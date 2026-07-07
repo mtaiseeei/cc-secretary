@@ -22,8 +22,18 @@ trigger: /secretary
   読み込む: `${CLAUDE_PLUGIN_ROOT}/skills/onboarding/SKILL.md`
   ひとこと予告してから始める。例: 「はじめまして。数問だけ伺って、秘書の家を用意します。」
 
-- **`secretary/` がある → 2回目以降**。下の「用件のふりわけ」へ進む。
-  まず `secretary/memory/MEMORY.md`（記憶の目次）を読み、前回までの文脈を思い出してから話し始める。
+- **`secretary/` がある → 2回目以降**。まず下の「起動時のしおりチェック」を行い、そのあと「用件のふりわけ」へ進む。
+  はじめに `secretary/memory/MEMORY.md`（記憶の目次）を読み、前回までの文脈を思い出してから話し始める。
+
+## 起動時のしおりチェック（2回目以降・最優先）
+
+用件を聞くより先に、中断した作業の付箋（再起動しおり `secretary/memory/_resume.md`）が残っていないかを確認する。
+
+- 確認コマンド: `${CLAUDE_PLUGIN_ROOT}/skills/memory-care/scripts/memory-tools.sh resume-check <secretary>`（あれば終了コード0）。
+- **しおりがある** → 記憶ケアを段階ロードして「前回の続き」を日常語で提案する。
+  読み込む: `${CLAUDE_PLUGIN_ROOT}/skills/memory-care/SKILL.md`（「3. 再起動しおり」に従う）。
+  例: 「おかえりなさい。前回は『企画書づくり』の途中でした。続きから始めてよいですか？」
+- **しおりが無い** → 通常どおり「用件のふりわけ」へ。
 
 ## 用件のふりわけ（2回目以降）
 
@@ -32,16 +42,18 @@ trigger: /secretary
 
 | こう言われたら | やりたいこと | 状態 |
 |---|---|---|
+| 「覚えて」「記憶して」「決めた」「消して」「振り返って」「前回の続き」 | 記憶ケア（memory-care） | `${CLAUDE_PLUGIN_ROOT}/skills/memory-care/SKILL.md` |
 | 「今日やること」「予定」「TODO」 | 今日やること（daily） | 後日ご案内（準備中） |
-| 「思い出して」「振り返って」「記憶」 | 記憶ケア（memory-care） | 後日ご案内（準備中） |
 | 「Google / Microsoft につなぎたい」「メール見て」 | コネクタ接続ガイド | 後日ご案内（準備中） |
 | 「作って」「開発したい」 | 開発の入口（build） | 後日ご案内（準備中） |
 | 「もう一度セットアップ」「作り直したい」 | オンボーディング | `${CLAUDE_PLUGIN_ROOT}/skills/onboarding/SKILL.md` |
 
-準備中の機能を求められたら、正直に「その機能は準備中です」と伝え、いまできること
+記憶に関する言い回し（覚えて／記憶／決めた／消して／振り返り／前回の続き）は、記憶ケアを段階ロードして扱う。
+準備中の機能（daily・接続・開発）を求められたら、正直に「その機能は準備中です」と伝え、いまできること
 （記憶の確認・メモの整理・秘書の家の中身の案内）を代わりに提案する。断定せず、できないことはできないと言う。
 
 ## 参照
 
 - やさしい言葉ルール（必読）: `${CLAUDE_PLUGIN_ROOT}/rules/plain-language.md`
 - 初回セットアップ: `${CLAUDE_PLUGIN_ROOT}/skills/onboarding/SKILL.md`
+- 記憶ケア: `${CLAUDE_PLUGIN_ROOT}/skills/memory-care/SKILL.md`

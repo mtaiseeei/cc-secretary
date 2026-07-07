@@ -113,19 +113,26 @@ section "2. スキル構文・段階ロードの参照整合"
 # ---------------------------------------------------------------------------
 SECRETARY_SKILL="$PLUGIN/skills/secretary/SKILL.md"
 ONBOARD_SKILL="$PLUGIN/skills/onboarding/SKILL.md"
+MEMCARE_SKILL="$PLUGIN/skills/memory-care/SKILL.md"
 RULES="$PLUGIN/rules/plain-language.md"
+# SKILL 群の参照スキャン対象（同梱ファイル参照の検査に使う）
+SKILLS=("$SECRETARY_SKILL" "$ONBOARD_SKILL" "$MEMCARE_SKILL")
 
 check "secretary/SKILL.md が存在" "[ -f '$SECRETARY_SKILL' ]"
 check "onboarding/SKILL.md が存在" "[ -f '$ONBOARD_SKILL' ]"
+check "memory-care/SKILL.md が存在" "[ -f '$MEMCARE_SKILL' ]"
 check "rules/plain-language.md が存在" "[ -f '$RULES' ]"
 
 # frontmatter の name を取り出す（1行目 --- 以降）
 name_of(){ awk '/^---$/{n++;next} n==1 && /^name:/{print $2; exit}' "$1"; }
 SNAME="$(name_of "$SECRETARY_SKILL")"
 ONAME="$(name_of "$ONBOARD_SKILL")"
+MNAME="$(name_of "$MEMCARE_SKILL")"
 check "secretary の name が 'secretary'" "[ '$SNAME' = 'secretary' ]"
 check "onboarding の name が 'onboarding'" "[ '$ONAME' = 'onboarding' ]"
-check "name が一意（重複なし）" "[ '$SNAME' != '$ONAME' ]"
+check "memory-care の name が 'memory-care'" "[ '$MNAME' = 'memory-care' ]"
+check "name が一意（重複なし）" \
+  "[ \"\$(printf '%s\n' '$SNAME' '$ONAME' '$MNAME' | sort -u | wc -l | tr -d ' ')\" = '3' ]"
 
 # 同梱ファイル参照は ${CLAUDE_PLUGIN_ROOT} 相対に統一されている（constraints.md L40 / domain.md）。
 # (a) ${CLAUDE_PLUGIN_ROOT}/... の参照先が全て実在（プラグイン配下で解決）
@@ -133,7 +140,7 @@ deadlinks=0
 while IFS= read -r ref; do
   ref="${ref%/}"   # 末尾スラッシュ（ディレクトリ参照）を正規化
   [ -e "$PLUGIN_ROOT/$ref" ] || { echo "  デッドリンク: \${CLAUDE_PLUGIN_ROOT}/$ref"; deadlinks=$((deadlinks+1)); }
-done < <(grep -rhoE '\$\{CLAUDE_PLUGIN_ROOT\}/[A-Za-z0-9_./-]+(\.md|/)?' "$SECRETARY_SKILL" "$ONBOARD_SKILL" \
+done < <(grep -rhoE '\$\{CLAUDE_PLUGIN_ROOT\}/[A-Za-z0-9_./-]+(\.md|\.sh|/)?' "${SKILLS[@]}" \
           | sed -E 's#^\$\{CLAUDE_PLUGIN_ROOT\}/##' | sort -u)
 check "SKILL の \${CLAUDE_PLUGIN_ROOT} 参照先が全て実在" "[ $deadlinks -eq 0 ]"
 
@@ -142,12 +149,12 @@ check "雛形が plugins/cc-secretary/templates/ に存在" "[ -f '$PLUGIN/templ
 
 # (c) 同梱ファイルへのリポジトリ直下相対参照（plugins/cc-secretary/... や bare templates/）が残っていない
 check "SKILL に plugins/cc-secretary/ 直下相対の同梱参照が無い" \
-  "! grep -rqE 'plugins/cc-secretary/' '$SECRETARY_SKILL' '$ONBOARD_SKILL'"
+  "! grep -rqE 'plugins/cc-secretary/' \"\${SKILLS[@]}\""
 check "SKILL に \${CLAUDE_PLUGIN_ROOT} を伴わない bare templates/ 参照が無い" \
-  "! grep -rhoE '[^./{]templates/' '$SECRETARY_SKILL' '$ONBOARD_SKILL' | grep -q ."
+  "! grep -rhoE '[^./{]templates/' \"\${SKILLS[@]}\" | grep -q ."
 # (d) 絶対パス直書き（先頭スラッシュのコード参照）が無い
 check "SKILL に絶対パス直書きが無い" \
-  "! grep -rhoE '\`/[A-Za-z]' '$SECRETARY_SKILL' '$ONBOARD_SKILL' | grep -q ."
+  "! grep -rhoE '\`/[A-Za-z]' \"\${SKILLS[@]}\" | grep -q ."
 
 # ---------------------------------------------------------------------------
 section "3. オンボーディング生成物（テンプレ実体化ドライラン）"
@@ -240,6 +247,9 @@ section "5. 非エンジニア体験（plain-language 参照・3行型骨子）"
 # ---------------------------------------------------------------------------
 check "secretary/SKILL が plain-language を参照" "grep -q 'plain-language.md' '$SECRETARY_SKILL'"
 check "onboarding/SKILL が plain-language を参照" "grep -q 'plain-language.md' '$ONBOARD_SKILL'"
+check "memory-care/SKILL が plain-language を参照" "grep -q 'plain-language.md' '$MEMCARE_SKILL'"
+check "memory-care に削除前の日常語警告がある" "grep -q '消すと' '$MEMCARE_SKILL' && grep -q '本当に消して' '$MEMCARE_SKILL'"
+check "memory-care にしおり『前回の続き』提案がある" "grep -q '前回の続き' '$MEMCARE_SKILL'"
 check "plain-language に報告3行型の骨子" "grep -q '3行' '$RULES'"
 check "plain-language に進行語彙（計画→道具→確認→結果）" "grep -q '計画' '$RULES' && grep -q '道具' '$RULES' && grep -q '確認' '$RULES' && grep -q '結果' '$RULES'"
 check "plain-language に英語エラー翻訳の方針" "grep -q '英語' '$RULES'"
@@ -255,6 +265,100 @@ check "同期層 10_sources を作らない" "! find '$REPO' -path '*/.git' -pru
 check "生成物に 10_sources 型フォルダが無い" "! find '$DEST' -type d -name '10_sources' | grep -q ."
 # 資格情報の実値をコミットしていない（生成物に token=/password= 等の代入が無い）
 check "生成物に資格情報の実値が無い" "! grep -rnEi '(password|api[_-]?key|secret|token)\\s*[:=]\\s*[A-Za-z0-9]' '$DEST'"
+
+# ---------------------------------------------------------------------------
+section "7. 記憶ケア（保護規則・索引追従・しおり・節目コミット）"
+# ---------------------------------------------------------------------------
+# 決定的シーム memory-tools.sh を、section 3/4 で作った $DEST（git init + 初回コミット済み）に対して実行する。
+TOOLS="$PLUGIN/skills/memory-care/scripts/memory-tools.sh"
+check "memory-tools.sh が存在" "[ -f '$TOOLS' ]"
+# ヘルパーが push / remote add を一切含まない（push 禁止を静的に担保）
+check "memory-tools.sh に git push が無い" "! grep -qE 'git .*push' '$TOOLS'"
+check "memory-tools.sh に git remote add が無い" "! grep -qE 'git .*remote +add' '$TOOLS'"
+
+# 索引の追従: ベースライン行数 → 新決定で +1 → 削除で元に戻る
+idx_lines(){ grep -c '^- \[' "$DEST/memory/MEMORY.md"; }
+bash "$TOOLS" reindex "$DEST" >/dev/null 2>&1
+BASE_IDX="$(idx_lines)"
+check "MEMORY.md 索引が1行1記憶（ベースライン≥2）" "[ '$BASE_IDX' -ge 2 ]"
+
+bash "$TOOLS" remember-decision "$DEST" 2026-07-09 "検証用の決定を記録" >/dev/null 2>&1
+check "新決定ログが作られた" "[ -f '$DEST/memory/decisions/2026-07-09-decisions.md' ]"
+check "決定追加で索引が+1追従" "[ \"\$(idx_lines)\" = \"\$(( BASE_IDX + 1 ))\" ]"
+check "相対日付でなく絶対日付で記録" "grep -q '2026-07-09' '$DEST/memory/decisions/2026-07-09-decisions.md'"
+
+# 空上書き拒否: preferences.md を空で上書きしようとしても拒否され、既存が保持される
+PREF="$DEST/memory/preferences.md"
+PREF_BEFORE="$(cksum "$PREF")"
+printf '   \n\t ' | bash "$TOOLS" guarded-write "$DEST" preferences.md >/dev/null 2>&1
+EMPTY_RC=$?
+check "空・空白のみの上書きは拒否（exit 3）" "[ '$EMPTY_RC' -eq 3 ]"
+check "拒否時に既存の記憶が保持される（内容不変）" "[ \"\$(cksum '$PREF')\" = '$PREF_BEFORE' ]"
+# 非空の上書きは通る
+printf '# 好み・環境\n呼び方: テスト\n' | bash "$TOOLS" guarded-write "$DEST" preferences.md >/dev/null 2>&1
+check "非空の上書きは成功する" "[ $? -eq 0 ] && grep -q '呼び方: テスト' '$PREF'"
+# 親フォルダが無いパスへの書き込みは、偽装成功せず失敗として返す（exit≠0・ファイル未作成）
+printf '中身\n' | bash "$TOOLS" guarded-write "$DEST" no_such_dir/x.md >/dev/null 2>&1
+check "親フォルダ無しの書き込みは失敗として返る（exit≠0）" "[ $? -ne 0 ]"
+check "親フォルダ無しの書き込みでファイルが作られない" "[ ! -e '$DEST/memory/no_such_dir/x.md' ]"
+
+# 削除前警告: --confirm なしでは消えず、警告して中断（exit 3）
+bash "$TOOLS" delete "$DEST" decisions/2026-07-09-decisions.md >/tmp/cc_del_warn.$$  2>&1
+DEL_RC=$?
+check "未確認の削除は実行されない（exit 3）" "[ '$DEL_RC' -eq 3 ]"
+check "未確認削除でファイルが残る" "[ -f '$DEST/memory/decisions/2026-07-09-decisions.md' ]"
+check "削除警告に『何を消すか』が出る" "grep -q '消そうとしている' /tmp/cc_del_warn.$$"
+rm -f /tmp/cc_del_warn.$$
+# --confirm ありで削除 → 索引がベースラインに戻る
+bash "$TOOLS" delete "$DEST" decisions/2026-07-09-decisions.md --confirm >/dev/null 2>&1
+check "確認つき削除は実行される" "[ ! -f '$DEST/memory/decisions/2026-07-09-decisions.md' ]"
+check "削除で索引がベースラインに戻る" "[ \"\$(idx_lines)\" = '$BASE_IDX' ]"
+
+# スコープ封じ込め（secretary/ の外を破壊的操作・書き込みで触らせない）
+SENTINEL="$WORK/OUTSIDE_SENTINEL.txt"
+echo "消してはいけない外部ファイル" > "$SENTINEL"
+# (a) delete のパストラバーサルは拒否され、外部ファイルが rm されない
+bash "$TOOLS" delete "$DEST" "../../OUTSIDE_SENTINEL.txt" --confirm >/dev/null 2>&1
+check "delete のトラバーサルは拒否（exit≠0）" "[ $? -ne 0 ]"
+check "delete で secretary/ 外のファイルが消えない" "[ -f '$SENTINEL' ]"
+# (b) remember-decision の date トラバーサルは拒否され、外部に書かれない
+bash "$TOOLS" remember-decision "$DEST" "../../../ESCAPE" "外に書く" >/dev/null 2>&1
+check "remember-decision の不正な日付は拒否（exit≠0）" "[ $? -ne 0 ]"
+check "remember-decision で secretary/ 外に書かれない" "[ ! -e '$WORK/ESCAPE-decisions.md' ] && [ ! -e \"\$(dirname '$WORK')/ESCAPE-decisions.md\" ]"
+# (c) guarded-write のパストラバーサルは拒否され、外部に書かれない
+printf '外部書き込み\n' | bash "$TOOLS" guarded-write "$DEST" "../../OUTSIDE_W.txt" >/dev/null 2>&1
+check "guarded-write のトラバーサルは拒否（exit≠0）" "[ $? -ne 0 ]"
+check "guarded-write で secretary/ 外に書かれない" "[ ! -e '$WORK/OUTSIDE_W.txt' ]"
+check "封じ込め後も外部センチネルが無事" "[ \"\$(cat '$SENTINEL')\" = '消してはいけない外部ファイル' ]"
+rm -f "$SENTINEL"
+
+# 再起動しおり: 無→書く→有→読める→閉じる→無
+bash "$TOOLS" resume-check "$DEST" >/dev/null 2>&1
+check "しおりは初期状態で無い（check exit≠0）" "[ $? -ne 0 ]"
+bash "$TOOLS" resume-write "$DEST" "企画書づくり" "見出しを決める" "公開範囲" >/dev/null 2>&1
+bash "$TOOLS" resume-check "$DEST" >/dev/null 2>&1
+check "しおりを書くと検知される（check exit 0）" "[ $? -eq 0 ]"
+RESUME_OUT="$(bash "$TOOLS" resume-read "$DEST" 2>/dev/null)"
+check "しおりに進行中の作業が復元できる" "printf '%s' \"\$RESUME_OUT\" | grep -q '企画書づくり'"
+check "しおりに次アクションが復元できる" "printf '%s' \"\$RESUME_OUT\" | grep -q '見出しを決める'"
+check "しおりに未確定事項が復元できる" "printf '%s' \"\$RESUME_OUT\" | grep -q '公開範囲'"
+bash "$TOOLS" resume-clear "$DEST" >/dev/null 2>&1
+bash "$TOOLS" resume-check "$DEST" >/dev/null 2>&1
+check "しおりを閉じると無くなる（check exit≠0）" "[ $? -ne 0 ]"
+# ルーターが起動時しおりチェックを持つ
+check "ルーターに起動時しおりチェックがある" "grep -q 'resume-check' '$SECRETARY_SKILL' && grep -q '_resume.md' '$SECRETARY_SKILL'"
+
+# 節目コミット: 日本語メッセージのコミットが増え、push/remote は無い
+COMMITS_BEFORE="$(git -C "$DEST" rev-list --count HEAD 2>/dev/null)"
+bash "$TOOLS" commit "$DEST" "記憶を更新（検証：決定と好みの記録）" >/dev/null 2>&1
+COMMITS_AFTER="$(git -C "$DEST" rev-list --count HEAD 2>/dev/null)"
+check "節目コミットで履歴が1件以上増える" "[ '$COMMITS_AFTER' -gt '$COMMITS_BEFORE' ]"
+CMSG="$(git -C "$DEST" log -1 --pretty=%s 2>/dev/null)"
+check "節目コミットが日本語メッセージ" "printf '%s' \"$CMSG\" | LC_ALL=C grep -q '[^ -~]'"
+check "記憶更新後もリモート未設定（push なし）" "[ -z \"\$(git -C '$DEST' remote 2>/dev/null)\" ]"
+check "記憶更新後も upstream 追跡が無い（未 push）" "! git -C '$DEST' rev-parse --abbrev-ref '@{u}' >/dev/null 2>&1"
+# 記憶ワークスペースに資格情報が入っていない
+check "記憶に資格情報の実値が無い" "! grep -rnEi '(password|api[_-]?key|secret|token)\\s*[:=]\\s*[A-Za-z0-9]' '$DEST/memory'"
 
 # ---------------------------------------------------------------------------
 section "結果"
