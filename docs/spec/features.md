@@ -22,7 +22,7 @@
 ### F04 オンボーディング
 - 初回 `/secretary` は、やさしい数問（呼び方・主に使うサービス・任せたいこと 程度）だけを尋ねる。
 - 回答に基づき `secretary/` ワークスペース（`AGENTS.md` / `CLAUDE.md` / `inbox/` / `docs/` / `projects/` / `memory/{MEMORY.md,decisions/,preferences.md}`）を生成する（構造は `docs/spec/domain.md`）。
-- `git init` して最初のコミットを作る。完了時に「秘書の家ができました」と場所を日常語で伝える。
+- `git init` して最初のコミットを作る。完了時に「秘書ディレクトリ（`secretary/`）を作成しました」と場所を具体的に伝える。
 - 生成される `AGENTS.md` には `docs/spec/constraints.md` の6規律（スコープ・根拠・出力規約・記憶保護・自動コミット・報告の型）が入る。
 
 ### F05 記憶ケア（memory-care）

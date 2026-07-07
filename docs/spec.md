@@ -37,11 +37,12 @@ DESIGN.md の開発フェーズ P1〜P4 をスプリント列に展開する。
 Patch:
 - [sprint-001-patch-001](sprints/sprint-001-patch-001.md)（`Type: micro`）— templates を `plugins/cc-secretary/templates/` へ移設し、SKILL 参照を `${CLAUDE_PLUGIN_ROOT}` 相対に統一。
 - [sprint-002-patch-001](sprints/sprint-002-patch-001.md)（`Type: micro`）— 記憶ツールの封じ込めハードニング（symlink 越えを `exit 3` で拒否、エッジ rel の偽装成功を遮断）。
+- [sprint-001-patch-002](sprints/sprint-001-patch-002.md)（`Type: patch`・**sprint-003 完了後に着手**）— 過度な平易化の一掃（「秘書の家」→「秘書ディレクトリ」、一般技術用語はそのまま使う。改訂 `docs/spec/ui.md` 準拠）。
 
 ## 絶対ルール（最優先・回帰厳禁）
 
 1. `~/workspace/agentic-harness` は変更禁止。同梱ハーネスはリポジトリ内に複製して改変する。
 2. 外部データのローカル同期層（`10_sources` 型）を作らない。コネクタで都度参照。
-3. ターゲットは非エンジニア。文言は日常語＋具体例、報告は「3行以内・言い換え併記・次の一言」。
+3. ターゲットは「技術に多少関心のある非エンジニア」。一般的な技術用語はそのまま使い、馴染みの薄い語のみ初出補足・幼稚なメタファー禁止（改訂 `docs/spec/ui.md`）。報告は「3行以内・次の一言」。
 
 詳細は [constraints.md](spec/constraints.md)。

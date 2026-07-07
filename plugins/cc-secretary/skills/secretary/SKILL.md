@@ -20,7 +20,7 @@ trigger: /secretary
 
 - **`secretary/` が無い → 初回**。オンボーディング（初回セットアップ）へ進む。
   読み込む: `${CLAUDE_PLUGIN_ROOT}/skills/onboarding/SKILL.md`
-  ひとこと予告してから始める。例: 「はじめまして。数問だけ伺って、秘書の家を用意します。」
+  ひとこと予告してから始める。例: 「はじめまして。数問だけ伺って、秘書フォルダ（secretary/）を用意します。」
 
 - **`secretary/` がある → 2回目以降**。まず下の「起動時のしおりチェック」を行い、そのあと「用件のふりわけ」へ進む。
   はじめに `secretary/memory/MEMORY.md`（記憶の目次）を読み、前回までの文脈を思い出してから話し始める。
@@ -37,23 +37,33 @@ trigger: /secretary
 
 ## 用件のふりわけ（2回目以降）
 
-ユーザーの自然な言い回しから、やりたいことを推測して案内する。
-このスプリントでは各機能スキルの本体は未実装なので、**入口の案内だけ**を行い、実装済みになり次第つなぐ。
+ユーザーの自然な言い回しから、やりたいことを推測し、必要な機能スキルだけを段階ロードする。
 
-| こう言われたら | やりたいこと | 状態 |
+| こう言われたら | やりたいこと | 段階ロード先 |
 |---|---|---|
 | 「覚えて」「記憶して」「決めた」「消して」「振り返って」「前回の続き」 | 記憶ケア（memory-care） | `${CLAUDE_PLUGIN_ROOT}/skills/memory-care/SKILL.md` |
-| 「今日やること」「予定」「TODO」 | 今日やること（daily） | 後日ご案内（準備中） |
-| 「Google / Microsoft につなぎたい」「メール見て」 | コネクタ接続ガイド | 後日ご案内（準備中） |
+| 「今日やること」「今日の予定」「TODO」「段取り」 | 今日やること（daily） | `${CLAUDE_PLUGIN_ROOT}/skills/daily/SKILL.md` |
+| 「Google につなぎたい」「Gmail／カレンダーを見て」「接続」 | Google 接続ガイド（setup-google） | `${CLAUDE_PLUGIN_ROOT}/skills/setup-google/SKILL.md` |
+| 「保存して」「文書にして」「まとめて残して」「企画書にして」 | 成果物保存（出力規約） | 下記「成果物を保存するとき」 |
 | 「作って」「開発したい」 | 開発の入口（build） | 後日ご案内（準備中） |
 | 「もう一度セットアップ」「作り直したい」 | オンボーディング | `${CLAUDE_PLUGIN_ROOT}/skills/onboarding/SKILL.md` |
+| 「Microsoft につなぎたい」「Notion」 | 接続拡張 | 後日ご案内（準備中） |
 
-記憶に関する言い回し（覚えて／記憶／決めた／消して／振り返り／前回の続き）は、記憶ケアを段階ロードして扱う。
-準備中の機能（daily・接続・開発）を求められたら、正直に「その機能は準備中です」と伝え、いまできること
-（記憶の確認・メモの整理・秘書の家の中身の案内）を代わりに提案する。断定せず、できないことはできないと言う。
+準備中の機能（開発・Microsoft／Notion）を求められたら、正直に「その機能は準備中です」と伝え、いまできることを代わりに提案する。断定せず、できないことはできないと言う。
+
+## 成果物を保存するとき（出力規約）
+
+企画書・調査まとめ等の成果物を保存するときは、決定的シームで出力規約（保存先・frontmatter・命名）を守る。
+
+1. 保存: `${CLAUDE_PLUGIN_ROOT}/scripts/workspace-tools.sh save-deliverable <secretary> <YYYY-MM-DD> "<タイトル>" "<タグ,カンマ区切り>"`（本文は標準入力）。
+   → `secretary/docs/YYYY/MM/YYYY-MM-DD_<タイトル>.md` に `createdAt`／`tags` 入りで保存される。1ファイル1トピック・見出しに固有名詞。
+2. 節目コミット（日本語・push しない）: `${CLAUDE_PLUGIN_ROOT}/skills/memory-care/scripts/memory-tools.sh commit <secretary> "成果物を保存（<タイトル>）"`。
 
 ## 参照
 
 - やさしい言葉ルール（必読）: `${CLAUDE_PLUGIN_ROOT}/rules/plain-language.md`
 - 初回セットアップ: `${CLAUDE_PLUGIN_ROOT}/skills/onboarding/SKILL.md`
 - 記憶ケア: `${CLAUDE_PLUGIN_ROOT}/skills/memory-care/SKILL.md`
+- 今日やること: `${CLAUDE_PLUGIN_ROOT}/skills/daily/SKILL.md`
+- Google 接続: `${CLAUDE_PLUGIN_ROOT}/skills/setup-google/SKILL.md`
+- 成果物・TODO の決定的シーム: `${CLAUDE_PLUGIN_ROOT}/scripts/workspace-tools.sh`

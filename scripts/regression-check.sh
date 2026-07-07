@@ -114,13 +114,17 @@ section "2. スキル構文・段階ロードの参照整合"
 SECRETARY_SKILL="$PLUGIN/skills/secretary/SKILL.md"
 ONBOARD_SKILL="$PLUGIN/skills/onboarding/SKILL.md"
 MEMCARE_SKILL="$PLUGIN/skills/memory-care/SKILL.md"
+SETUP_GOOGLE_SKILL="$PLUGIN/skills/setup-google/SKILL.md"
+DAILY_SKILL="$PLUGIN/skills/daily/SKILL.md"
 RULES="$PLUGIN/rules/plain-language.md"
 # SKILL 群の参照スキャン対象（同梱ファイル参照の検査に使う）
-SKILLS=("$SECRETARY_SKILL" "$ONBOARD_SKILL" "$MEMCARE_SKILL")
+SKILLS=("$SECRETARY_SKILL" "$ONBOARD_SKILL" "$MEMCARE_SKILL" "$SETUP_GOOGLE_SKILL" "$DAILY_SKILL")
 
 check "secretary/SKILL.md が存在" "[ -f '$SECRETARY_SKILL' ]"
 check "onboarding/SKILL.md が存在" "[ -f '$ONBOARD_SKILL' ]"
 check "memory-care/SKILL.md が存在" "[ -f '$MEMCARE_SKILL' ]"
+check "setup-google/SKILL.md が存在" "[ -f '$SETUP_GOOGLE_SKILL' ]"
+check "daily/SKILL.md が存在" "[ -f '$DAILY_SKILL' ]"
 check "rules/plain-language.md が存在" "[ -f '$RULES' ]"
 
 # frontmatter の name を取り出す（1行目 --- 以降）
@@ -128,11 +132,15 @@ name_of(){ awk '/^---$/{n++;next} n==1 && /^name:/{print $2; exit}' "$1"; }
 SNAME="$(name_of "$SECRETARY_SKILL")"
 ONAME="$(name_of "$ONBOARD_SKILL")"
 MNAME="$(name_of "$MEMCARE_SKILL")"
+GNAME="$(name_of "$SETUP_GOOGLE_SKILL")"
+DNAME="$(name_of "$DAILY_SKILL")"
 check "secretary の name が 'secretary'" "[ '$SNAME' = 'secretary' ]"
 check "onboarding の name が 'onboarding'" "[ '$ONAME' = 'onboarding' ]"
 check "memory-care の name が 'memory-care'" "[ '$MNAME' = 'memory-care' ]"
+check "setup-google の name が 'setup-google'" "[ '$GNAME' = 'setup-google' ]"
+check "daily の name が 'daily'" "[ '$DNAME' = 'daily' ]"
 check "name が一意（重複なし）" \
-  "[ \"\$(printf '%s\n' '$SNAME' '$ONAME' '$MNAME' | sort -u | wc -l | tr -d ' ')\" = '3' ]"
+  "[ \"\$(printf '%s\n' '$SNAME' '$ONAME' '$MNAME' '$GNAME' '$DNAME' | sort -u | wc -l | tr -d ' ')\" = '5' ]"
 
 # 同梱ファイル参照は ${CLAUDE_PLUGIN_ROOT} 相対に統一されている（constraints.md L40 / domain.md）。
 # (a) ${CLAUDE_PLUGIN_ROOT}/... の参照先が全て実在（プラグイン配下で解決）
@@ -391,6 +399,91 @@ check "記憶更新後もリモート未設定（push なし）" "[ -z \"\$(git 
 check "記憶更新後も upstream 追跡が無い（未 push）" "! git -C '$DEST' rev-parse --abbrev-ref '@{u}' >/dev/null 2>&1"
 # 記憶ワークスペースに資格情報が入っていない
 check "記憶に資格情報の実値が無い" "! grep -rnEi '(password|api[_-]?key|secret|token)\\s*[:=]\\s*[A-Za-z0-9]' '$DEST/memory'"
+
+# ---------------------------------------------------------------------------
+section "8. 今日やること・出力規約・Google 接続（sprint-003）"
+# ---------------------------------------------------------------------------
+WT="$PLUGIN/scripts/workspace-tools.sh"
+GUIDE="$SETUP_GOOGLE_SKILL"
+check "workspace-tools.sh が存在" "[ -f '$WT' ]"
+check "封じ込め共有ライブラリ path-guard.sh が存在" "[ -f '$PLUGIN/scripts/lib/path-guard.sh' ]"
+
+# --- setup-google: 公式コネクタ前提（Cloud Console 手作業を案内しない）---
+gcc_leak=0
+for term in 'Cloud Console' 'gcp-oauth' 'API を有効' 'API有効' 'プロジェクトを作成' 'プロジェクト作成' '認証情報' 'JSON 鍵' 'JSON鍵'; do
+  grep -qF "$term" "$GUIDE" && { echo "  手作業語が露出: $term"; gcc_leak=$((gcc_leak+1)); }
+done
+check "setup-google に Cloud Console 手作業手順が無い" "[ $gcc_leak -eq 0 ]"
+check "setup-google に『設定画面からコネクタ接続』の導線" "grep -q '設定画面' '$GUIDE' && grep -q 'コネクタ' '$GUIDE'"
+check "setup-google に接続確認テスト手順" "grep -q '直近の予定' '$GUIDE' || grep -q 'つながったか' '$GUIDE'"
+check "setup-google に英語エラーの言い換え型" "grep -q '英語' '$GUIDE' && grep -q '言い換え' '$GUIDE'"
+check "setup-google が接続前にしおりを書く（resume-write）" "grep -q 'resume-write' '$GUIDE'"
+check "setup-google が資格情報を保存しない旨を明記" "grep -q '保存' '$GUIDE' && grep -q 'トークン' '$GUIDE'"
+check "setup-google が plain-language を参照" "grep -q 'plain-language.md' '$GUIDE'"
+
+# --- daily: 根拠ルール・同期しない・未接続フォールバック ---
+check "daily に根拠ルール（サービス名＋リンク＋日付）" "grep -q 'サービス名' '$DAILY_SKILL' && grep -q 'リンク' '$DAILY_SKILL' && grep -q '日付' '$DAILY_SKILL'"
+check "daily に原文にない事実を足さない旨" "grep -q '原文にない事実を足さない' '$DAILY_SKILL'"
+check "daily に矛盾は両方提示" "grep -q '両方' '$DAILY_SKILL'"
+check "daily が外部本文をローカル保存しない旨" "grep -q '本文' '$DAILY_SKILL' && (grep -q '保存しない' '$DAILY_SKILL' || grep -q '書き出さない' '$DAILY_SKILL')"
+check "daily が同期層（10_sources/キャッシュ）を作らない旨" "grep -q '10_sources' '$DAILY_SKILL' || grep -q 'キャッシュ' '$DAILY_SKILL'"
+check "daily が未接続時に setup-google へフォールバック" "grep -q 'setup-google/SKILL.md' '$DAILY_SKILL'"
+check "daily が plain-language を参照" "grep -q 'plain-language.md' '$DAILY_SKILL'"
+check "daily が3行型（次に何が起きるか）を含む" "grep -q '次は' '$DAILY_SKILL'"
+
+# --- 語彙方針（改訂 ui.md）: sprint-003 で新規/変更した文言に『秘書の家』を使わない ---
+# （既存ファイル onboarding / memory-care / templates の一掃は別 Patch の担当・対象外）
+check "setup-google に『秘書の家』が無い（語彙方針）" "! grep -q '秘書の家' '$GUIDE'"
+check "daily に『秘書の家』が無い（語彙方針）" "! grep -q '秘書の家' '$DAILY_SKILL'"
+check "ルーター（sprint-003 変更分）に『秘書の家』が無い" "! grep -q '秘書の家' '$SECRETARY_SKILL'"
+check "workspace-tools.sh に『秘書の家』が無い" "! grep -q '秘書の家' '$WT'"
+
+# --- 出力規約のドライラン（workspace-tools.sh save-deliverable）---
+printf '## 概要\nテスト成果物の本文。\n' | bash "$WT" save-deliverable "$DEST" 2026-07-08 "テスト企画 骨子" "企画,調査" >/dev/null 2>&1
+DELIV="$DEST/docs/2026/07/2026-07-08_テスト企画_骨子.md"
+check "成果物が docs/YYYY/MM/YYYY-MM-DD_<title>.md に保存" "[ -f '$DELIV' ]"
+check "成果物 frontmatter に createdAt" "grep -q '^createdAt: 2026-07-08' '$DELIV'"
+check "成果物 frontmatter に tags" "grep -q '^tags:' '$DELIV' && grep -q '  - 企画' '$DELIV'"
+check "成果物 見出しに固有名詞（タイトル）" "grep -q '^# テスト企画 骨子' '$DELIV'"
+check "成果物 本文が保存されている" "grep -q 'テスト成果物の本文' '$DELIV'"
+# 空本文・不正日付・タイトル traversal は拒否
+printf '   \n' | bash "$WT" save-deliverable "$DEST" 2026-07-08 "空本文" >/dev/null 2>&1
+check "空本文の成果物は拒否（exit 3）" "[ $? -eq 3 ]"
+printf 'x\n' | bash "$WT" save-deliverable "$DEST" "2026/07" "不正日付" >/dev/null 2>&1
+check "不正日付の成果物は拒否（exit≠0）" "[ $? -ne 0 ]"
+printf 'x\n' | bash "$WT" save-deliverable "$DEST" 2026-07-08 "../外" >/dev/null 2>&1
+check "タイトルの .. は拒否（exit≠0）" "[ $? -ne 0 ]"
+check "成果物保存後も docs 外に書かれていない" "[ ! -e '$WORK/外.md' ] && [ ! -e '$WORK/2026-07-08_外.md' ]"
+
+# 出力規約の封じ込め: 保存先の月フォルダが外向き symlink でも、実解決して境界外を拒否する
+mkdir -p "$WORK/outside2"; echo "EXT-ORIGINAL" > "$WORK/outside2/keep.txt"
+mkdir -p "$DEST/docs/2026"
+ln -s "$WORK/outside2" "$DEST/docs/2026/09"   # 2026/09 を外向き symlink にすり替え
+printf 'HACK\n' | bash "$WT" save-deliverable "$DEST" 2026-09-15 "侵入" >/dev/null 2>&1
+check "出力規約: 中間 symlink 越えの保存は拒否（exit 3）" "[ $? -eq 3 ]"
+check "出力規約: symlink 越えで外部フォルダに書かれない" "[ ! -e '$WORK/outside2/2026-09-15_侵入.md' ]"
+check "出力規約: symlink 越えで外部の実ファイルが不変" "[ \"\$(cat '$WORK/outside2/keep.txt')\" = 'EXT-ORIGINAL' ]"
+rm -rf "$DEST/docs/2026/09" "$WORK/outside2"
+
+# 成果物の節目コミット（日本語・push なし）
+DCOMMITS_BEFORE="$(git -C "$DEST" rev-list --count HEAD 2>/dev/null)"
+bash "$TOOLS" commit "$DEST" "成果物を保存（テスト企画 骨子）" >/dev/null 2>&1
+check "成果物保存の節目コミットが増える" "[ \"\$(git -C '$DEST' rev-list --count HEAD)\" -gt '$DCOMMITS_BEFORE' ]"
+DMSG="$(git -C "$DEST" log -1 --pretty=%s 2>/dev/null)"
+check "成果物コミットが日本語メッセージ" "printf '%s' \"$DMSG\" | LC_ALL=C grep -q '[^ -~]'"
+check "成果物保存後もリモート未設定（push なし）" "[ -z \"\$(git -C '$DEST' remote 2>/dev/null)\" ]"
+
+# --- daily の TODO: 根拠必須（同期しない）---
+bash "$WT" todo-add "$DEST" "請求書を送る" "Gmail | https://mail.google.com/x | 2026-07-08" >/dev/null 2>&1
+check "TODO が inbox/todo.md に根拠つきで追記" "[ -f '$DEST/inbox/todo.md' ] && grep -q '根拠: Gmail' '$DEST/inbox/todo.md'"
+bash "$WT" todo-add "$DEST" "根拠なしタスク" "" >/dev/null 2>&1
+check "根拠なし TODO は拒否（根拠ルール・exit 3）" "[ $? -eq 3 ]"
+# daily がローカルに残すのは TODO のみ（外部本文の全文コピー/キャッシュファイルを作らない）
+check "TODO 追記で 10_sources 型の層が作られない" "! find '$DEST' -type d -name '10_sources' | grep -q ."
+check "workspace-tools.sh に外部本文の保存指示が無い（同期しない）" "grep -q '本文をローカルに保存しない' '$WT'"
+
+# 新シームに資格情報が保存されない
+check "成果物・TODO に資格情報の実値が無い" "! grep -rnEi '(password|api[_-]?key|secret|token)\\s*[:=]\\s*[A-Za-z0-9]' '$DEST/docs' '$DEST/inbox'"
 
 # ---------------------------------------------------------------------------
 section "結果"

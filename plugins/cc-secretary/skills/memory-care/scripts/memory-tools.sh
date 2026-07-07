@@ -26,60 +26,11 @@ set -u
 die_usage(){ echo "使い方エラー: $1" >&2; exit 2; }
 refuse(){ echo "$1" >&2; exit 3; }
 
-# 実解決先の物理絶対パスを返す（symlink を完全解決。最終要素が存在しなくても親まで解決）。
-# realpath 非依存・可搬（macOS でも動く）。解決できなければ非ゼロ。
-_realpath(){
-  p="$1"
-  d="$(cd "$(dirname "$p")" 2>/dev/null && pwd -P)" || return 1
-  b="$(basename "$p")"
-  n=0
-  # 最終要素が symlink である限りターゲットへ辿る（相対/絶対両対応・ループ保護）
-  while [ -L "$d/$b" ]; do
-    n=$((n + 1)); [ "$n" -gt 40 ] && return 1
-    link="$(readlink "$d/$b")"
-    case "$link" in
-      /*) d="$(cd "$(dirname "$link")" 2>/dev/null && pwd -P)" || return 1 ;;
-      *)  d="$(cd "$d/$(dirname "$link")" 2>/dev/null && pwd -P)" || return 1 ;;
-    esac
-    b="$(basename "$link")"
-  done
-  printf '%s/%s' "$d" "$b"
-}
-
-# スコープ封じ込め: base（実在ディレクトリ）配下に rel の**実解決先**が収まる安全な絶対パスを返す。
-# 破壊的操作・書き込みは必ずこれを通す（秘書は secretary/memory/ 配下だけ・外は触らない）。
-# symlink（対象自身・中間ディレクトリ）を解決してから境界判定するため、symlink 越えで外へ出られない。
-# 返り値: 0=安全（実解決パスを出力） / 1=範囲外・不正 rel（.. / . / 空 / 境界脱出 / symlink 越え） / 2=親フォルダが無い
-_safe_path(){
-  base="$1"; rel="$2"
-  # 1) エッジ rel: 空・'.'・'..' は「対象未指定」として拒否（偽装成功させない）
-  case "$rel" in
-    ""|.|..) return 1 ;;
-  esac
-  # 2) '..' セグメントを含むパスは拒否（防御の第一線）
-  case "/$rel/" in
-    */../*) return 1 ;;
-  esac
-  cand="$base/$rel"
-  b="$(basename "$cand")"
-  case "$b" in .|..) return 1 ;; esac
-  baseabs="$(cd "$base" 2>/dev/null && pwd -P)" || return 1
-  # 3) 実解決先を求める（symlink 完全解決）
-  if [ -e "$cand" ] || [ -L "$cand" ]; then
-    real="$(_realpath "$cand")" || return 1     # 対象自身の symlink もここで実体化
-  else
-    parentabs="$(cd "$(dirname "$cand")" 2>/dev/null && pwd -P)" || return 2  # 中間 symlink も物理解決
-    real="$parentabs/$b"
-  fi
-  # 4) 実解決先が base 配下（base 自身は不可）であること。前方一致の接頭辞衝突を避けるため境界に '/' を付ける
-  case "$real/" in
-    "$baseabs"/) return 1 ;;
-    "$baseabs"/*) : ;;
-    *) return 1 ;;
-  esac
-  printf '%s' "$real"
-  return 0
-}
+# スコープ封じ込めの共有ライブラリ（_realpath / _safe_path）を読み込む。
+# 封じ込め不変条件は全ヘルパー共通の単一実装で担保する（このスクリプト → scripts/lib/）。
+_HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# memory-care/scripts/ → plugins/cc-secretary/scripts/lib/path-guard.sh
+. "$_HERE/../../../scripts/lib/path-guard.sh"
 
 # MEMORY.md 索引を、実在する記憶ファイルに追従して再生成する（決定的）。
 # 仕様: 「## 記録の目次」見出しまでを残し、その下を preferences → decisions（昇順）で作り直す。
