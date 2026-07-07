@@ -1,0 +1,24 @@
+{
+  "name": "cc-secretary",
+  "owner": {
+    "name": "mtaiseeei"
+  },
+  "metadata": {
+    "description": "非エンジニア向けのAI秘書プラグイン。データは各サービスに置いたまま、秘書だけがローカルに住む。数問のオンボーディングで秘書の家（secretary/）ができ、git init まで完了する。"
+  },
+  "plugins": [
+    {
+      "name": "cc-secretary",
+      "source": "./plugins/cc-secretary",
+      "description": "あなた専属のAI秘書。記憶と成果物はローカルに置き、外部データは公式コネクタで都度参照する。",
+      "version": "0.1.0",
+      "author": {
+        "name": "mtaiseeei"
+      },
+      "license": "MIT",
+      "category": "productivity",
+      "tags": ["secretary", "assistant", "non-engineer", "memory", "productivity"],
+      "forkedFrom": "https://github.com/Shin-sibainu/cc-company"
+    }
+  ]
+}
