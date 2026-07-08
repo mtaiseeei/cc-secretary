@@ -37,7 +37,8 @@ DESIGN.md の開発フェーズ P1〜P4 をスプリント列に展開する。
 Patch:
 - [sprint-001-patch-001](sprints/sprint-001-patch-001.md)（`Type: micro`）— templates を `plugins/cc-secretary/templates/` へ移設し、SKILL 参照を `${CLAUDE_PLUGIN_ROOT}` 相対に統一。
 - [sprint-002-patch-001](sprints/sprint-002-patch-001.md)（`Type: micro`）— 記憶ツールの封じ込めハードニング（symlink 越えを `exit 3` で拒否、エッジ rel の偽装成功を遮断）。
-- [sprint-001-patch-002](sprints/sprint-001-patch-002.md)（`Type: patch`・**sprint-003 完了後に着手**）— 過度な平易化の一掃（「秘書の家」→「秘書ディレクトリ」、一般技術用語はそのまま使う。改訂 `docs/spec/ui.md` 準拠）。
+- [sprint-001-patch-002](sprints/sprint-001-patch-002.md)（`Type: patch`・**合格・done**）— 過度な平易化の一掃（「秘書の家」→「秘書ディレクトリ」、一般技術用語はそのまま使う。改訂 `docs/spec/ui.md` 準拠）。
+- [sprint-003-patch-001](sprints/sprint-003-patch-001.md)（`Type: patch`・**sprint-004 前に着手**）— Codex レビュー指摘対応（封じ込め基点 symlink・再セットアップ確認・秘密情報非履歴化ほか High/Medium/Low ＋ finding 7: `templates/AGENTS.md` の文言取りこぼし）。
 
 ## 絶対ルール（最優先・回帰厳禁）
 
