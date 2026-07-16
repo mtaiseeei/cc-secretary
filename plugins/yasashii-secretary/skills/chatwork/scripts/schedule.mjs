@@ -9,7 +9,7 @@ export const INTERVALS = Object.freeze({
 
 export function scheduleFor(interval, enabled) {
   const selected = INTERVALS[interval];
-  if (!selected) throw new Error("同期間隔を選び直してください。");
+  if (!selected) throw new Error("自動取得の間隔を選び直してください。");
   return enabled && selected.cron ? selected.cron : null;
 }
 

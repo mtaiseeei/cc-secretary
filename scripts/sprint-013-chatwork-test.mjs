@@ -137,15 +137,17 @@ if (existsSync(browser)) {
     process.stderr.write(`running DOM確認を実行できませんでした: ${error.code || error.message}\n`);
   }
 }
-const roomUiRendered = /type="checkbox"/.test(runningDom) && runningDom.includes("空room") && runningDom.includes("営業");
-if (!roomUiRendered && runningDom) process.stderr.write(`running DOM抜粋: ${runningDom.slice(0, 1000).replace(/\s+/g, " ")}\n`);
-check("running DOMにroom選択UIを描画", roomUiRendered);
+const connectionUiRendered = runningDom.includes("ChatworkでAPI Tokenを取得します。") && runningDom.includes("Tokenページを使えない");
+if (!connectionUiRendered && runningDom) process.stderr.write(`running DOM抜粋: ${runningDom.slice(0, 1000).replace(/\s+/g, " ")}\n`);
+check("running DOMにToken接続UIを描画", connectionUiRendered);
 check("wizard DOMにTokenが無い", !wizardHtml.includes(tokenMarker));
 const before = readFileSync(join(wizardRoot, "chatwork", "config.json"), "utf8");
 await fetch(`${url}api/bootstrap`);
 check("閲覧・キャンセル相当は設定副作用0", readFileSync(join(wizardRoot, "chatwork", "config.json"), "utf8") === before);
 const invalid = await fetch(`${url}api/confirm`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ selectedRoomIds: ["999"], interval: "1h" }) });
 check("未発見roomを確定できない", invalid.status === 400 && readFileSync(join(wizardRoot, "chatwork", "config.json"), "utf8") === before);
+const discovered = await fetch(`${url}api/discover`, { method: "POST" });
+check("Token登録確認後だけroom一覧を取得", discovered.status === 200 && (await discovered.json()).rooms.status === "ready");
 const confirmed = await fetch(`${url}api/confirm`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ selectedRoomIds: ["101"], interval: "3h", automaticPushConsent: true }) });
 const confirmedConfig = json(join(wizardRoot, "chatwork", "config.json"));
 check("確定後だけroomと頻度を保存", confirmed.status === 202 && confirmedConfig.selectedRoomIds.join() === "101" && confirmedConfig.interval === "3h");
@@ -154,5 +156,5 @@ wizard.kill("SIGTERM");
 
 api.close();
 rmSync(work, { recursive: true, force: true });
-process.stdout.write(`PASS=${34 - failures} FAIL=${failures}\n`);
+process.stdout.write(`PASS=${35 - failures} FAIL=${failures}\n`);
 process.exit(failures === 0 ? 0 : 1);

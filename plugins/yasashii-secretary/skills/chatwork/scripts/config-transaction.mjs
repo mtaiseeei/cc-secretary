@@ -34,12 +34,12 @@ function classify(error) {
 export async function applyChatworkConfig({ root, selectedRoomIds, interval, automaticPushConsent }) {
   root = resolve(root);
   const selected = [...new Set((selectedRoomIds || []).map(String))];
-  if (selected.length === 0) throw Object.assign(new Error("roomを1つ以上選んでください。"), { code: "room-required" });
-  if (selected.some((id) => !/^\d+$/.test(id))) throw Object.assign(new Error("Room IDの形式が不正です。"), { code: "room-invalid" });
-  if (!INTERVALS[interval]) throw Object.assign(new Error("同期間隔を選び直してください。"), { code: "interval-invalid" });
+  if (selected.length === 0) throw Object.assign(new Error("ルームを1つ以上選んでください。"), { code: "room-required" });
+  if (selected.some((id) => !/^\d+$/.test(id))) throw Object.assign(new Error("ルームIDの形式が不正です。"), { code: "room-invalid" });
+  if (!INTERVALS[interval]) throw Object.assign(new Error("自動取得の間隔を選び直してください。"), { code: "interval-invalid" });
   const scheduleEnabled = interval !== "manual";
   if (scheduleEnabled && automaticPushConsent !== true) {
-    throw Object.assign(new Error("対象room、頻度、保存内容、自動commit・pushへの同意が必要です。"), { code: "consent-required" });
+    throw Object.assign(new Error("対象ルーム、自動取得の間隔、保存内容、自動commit・pushへの同意が必要です。"), { code: "consent-required" });
   }
 
   const git = process.env.YASASHII_GIT_BIN || "git";
@@ -58,7 +58,7 @@ export async function applyChatworkConfig({ root, selectedRoomIds, interval, aut
       const names = JSON.parse(listed.stdout || "[]").map((item) => item.name);
       if (!names.includes("CHATWORK_API_TOKEN")) throw new Error("missing");
     } catch {
-      throw Object.assign(new Error("Repository Secret CHATWORK_API_TOKENを確認できないため、設定を変更していません。"), { code: "secret-missing" });
+      throw Object.assign(new Error("GitHub上の安全な保管場所（Repository Secret）に CHATWORK_API_TOKEN を確認できないため、設定を変更していません。"), { code: "secret-missing" });
     }
   }
 
@@ -85,7 +85,7 @@ export async function applyChatworkConfig({ root, selectedRoomIds, interval, aut
     writeAtomic(workflowPath, renderWorkflow(interval, scheduleEnabled));
     if (process.env.YASASHII_CHATWORK_SKIP_GIT === "1") return { status: "saved", config };
     await run(git, ["add", "--", ...relativePaths], root);
-    await run(git, ["commit", "-m", "Chatworkのroomと同期間隔を変更"], root);
+    await run(git, ["commit", "-m", "Chatworkのルームと自動取得の間隔を変更"], root);
     newHead = (await run(git, ["rev-parse", "HEAD"], root)).stdout.trim();
     await run(git, ["push"], root, 60_000);
     return { status: "pushed", config, commit: newHead };

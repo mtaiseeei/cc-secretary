@@ -30,14 +30,14 @@ function output(value) {
 
 function classify(error) {
   const text = `${error?.stdout || ""}\n${error?.stderr || ""}`.toLowerCase();
-  if (error?.killed || error?.code === "ETIMEDOUT" || /timed out|timeout/.test(text)) return { code: "timeout", message: "GitHub Actionsの完了待ちが時間切れになりました。workflowの状態を確認してから再実行してください。" };
+  if (error?.killed || error?.code === "ETIMEDOUT" || /timed out|timeout/.test(text)) return { code: "timeout", message: "自動取得処理（GitHub Actions）の完了待ちが時間切れになりました。状態を確認してから再実行してください。" };
   if (/resource not accessible|permission|forbidden|403/.test(text)) return { code: "github-permission", message: "GitHub Actionsを実行する権限を確認できません。repoのActions権限を確認してください。" };
   if (/non-fast-forward|not possible to fast-forward|divergent|conflict/.test(text)) return { code: "git-conflict", message: "remoteとlocalの変更が競合したため停止しました。前回の履歴はそのまま検索できます。" };
-  if (/失敗種別:\s*auth|api token/.test(text)) return { code: "auth", message: "Chatworkの認証に失敗しました。Repository Secretを確認してください。前回の履歴はそのまま検索できます。" };
+  if (/失敗種別:\s*auth|api token/.test(text)) return { code: "auth", message: "Chatworkの認証に失敗しました。GitHub上の安全な保管場所（Repository Secret）を確認してください。前回の履歴はそのまま検索できます。" };
   if (/失敗種別:\s*rate-limit|利用上限/.test(text)) return { code: "rate-limit", message: "Chatwork APIの利用上限に達しました。時間を置いて再実行してください。前回の履歴は保持しています。" };
   if (/失敗種別:\s*network|接続できません/.test(text)) return { code: "network", message: "Chatworkへ接続できませんでした。ネットワークを確認してください。前回の履歴は保持しています。" };
-  if (/失敗種別:.*(?:server|api|unknown)|一部または全部のroom/.test(text)) return { code: "partial-room", message: "一部または全部のroomを取得できませんでした。前回の履歴と取得位置は保持しています。" };
-  return { code: "workflow-failure", message: "GitHub Actionsが成功しませんでした。前回の履歴はそのまま検索できます。" };
+  if (/失敗種別:.*(?:server|api|unknown)|一部または全部のroom/.test(text)) return { code: "partial-room", message: "一部または全部のルームを取得できませんでした。前回の履歴と取得位置は保持しています。" };
+  return { code: "workflow-failure", message: "自動取得処理（GitHub Actions）が成功しませんでした。前回の履歴はそのまま検索できます。" };
 }
 
 async function run(binary, argv, runTimeout = 60_000) {
@@ -86,7 +86,7 @@ try {
     process.exit(0);
   }
   if (choice === "review") {
-    output({ status: "room-review-needed", message: "同期は開始していません。/chatwork のwizardで対象roomを確認してください。" });
+    output({ status: "room-review-needed", message: "同期は開始していません。/chatwork のwizardで対象ルームを確認してください。" });
     process.exit(0);
   }
   if (choice !== "sync") throw Object.assign(new Error("選択肢を確認できません。"), { code: "choice-invalid" });

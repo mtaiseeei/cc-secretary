@@ -881,7 +881,7 @@ done
 check "README の機能一覧が実スキル全12件と一致" "[ $skill_miss -eq 0 ]"
 # README が実在しないスキルを機能として掲げていない（記載スキル名が実ディレクトリに存在）
 check "README がChatwork対応と未対応チャットを区別" \
-  "grep -q 'Chatwork 接続・room選択・履歴検索' '$README' && grep -q 'LINE等の未対応チャット' '$README'"
+  "grep -q 'Chatwork 接続・ルーム選択・履歴検索' '$README' && grep -q 'LINE等の未対応チャット' '$README'"
 
 # --- 3: 公開 docs の分離 ---
 check "公開ガイド docs/guide/ が存在" "[ -f '$GUIDE/README.md' ]"

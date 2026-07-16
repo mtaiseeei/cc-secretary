@@ -3,7 +3,7 @@
 メールや予定表・ファイルなどを秘書が参照できるようにするには、**Claude の設定画面から公式コネクタ**でつなぎます。
 むずかしい開発者向けの下準備（管理画面での登録や鍵ファイルの用意）は要りません。ボタン操作だけで完結します。
 
-> つなぐときも、パスワードやトークンを秘書ディレクトリに保存することはありません。ChatworkだけはGitHub ActionsのRepository Secretへ登録し、値はrepoへ保存しません。
+> つなぐときも、パスワードやトークンを秘書ディレクトリに保存することはありません。ChatworkだけはGitHub上の安全な保管場所（Repository Secret）へ登録し、値はリポジトリへ保存しません。
 
 ## Google（Gmail・カレンダー・ドライブ）
 
@@ -23,12 +23,20 @@
 - **任意**です。使わない人は繋がなくても、他の機能は普通に使えます。
 - 流れ: 設定画面 → コネクタ → Notion（`mcp.notion.com`）を有効化 → ログイン・許可 → 「ページを1つ探す」で確認。
 
-## Chatwork（選択roomだけ）
+## Chatwork（選択ルームだけ）
 
 - 呼び方の例: `/chatwork`、「Chatworkにつなぎたい」「Chatworkで探して」。
-- 流れ: private repo確認 → `gh secret set CHATWORK_API_TOKEN` → room一覧取得 → wizardでroom・頻度・自動push同意を確認。
-- 初回は各roomの最新100件以内です。頻度の月間run数は概算で、GitHub Actionsの実課金分数ではありません。
-- 検索で見つからない場合は3択を示し、承認後だけworkflowを開始して再検索します。
+- 流れは次の4段階です。
+  1. [ChatworkでAPI Tokenを取得する](https://www.chatwork.com/service/packages/chatwork/subpackages/api/token.php)か、[API Tokenの発行方法を見る](https://help.chatwork.com/hc/ja/articles/115000172402-API%E3%83%88%E3%83%BC%E3%82%AF%E3%83%B3%E3%82%92%E7%99%BA%E8%A1%8C%E3%81%99%E3%82%8B)へ進みます。Tokenページを使えない場合は、実際にAPIを使うアカウントで[組織契約のAPI利用申請を見る](https://help.chatwork.com/hc/ja/articles/115000169501-API%E3%81%AE%E5%88%A9%E7%94%A8%E7%94%B3%E8%AB%8B%E3%82%92%E6%89%BF%E8%AA%8D-%E5%8D%B4%E4%B8%8B%E3%81%99%E3%82%8B)から申請し、承認後に戻ります。
+  2. wizardが現在のGitHubリポジトリから作った「GitHub上の安全な保管場所を開く」でGitHubのSecret追加画面を開きます。
+  3. 自分で `CHATWORK_API_TOKEN` として登録し、登録できたことを確認します。API Tokenは有効期限がなくChatwork機能へフルアクセスできるため、第三者には見せません。wizardや会話へToken値を貼る必要はありません。
+  4. 登録確認後だけ、自動取得処理（GitHub Actions）でルーム一覧を取得します。
+- ルームを選び、30分ごと／1時間ごと（おすすめ）／3時間ごと／6時間ごと／12時間ごと／手動のみから自動取得の間隔を決めます。30日換算の概算実行回数は、約1,440回／720回／240回／120回／60回／0回です。
+- 実行回数とGitHub Actionsの処理時間は別です。GitHub Freeの非公開リポジトリでは2026年7月時点で月2,000分の処理時間が含まれますが、2,000回ではありません。プラン、runner、1回の処理時間で実使用量が変わります。[GitHub Actionsの料金と利用枠を見る](https://docs.github.com/en/billing/concepts/product-billing/github-actions)で最新情報を確認してください。
+- 初回は各ルームの最新100件以内です。0件も正常です。確認画面の「取得結果をこのリポジトリへ自動保存します（Gitのcommit・push）」へ同意した後だけ自動実行を有効にします。
+- 検索で見つからない場合は3択を示し、承認後だけ自動取得処理（GitHub Actions）を開始して再検索します。
+
+> 公式情報は2026年7月確認。サービス側の変更により手順・料金・利用枠が変わる可能性があります。
 
 ## うまくいかないとき
 
@@ -39,4 +47,4 @@
 ## 大切な約束
 
 - 外部データは各サービスに置いたまま**都度参照**します。メール本文などの全文をローカルにコピー・保存しません。
-- Chatwork以外のチャット同期は対象外です。Chatworkも選択roomの読取だけで、投稿・編集・削除は行いません。
+- Chatwork以外のチャット同期は対象外です。Chatworkも選択ルームの読取だけで、投稿・編集・削除は行いません。

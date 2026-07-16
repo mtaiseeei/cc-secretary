@@ -16,5 +16,5 @@
 ## 大切な考え方（ひとことで）
 
 - メールや予定は各サービスに置いたまま参照し、全文を勝手にコピーしません。
-- 秘書・通常のproject・選択したChatwork履歴は、1つのprivate GitHub repoで管理します。
-- Chatworkの自動commit・pushは、対象room・頻度・保存内容を確認して同意した後だけです。
+- 秘書・通常のproject・選択したChatwork履歴は、1つの非公開のGitHubリポジトリで管理します。
+- Chatworkの自動commit・pushは、対象ルーム・自動取得の間隔・保存内容を確認して同意した後だけです。

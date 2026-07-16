@@ -13,7 +13,7 @@ PUBLISH="$PLUGIN/scripts/workspace-repo.mjs"
 
 check "chatwork skillが存在" test -f "$CHATWORK/SKILL.md"
 check_eval "chatwork skillのnameとdescriptionだけがfrontmatter" "awk '/^---$/{n++; next} n==1 && /^[A-Za-z_-]+:/{print \$1}' '$CHATWORK/SKILL.md' | tr -d ':' | paste -sd, - | grep -qx 'name,description'"
-check_eval "chatwork skillはRepository Secret登録を案内し値を受けない" "grep -q 'gh secret set CHATWORK_API_TOKEN' '$CHATWORK/SKILL.md' && grep -q 'Tokenの値を尋ねず' '$CHATWORK/SKILL.md'"
+check_eval "chatwork skillは安全な保管場所へのSecret登録を案内し値を受けない" "grep -q 'GitHub上の安全な保管場所' '$CHATWORK/SKILL.md' && grep -q 'CHATWORK_API_TOKEN' '$CHATWORK/SKILL.md' && grep -q 'Tokenの値を尋ねず' '$CHATWORK/SKILL.md'"
 check_eval "routerがchatworkを段階ロード" "grep -q 'skills/chatwork/SKILL.md' '$PLUGIN/skills/secretary/SKILL.md' && ! grep -q 'Chatwork / LINE 等.*対応していない' '$PLUGIN/skills/secretary/SKILL.md'"
 check "marketplace JSONは有効" node -e "JSON.parse(require('fs').readFileSync(process.argv[1]))" "$REPO/.claude-plugin/marketplace.json"
 check "plugin JSONは有効" node -e "JSON.parse(require('fs').readFileSync(process.argv[1]))" "$PLUGIN/.claude-plugin/plugin.json"
