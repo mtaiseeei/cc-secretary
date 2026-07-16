@@ -2,7 +2,7 @@
 
 <!-- オーケストレーターだけが書く進行状態の正本 -->
 
-- Current ID: sprint-014
+- Current ID: sprint-014-patch-001
 - Retry Count: 0
 - Next Planned: TBD
 
@@ -32,6 +32,7 @@
 | sprint-012-patch-001 | done | [contract](sprint-012-patch-001.md) | [progress](../progress/sprint-012-patch-001.md) | [feedback](../feedback/sprint-012-patch-001.md) |
 | sprint-013 | done | [contract](sprint-013.md) | [progress](../progress/sprint-013.md) | [feedback](../feedback/sprint-013.md) |
 | sprint-014 | done | [contract](sprint-014.md) | [progress](../progress/sprint-014.md) | [feedback](../feedback/sprint-014.md) |
+| sprint-014-patch-001 | done | [contract](sprint-014-patch-001.md) | [progress](../progress/sprint-014-patch-001.md) | [feedback](../feedback/sprint-014-patch-001.md) |
 
 ## Deferred / Superseded
 - sprint-007: superseded — 2026-07-15 製品方針転換により白紙化、`backup/sprint-007-010-plan` に退避
@@ -48,3 +49,6 @@
 - 2026-07-16: sprint-014 Retry 1再評価で表示修正・browser・専用回帰80件・全offline 298件・online 299件は合格。専用private test workspace、外部操作許可、test用token、非機密test roomが未準備のため `external-live-gate-unavailable` で不合格（Retry 2）。実装問題は残っておらず、live gateの準備待ち。
 - 2026-07-17: ユーザーの明示許可により専用private test workspaceを作成。Repository Secret経由の実room discovery、選択room 1件の初回同期100件、workflow成功、commit/push、pull後の伏せ字検索foundまで成立したため、Sprint 014 Retry 2の独立再評価へ引き渡し。
 - 2026-07-17: sprint-014 Retry 2は独立Evaluatorで39/40合格。専用34件・合成46件・offline 298件・online 299件が0 FAIL、実API live gateも伏せ字証跡で成立。評価後にschedule停止、room選択解除、Repository Secret削除を完了し、Sprint 008〜014の全計画を完了。
+- 2026-07-17: 完成版 `89376b2` までpublic mainへpush。ユーザーからChatwork設定wizardの非エンジニア向け文言、GitHub Actions処理時間、API Token取得・組織管理者申請・Secret直接導線の改善依頼を受け、`sprint-014-patch-001`（Type: micro）を開始。
+- 2026-07-17: sprint-014-patch-001 GeneratorがToken取得・組織管理者申請・動的Secret登録導線と非エンジニア向け表示を実装。全offline回帰298件・専用回帰100件・browser回帰が0 FAILのため独立Evaluatorへ引き渡し。
+- 2026-07-17: sprint-014-patch-001は独立Evaluatorで合格。受入基準12/12、専用回帰41件（内包合成59件）・全offline回帰298件が0 FAIL、desktop・mobile・200%相当と安全・accessibility gateも違反0件で完了。

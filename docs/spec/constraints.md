@@ -18,7 +18,7 @@
 
 1. Gmail / Calendar / Drive / Microsoft 365 / Notion等は公式リモートコネクタで都度参照し、同期層や `10_sources` 型の複製を作らない。**唯一の同期例外は、選択したChatwork roomを同じprivate repoへ保存する承認済みGitHub Actions**とする。
 2. コネクタ由来の本文を記憶やjournalへ複製しない。Chatwork本文は専用の履歴領域だけに保存し、取得件数・room・時刻等の同期状態もjournalではなくChatwork専用の状態記録に分ける。
-3. Chatwork API Tokenを含む資格情報、パスワード、APIキーを保存・コミットしない。Chatwork API Tokenの正本はGitHub Actions Repository Secretだけであり、repo本文、設定、ログ、エラー、fixture、スクリーンショットに値を出さない。
+3. Chatwork API Tokenを含む資格情報、パスワード、APIキーを保存・コミットしない。Chatwork API Tokenの正本はGitHub上の安全な保管場所（Repository Secret）だけであり、repo本文、設定、ログ、エラー、fixture、スクリーンショット、会話、wizardに値を出さない。Tokenは有効期限がなくChatwork機能へフルアクセスできる資格情報として扱い、第三者へ開示しない。
 4. ユーザーワークスペースはprivate GitHub repoでなければならない。public repoへの初回pushまたはChatwork保存を拒否し、privateからpublicへ変更されたことを検出した場合は同期を止める。
 5. private repoの共同編集者は保存されたChatwork本文を読める。wizardはroom選択確定前にこの影響を表示し、ユーザーは所属組織の情報管理方針に従う。
 6. 初回オンボーディングはrepo作成、初期commit、初回pushを完了条件とする。既存remoteがある場合は現在のrepoを使う確認を行い、Chatwork専用repoを黙って作らない。
@@ -92,10 +92,25 @@
 ## 8. Chatwork設定wizard
 
 1. wizardはloopbackだけで利用するローカル設定画面とし、外部公開サーバーや常設サービスにしない。
-2. 画面へAPI Token入力欄を作らない。Repository Secret登録は値を画面やrepoへ戻さない導線で案内する。
-3. 変更は確認画面まで副作用を出さず、確定後だけroom設定・同期間隔・scheduleへ一貫して反映する。キャンセル時は0変更。
-4. 30分／1時間／3時間／6時間／12時間／手動のみを選べ、既定推奨は1時間。scheduleは17分起点とし、選択値と実際の動作を一致させる。
-5. 30日換算run数1440／720／240／120／60／0は概算として表示し、実課金分数ではないこと、GitHub Free privateの2,000分は変更されうる参考値であることを併記する。
-6. wizardは白／薄灰、Carbon Dark／Graphite／Pewter、primary CTAだけElectric Blue `#3E6AE1`を用いる。gradient・shadow・装飾写真・Tesla商標／wordmark・ライセンス不明フォントを使わない。
-7. UIは4px radius、8px spacing、400/500 weight、14px中心、headline最大40px、1 step 1 primary message、CTA最大2を守る。hoverは0.33秒のcolor／border変化だけで、scale／translateを使わない。
-8. 768px未満は1 column・CTA縦積みとし、desktopは中央寄せの広い余白を持つ。keyboard操作、visible focus、ラベル、エラー関連付け、十分なcontrastを必須にする。
+2. 画面へAPI Token入力欄を作らず、会話にもToken値を貼らせない。接続順は、(1) ChatworkでTokenを取得または組織管理者へ利用申請、(2) 現在のGitHub repoのSecret追加画面を開く、(3) 名前 `CHATWORK_API_TOKEN` で登録、(4) 登録確認後にルーム一覧取得、とする。
+3. Chatwork公式のTokenページ、発行ヘルプ、組織契約のAPI利用申請ヘルプへ直接案内する。パーソナルプランを除き組織管理者への申請が必要であり、実際にAPIを利用するアカウントで申請する。承認前はルーム一覧取得へ進めない。Tokenページが利用できない状態では「組織管理者へAPI利用申請→承認後に戻る」を示し、設定途中の選択を保持する。
+4. Secret追加画面は `https://github.com/<owner>/<repo>/settings/secrets/actions/new` を現在のrepo情報から組み立て、CTAを「GitHub上の安全な保管場所を開く」とする。固定owner／repo pathを使わず、外部リンクは新しいタブで開き、行き先と目的が分かる日本語ラベルを付ける。
+5. 変更は確認画面まで副作用を出さず、確定後だけルーム設定・自動取得の間隔・scheduleへ一貫して反映する。キャンセル時は0変更。
+6. 「30分ごと」「1時間ごと（おすすめ）」「3時間ごと」「6時間ごと」「12時間ごと」「手動のみ」を選べる。scheduleは17分起点とし、選択値と実際の動作を一致させる。
+7. 30日換算の概算実行回数1,440／720／240／120／60／0回を表示する。実行回数と処理時間を区別し、GitHub Freeの非公開リポジトリに含まれる月2,000分は2,000回ではなくGitHub Actionsの処理時間枠であることを明記する。2026年7月確認の参考情報であり、プランや1回の処理時間で実使用量が変わり、料金・枠は変更されうることと、GitHub公式billingページへのリンクを併記する。
+8. ユーザー向け表示では `room` を原則「ルーム」、識別子が必要な箇所を「ルームID」、`頻度` を「自動取得の間隔」、`runs` を「実行回数」とする。`schedule` は「自動実行」、`workflow` は「自動取得処理（GitHub Actions）」、`private repo` は「非公開のGitHubリポジトリ」、`Repository Secret` は初出で「GitHub上の安全な保管場所（Repository Secret）」とする。内部コード、設定key、CLI、正式なAPI名は対象外。
+9. GitHub Actionsの初出には「決めた間隔で自動取得を動かすGitHubの仕組み」と短く補足する。`同期` の初出は「最新メッセージの取り込み（同期）」とし、commit・pushは正式名称を保ったまま「取得結果をこのリポジトリへ自動保存します（Gitのcommit・push）」と目的を先に示す。
+10. wizard本文は決定に必要な情報へ絞り、料金・実行時間などの補足は「料金と実行時間について」のdetailsまたは短いhelpへ置く。1 step 1 primary message、CTA最大2、既存デザイン言語を維持する。
+11. wizardは白／薄灰、Carbon Dark／Graphite／Pewter、primary CTAだけElectric Blue `#3E6AE1`を用いる。gradient・shadow・装飾写真・Tesla商標／wordmark・ライセンス不明フォントを使わない。
+12. UIは4px radius、8px spacing、400/500 weight、14px中心、headline最大40pxを守る。hoverは0.33秒のcolor／border変化だけで、scale／translateを使わない。
+13. 768px未満は1 column・CTA縦積みとし、desktopは中央寄せの広い余白を持つ。keyboard操作、visible focus、可視ラベル、accessible name、エラー関連付け、十分なcontrast、200% zoomでの非欠落を必須にする。日本語化で折返しや横overflowを増やさない。
+
+### 公式情報の確認基準（2026年7月）
+
+- Chatwork API Token: `https://www.chatwork.com/service/packages/chatwork/subpackages/api/token.php`
+- Chatwork公式発行ヘルプ: `https://help.chatwork.com/hc/ja/articles/115000172402-API%E3%83%88%E3%83%BC%E3%82%AF%E3%83%B3%E3%82%92%E7%99%BA%E8%A1%8C%E3%81%99%E3%82%8B`
+- Chatwork組織契約の申請・承認ヘルプ: `https://help.chatwork.com/hc/ja/articles/115000169501-API%E3%81%AE%E5%88%A9%E7%94%A8%E7%94%B3%E8%AB%8B%E3%82%92%E6%89%BF%E8%AA%8D-%E5%8D%B4%E4%B8%8B%E3%81%99%E3%82%8B`
+- Chatwork API Tokenの取扱い: `https://developer.chatwork.com/docs/endpoints`
+- GitHub Actions billing: `https://docs.github.com/en/billing/concepts/product-billing/github-actions`
+
+公開ガイドには「公式情報は2026年7月確認。サービス側の変更により手順・料金・利用枠が変わる可能性がある」と明記する。
