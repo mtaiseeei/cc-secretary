@@ -1,33 +1,35 @@
 ---
 createdAt: 2026-07-08 00:30
+updatedAt: 2026-07-16
 tags:
   - Claude
   - AI
   - 開発
   - ドキュメント
-status: draft
-related:
-  - "[[2026-07-02_Google_Classroom運用]]"
+status: approved
 ---
 
-# スーパー秘書プラグイン設計方針（cc-company × my-vault 融合）
+# やさしい秘書プラグイン設計方針（yasashii-secretary）
 
 ゆるAIコーディング塾 第2期以降の目玉コンテンツとして配布する、非エンジニア向けAI秘書プラグインの設計方針。
-`workspace/inbox/company`（bootcamp-company / cc-companyフォーク）の分析と、my-vault の運用実績をもとに、村山さんへのヒアリングで確定した内容を正本化する。
 
-## 確定した意思決定（2026-07-07〜08 ヒアリング）
+> **2026-07-15 方針転換の扱い**
+> `docs/proposal-2026-07-15-realignment.md` が本作業の唯一の引き継ぎ正本である。
+> 本文はその承認事項を恒久設計へ反映したもの。実装・評価の詳細正本は `docs/spec/` と sprint 契約に置く。
 
-- 配布対象は **ゆるAIコーディング塾の受講者**（非エンジニア30〜60代、標準環境はClaudeデスクトップアプリ、第1回でGit/GitHub習得済み）
-- 提供時期は **第2期以降の目玉コンテンツ**（第1期 8/3 終了後に開発期間あり）
-- 外部データは **公式リモートコネクタ優先**。第一級サポートは **Google系（Gmail/Calendar/Drive）とMicrosoft系** の両対応
-- **10_sources型のローカル同期層は持たない**（GitHub Actions非依存）。ただし記憶と成果物はローカルに置く
-- 成果物（企画書・調査まとめ等）の**正本はローカル**
-- **Gitは必須**。秘書が節目ごとに**ローカル自動コミット**（pushはしない＝プライバシー懸念なし）
-- メタファーは **「秘書＋道具箱」**。cc-companyの部署制・キーワード振り分け表・部署間inbox通知は採用しない
-- 開発機能は **agentic-harnessを複製し、非エンジニア向けに平易化したフォークを同梱**（現行 `workspace/agentic-harness` は変更しない）
-- 公開範囲は **public + MIT**（cc-companyのクレジット表記を継承）
-- 秘書の作業フォルダは **見えるフォルダ・英語名**（my-vault風）
-- プラグイン名は **`cc-secretary`** に決定（2026-07-08。「開発もできるスーパー秘書」コンセプト）
+## 確定した意思決定
+
+- 配布対象は、技術に多少関心がある非エンジニア（ゆるAIコーディング塾の30〜60代受講者）。標準環境は Claude デスクトップアプリ／Claude Code。
+- 製品名・local repo・remote repo・プラグイン名は **`yasashii-secretary`**。名前とREADMEの両方で非エンジニア向けであることを強調する。
+- 外部データは Google / Microsoft 等の公式リモートコネクタで都度参照し、ローカル同期層は持たない。
+- 記憶と成果物の正本はローカル `secretary/`。節目で自動コミットし、pushはユーザーの明示指示時だけ。
+- メタファーは「秘書＋道具箱」。部署制・キーワード振り分け・部署間inbox通知は採用しない。
+- やさしいハーネスは**同梱しない**。別リポジトリ **`yasashii-harness`** を正本とし、`yasashii-secretary` はインストール案内と接続導線だけを持つ。
+- `mtaiseeei/yasashii-harness` は GitHub fork ではない**独立public downstream repo**とし、`fork=false`、fb9c303を初期基点にする。
+- downstreamの書込先は `origin=mtaiseeei/yasashii-harness`、読取専用の上流は `upstream=mtaiseeei/agentic-harness` とする。親repoは移管・改名・変更しない。
+- `~/workspace/agentic-harness` は**全面操作禁止**。編集、checkout、commit、branch、remote変更、生成物作成、複製元利用、当該checkoutを対象にしたコマンド実行を行わない。追随元はGitHub上の `upstream` remoteだけとする。
+- public + MIT、Shin-sibainu/cc-company の単段クレジットを継承する。
+- 一般技術用語はそのまま使い、過度な平易化や幼稚なメタファーは避ける。
 
 ## アーキテクチャの基本原則
 
@@ -35,91 +37,155 @@ related:
 
 | レイヤー | 置き場 | アクセス方法 |
 |---|---|---|
-| 外部データ（メール・予定・ファイル・タスク） | 各SaaSのまま | 公式リモートコネクタで都度参照。同期しない |
-| 秘書の記憶（決定・好み・進行中案件） | ローカル `secretary/memory/` | 直接読み書き＋自動コミット |
-| 成果物（文書の正本） | ローカル `secretary/docs/` | 直接読み書き＋自動コミット |
+| 外部データ | 各SaaS | 公式コネクタで都度参照。同期しない |
+| 秘書の記憶 | `secretary/memory/` | 保護されたシームで読み書きし、自動コミット |
+| 成果物 | `secretary/docs/` | ローカル正本として保存し、自動コミット |
+| 開発ハーネス | 別repo `yasashii-harness` | buildから存在確認・案内・接続 |
 
-my-vault の GitHub Actions が担っていた「検索可能性の事前確保」を、コネクタのAPI検索に置き換える。
-my-vault から持ち込むのは**インフラではなく規律**（スコープ表・根拠ルール・出力規約・スキル分割）。
-cc-company から持ち込むのは**導線**（3コマンドインストール・オンボーディング・再起動しおり・記憶保護）。
+my-vault から持ち込むのはインフラではなく、スコープ・根拠・出力・記憶保護・スキル分割の規律。
+cc-company からは3コマンド導入、オンボーディング、再起動しおり、記憶保護を継承する。
 
-## 生成されるワークスペース構造
+## 製品テーマ
 
-```
-secretary/                  ← 秘書の家（初回セットアップで git init）
-├── AGENTS.md               ← 指示の正本（スコープ・根拠・出力規約・記憶保護）
-├── CLAUDE.md               ← AGENTS.md へのポインタのみ
-├── inbox/                  ← 走り書き・下書き・クイックキャプチャ
-├── docs/                   ← 成果物の正本（YYYY/MM/YYYY-MM-DD_<title>.md）
-├── projects/               ← 進行中案件ごとのフォルダ（軽量。案件指示はAGENTS.md）
+1. **G1【最優先】**: 相談・活動・決定が普段の対話と定義済みシームから三層で蓄積され、`timeline` で時系列に見える。
+2. **G2【次点】**: `settings` と `preferences.md` v2 により、役割・言葉遣い・詳しさ・確認方法を途中でも変えられる。
+3. **G3**: `yasashii-harness` を別repo正本として上流へ追随し、overlayと独自回帰で健全性を守る。
+4. **G4**: やさしさはユーザーに見える面に適用し、規律・3 Agent分離・評価閾値・回帰ゼロ許容は緩めない。
+
+## 生成されるワークスペース
+
+```text
+secretary/
+├── AGENTS.md
+├── CLAUDE.md
+├── inbox/
+│   └── todo.md
+├── docs/
+│   └── YYYY/MM/
+├── projects/
 └── memory/
-    ├── MEMORY.md           ← 記憶の目次（1行索引。cc-companyから継承）
-    ├── decisions/          ← 決定ログ（YYYY-MM-DD-decisions.md）
-    └── preferences.md      ← オーナーの好み・口調・環境情報
+    ├── MEMORY.md
+    ├── preferences.md
+    ├── decisions/
+    ├── journal/
+    ├── topics/
+    └── _resume.md
 ```
 
-- `10_sources/` に相当する層は存在しない。外部データの根拠は「サービス名＋URL/ID＋日付」で引用する
-- cc-companyの `experience/case-NNN` 必須生成・`patterns/` 自動統合は廃止。振り返り・パターン化は「振り返りして」で起動するオンデマンドスキルに変更
+- `MEMORY.md` は200行以内の索引。journalは月単位に畳み、topicsを索引対象にする。
+- 決定、活動、相談文脈を混ぜない。journalは追記専用、decisionsは純追加で変更履歴を残す。
+- `_resume.md` は作業の中断点、journalの `next` は翌日への申し送り。
+- 詳細は `docs/spec/domain.md` を正本とする。
 
-## 生成される AGENTS.md に入れる規律（my-vaultからの移植）
+## 生成される AGENTS.md の6規律
 
-1. **スコープ表**: 秘書は `secretary/` 配下だけ読み書きする。外は明示指示時のみ。資格情報は常時禁止
-2. **根拠ルール**: 要約・判断にはコネクタ由来の根拠（サービス名・リンク・日付）を明示。原文にない事実を補完しない。矛盾は両方提示
-3. **出力規約**: `YYYY-MM-DD_<title>.md`、frontmatter必須（createdAt/tags）、1ファイル1トピック、見出しに固有名詞
-4. **記憶保護**（cc-company継承）: 空内容で上書きしない。削除前に警告。MEMORY.md索引を常に最新に
-5. **自動コミット**: 作業の節目ごとに日本語メッセージでローカルcommit。pushはユーザーの明示指示時のみ
-6. **報告の型**: 3行以内・専門用語は言い換え併記・次に何が起きるかを一言
+1. **スコープ**: `secretary/` 配下だけを既定の読み書き対象にする。資格情報は常時禁止。
+2. **根拠**: 外部データはサービス名・URL/ID・日付を示し、原文にない事実を補完しない。
+3. **出力**: `YYYY-MM-DD_<title>.md`、frontmatter、1ファイル1トピック、固有名詞見出し。
+4. **記憶保護**: 空上書き禁止、削除2段階、索引追従、封じ込め。
+5. **自動コミット**: 節目で日本語1行のローカルcommit。pushは明示時だけ。
+6. **報告**: 既定は3行。preferencesで「くわしく」が明示された場合だけ3行＋補足1つ。3行目は可能なら次の一手を1つ提案する。
 
-## プラグイン構成（配布リポジトリ）
+## 配布リポジトリの構成
 
-```
-<repo>/                                  ← public / MIT
+```text
+<yasashii-secretary>/
 ├── .claude-plugin/marketplace.json
-├── plugins/cc-secretary/
+├── plugins/yasashii-secretary/
 │   ├── .claude-plugin/plugin.json
 │   ├── skills/
-│   │   ├── secretary/SKILL.md           ← 薄いルーター（起動・モード判定のみ）
-│   │   ├── onboarding/                  ← 初回3問＋ワークスペース生成＋git init
-│   │   ├── setup-google/                ← コネクタ接続ガイド＋接続確認テスト
+│   │   ├── secretary/
+│   │   ├── onboarding/
+│   │   ├── memory-care/
+│   │   ├── daily/             # morning / daily / evening の3モードを統合
+│   │   ├── settings/
+│   │   ├── weekly/
+│   │   ├── setup-google/
 │   │   ├── setup-microsoft/
-│   │   ├── memory-care/                 ← 記憶の保護・復元・オンデマンド振り返り
-│   │   ├── daily/                       ← 今日やること・TODO・予定の突き合わせ
-│   │   └── build/                       ← 開発依頼の入口（やさしいハーネスへ接続）
-│   ├── agents/                          ← planner/generator/evaluator のやさしい版
-│   └── rules/plain-language.md          ← 報告3行型・日常語彙のルールファイル
-├── templates/                           ← ワークスペース雛形（AGENTS.md等）
-└── docs/                                ← 公開向け使い方ドキュメント
+│   │   └── build/
+│   ├── scripts/
+│   ├── templates/
+│   └── rules/plain-language.md
+├── docs/
+└── README.md
 ```
 
-- cc-companyの936行単一SKILL.mdは分割し、段階ロードにする（SKILL.mdは薄く、必要時に個別スキル）
-- インストール導線は cc-company と同じ3コマンド（marketplace add → install → /secretary）を維持
+`plugins/*/harness/`、`plugins/*/agents/`、ハーネスのsource baselineは置かない。
+SKILLは薄いルーターと段階ロードを維持し、配布されない開発docsへのデッドリンクを作らない。
 
-## やさしいハーネス（agentic-harnessの平易化フォーク）
+## やさしいハーネスの別リポジトリ設計
 
-`workspace/agentic-harness` を複製して同梱。**元は変更しない**。平易化の3点：
+`yasashii-harness` が所有するもの:
 
-- **Plannerのヒアリング日常語化**: 質問と選択肢を日常語＋具体例つきに（「認証方式は？」→「見る人を制限しますか？ 誰でも見られる／合言葉を知っている人だけ」）
-- **報告の型を固定**: 各エージェントの報告を「3行以内・専門用語は言い換え併記・次に何が起きるかを一言」にするルールファイルを全エージェントから参照
-- **進行の見せ方**: 「いま計画→実装→検証のどこにいるか」を毎回宣言。第1回座学の実況語彙（計画・道具・確認・結果）と接続
+- Planner / Generator / Evaluator のやさしい版 agents 3種。
+- `gentle-overlay/` の追加セクション断片とアンカー。
+- `gentle-overlay/metadata-overrides.json` の配布識別metadata overlay兼allowlist。
+- 上流merge後のsync健全性検査と独自回帰。
+- 上流との差分、未分類の追加・削除ファイル、アンカー不在を検出する仕組み。
 
-裏側の docs/spec・sprint契約などは技術的文脈のまま維持（AIの理解しやすさを優先）。
+remote topology（接続関係）の正本:
 
-## コネクタ設計
+```text
+origin   https://github.com/mtaiseeei/yasashii-harness.git   # downstreamの書込先
+upstream https://github.com/mtaiseeei/agentic-harness.git    # 上流同期用・読取専用
+initial baseline: fb9c303
+GitHub API: full_name=mtaiseeei/yasashii-harness, private=false, fork=false
+```
 
-- 第一級: claude.ai公式コネクタ（Gmail / Google Calendar / Google Drive / Microsoft 365）。デスクトップアプリの設定画面からOAuth自動 → cc-companyのGoogle Cloud Console手作業がほぼ消える
-- 任意: Notion（mcp.notion.com、OAuth自動）
-- 見送り（初期）: Chatwork・LINE等の国内チャット（公式リモートMCPがなく自作ラッパーが必要）
-- cc-companyから継承する運用知: 再起動しおり（`_resume.md`）プロトコル、「実エラーで原因確定してから案内」の診断手順
+本文・スキル・agents・runtimeロジックのやさしさ差分は、見出しに `yasashii` を含む追加セクションだけ。上流由来の実装行を書換・削除しない。
+機械的例外は配布識別metadataだけとする。marketplaceは `name=yasashii-harness`、`repository=mtaiseeei/yasashii-harness`、pluginは `name=harness` を維持し、`source=./plugins/harness`、plugin manifestの `repository` / `homepage` は `https://github.com/mtaiseeei/yasashii-harness`、必要なCodex marketplace識別子は同じ配布元へ揃える。これらは `gentle-overlay/metadata-overrides.json` に対象ファイル・field・期待値を宣言する。
+上流HEADの前進は巻き取り候補の警告であり、それだけで回帰失敗にしない。
+取り込み済み上流＋overlayの合成結果と一致しない場合、metadata期待値が一致しない場合、allowlist外の上流行変更、または未分類ファイルがある場合は失敗にする。
 
-## 開発フェーズ案
+`yasashii-secretary` の build は、`yasashii-harness` が導入済みなら接続し、無ければ `/plugin install harness@yasashii-harness` を含む、非エンジニアが実行できる3コマンドを案内する。
+regression section 12 は、案内と同梱不在のoffline構造検査に加え、GitHub APIでrepo実在、public、`fork=false`、owner/name、remote manifestのmarketplace `name` / `repository`、plugin `name` / `source` / `repository` / `homepage` と3コマンドの整合を検査する。ネットワーク不可はremote健全性のPASSにせず、offline構造検査の結果とEvaluatorのonline証跡を分けて報告する。
 
-1. **Phase 1（秘書コア）**: onboarding / memory / daily / 出力規約 / 自動コミット / setup-google
-2. **Phase 2（接続拡張）**: setup-microsoft / Notion / 接続診断
-3. **Phase 3（開発機能）**: agentic-harness平易化フォークの統合・build スキル
-4. **Phase 4（公開整備）**: README・docs・クレジット表記・第2期カリキュラムへの組み込み
+GitHubのfork badge、parent relation、同じforkから上流へPRする導線は非ゴール。上流変更は本作業のスコープ外であり、将来あらためて明示承認された場合だけ `agentic-harness` 側の別branch / PR手順に分離する。
+
+## パーソナライズの設計
+
+- 初回は5問以内。仕事・役割と説明の詳しさを含めるが、口調は聞かず標準で始める。
+- 途中変更は `settings` からいつでも再入可能。適用前に例文、適用後に記憶内容を宣言する。
+- `preferences.md` は「基本／言葉遣い／口調のお手本／秘書のメモ」のv2構造。
+- 規律と既定値を共通の第1部、preferencesによる明示上書きを第2部として分ける。
+- 濃いキャラクタープリセットは同梱しない。
+
+## やさしさの実装面
+
+| 要素 | 主な置き場 |
+|---|---|
+| 言葉遣い | `rules/plain-language.md` の共通部＋preferences部 |
+| 進行表示 | `yasashii-harness` のoverlay |
+| 報告 | 既定3行＋明示時だけ補足、agents overlay |
+| 内部用語の補足 | build（正式名称を隠さず役割を短く併記） |
+| 先回り提案 | 生成AGENTS.mdと各スキル末尾 |
+
+## コネクタ
+
+- 第一級: Gmail / Google Calendar / Google Drive / Microsoft 365 の公式コネクタ。
+- 任意: Notion。
+- 初期見送り: 公式リモートMCPがない国内チャット。
+- 接続診断は実エラーを確認してから原因と対処を日本語で示す。
+
+## 開発順序
+
+1. sprint-008: 改名、別repo分離、参照導線、回帰section 12の復旧。
+2. sprint-009: G1配管。journal、シーム副作用、topics、TODO、reindex、固定時刻。
+3. sprint-010: G1体験。timeline、節目プロトコル、朝夕・daily統合。
+4. sprint-011: G2。先にconstraints/rubric/憲章テンプレを「既定値＋明示上書き」へ揃えてからsettingsを実装。
+5. sprint-012: 週次ふりかえりと索引退避。dashboardとmigrationは承認済み条件に従い明示判断する。
+
+## スコープ外
+
+- restoreシーム「昨日の状態に戻して」。Git履歴が守られる事実だけを案内する。
+- dashboardをG1の必須条件にすること。
+- hooksの同梱。
+- `~/workspace/agentic-harness` への一切の操作。
+- GitHubのfork badge／parent relationと、`yasashii-harness` から直接上流へPRする導線。
 
 ## 参照
 
-- 分析対象: `~/workspace/inbox/company`（inoshinichi/bootcamp-company、Shin-sibainu/cc-company のフォーク、MIT）
-- 複製元ハーネス: `~/workspace/agentic-harness`
-- 講座前提: [[PROJECT]]（vault/02_pj/open/ゆるAIコーディング塾/）、標準環境はD-034（Claudeデスクトップアプリ）
+- 方針転換の唯一の引き継ぎ正本: `docs/proposal-2026-07-15-realignment.md`
+- 実装仕様: `docs/spec/`
+- 白紙化前の旧実装: `backup/sprint-007-010-plan`（そのまま復元せずjournal統合形に書き直す）
+- 全面操作禁止のローカルcheckout: `~/workspace/agentic-harness`

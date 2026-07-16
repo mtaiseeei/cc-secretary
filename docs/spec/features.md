@@ -1,87 +1,80 @@
 # Features
 
-機能IDと「ユーザーから見た振る舞い」。実装詳細ではなく**外から見える結果**で書く。
-`P1`〜`P4` は DESIGN.md の開発フェーズ、`Fnn` は機能ID。スプリント割り当ては `docs/sprints/` を参照。
+機能IDと、ユーザーから見える振る舞いの正本。F01〜F16 は受け入れ済みの既存機能、F17〜F22 は 2026-07-15 方針転換で追加・再定義した機能。
 
-## 配布・インストール（P1 基盤）
+## 既存機能（F01〜F16）
 
-### F01 マーケットプレイス配布
-- リポジトリ直下に `.claude-plugin/marketplace.json` があり、`cc-secretary` プラグインを配布できる。
-- public / MIT。元作者 **Shin-sibainu/cc-company（MIT）** への**クレジットを継承**する（`forkedFrom` で明記）。中間フォーク inoshinichi/bootcamp-company は必須クレジットに含めない。
+| ID | 機能 | 外から見える結果 |
+|---|---|---|
+| F01 | マーケットプレイス配布 | `yasashii-secretary` を public / MIT で配布し、Shin-sibainu/cc-company の単段クレジットを維持する |
+| F02 | 3コマンド導入 | marketplace add → install → `/secretary` で導入できる |
+| F03 | 薄いルーター | 自然な言い回しを必要なスキルへ段階ロードし、全機能を一度に読まない |
+| F04 | オンボーディング | 5問以内で `secretary/` を安全に生成し、`git init` と初回ローカルコミットを行う |
+| F05 | 記憶ケア | 空上書き禁止、削除2段階、索引追従、`_resume.md` による再開を提供する |
+| F06 | daily | 外部予定・タスクとローカルTODOを根拠つきで突き合わせる |
+| F07 | 自動コミット | 節目で何をしたか分かる日本語メッセージをローカルcommitし、pushしない |
+| F08 | 成果物規約 | `docs/YYYY/MM/YYYY-MM-DD_<title>.md` に frontmatter つきで保存する |
+| F09 | Google 接続 | Gmail / Calendar / Drive の公式コネクタ接続と診断を案内する |
+| F10 | 文言ルール | 一般技術用語を保ち、馴染みの薄い語だけ短く補足し、3行報告と進行表示を守る |
+| F11 | Microsoft 接続 | Microsoft 365 公式コネクタの接続と確認を案内する |
+| F12 | Notion 接続 | 任意で Notion の公式接続を案内する |
+| F13 | 接続診断 | 実エラーを根拠に原因と対処を伝える |
+| F14 | やさしいハーネス提供 | **再定義**: 同梱せず、別repo `yasashii-harness` を正本として提供する |
+| F15 | build | `yasashii-harness` の有無を確認し、無ければ3コマンド案内、あれば開発ループへ接続する |
+| F16 | 公開ドキュメント | README 前半で非エンジニアが導入でき、後半で技術者が設計とライセンスを確認できる |
 
-### F02 3コマンドインストール
-- ユーザーは cc-company と同じ3コマンド（marketplace add → install → `/secretary`）で導入できる。
-- 各コマンドの前に「今から何をするか」が日常語で1行示される。
+## 新機能（F17〜F22）
 
-### F03 薄いルーター `/secretary`
-- `/secretary`（`skills/secretary/SKILL.md`）は薄いルーターとして働き、ユーザーの言い回しからモード（オンボーディング／今日やること／記憶ケア／接続設定／開発）を判定し、必要な機能スキルだけを段階ロードする。
-- 起動時に全機能を読み込まない。
+### F17 journal — 活動記録
 
-## 秘書コア（P1）
+- `memory-tools.sh journal-add <sec> <did|decided|next|note> "<本文>"` で日次ログへ末尾追記できる。共通の追記境界は `scripts/lib/journal.sh` の `journal_append` とする。
+- 成果物保存、TODO追加・完了・持ち越し、決定記録、topic追加、設定変更を行う定義済みシームは、成功した事実を journal へ自動追記する。
+- 空本文を拒否し、既存行の書換・削除シームを提供しない。
+- `_resume.md` は作業の中断点、journal の `next` は翌日への申し送りとして使い分ける。
 
-### F04 オンボーディング
-- 初回 `/secretary` は、やさしい数問（呼び方・主に使うサービス・任せたいこと 程度）だけを尋ねる。
-- 回答に基づき `secretary/` ワークスペース（`AGENTS.md` / `CLAUDE.md` / `inbox/` / `docs/` / `projects/` / `memory/{MEMORY.md,decisions/,preferences.md}`）を生成する（構造は `docs/spec/domain.md`）。
-- `git init` して最初のコミットを作る。完了時に「秘書ディレクトリ（`secretary/`）を作成しました」と場所を具体的に伝える。
-- 生成される `AGENTS.md` には `docs/spec/constraints.md` の6規律（スコープ・根拠・出力規約・記憶保護・自動コミット・報告の型）が入る。
+### F18 timeline — 時系列表示と検索
 
-### F05 記憶ケア（memory-care）
-- 記憶（決定・好み・進行中案件）を `secretary/memory/` に蓄積する。
-- **保護**: 空内容で上書きしない。削除前に「何を消すか」を日常語で警告し確認を取る。`MEMORY.md` 索引を常に最新に保つ。
-- **再起動しおり**: `_resume.md` プロトコルで、中断後に文脈を復元して続けられる。
-- **オンデマンド振り返り**: 「振り返りして」で進行中案件・決定を棚卸しし記憶を整理する（自動 `case-NNN` 生成はしない）。
+- `memory-tools.sh timeline <sec> [--from/--to] [--type decisions|journal|all] [--grep <キーワード>]` で決定と活動を逆時系列の Markdown に整形する。
+- 同一入力から同一出力を返し、LLMの要約に依存しない。
+- 「先週なにしてた」「今日やったこと」「いつ決めた」「7月に決まったこと」を期間・種類・キーワードに対応づける。
+- 出力を保存してと言われた場合は既存の成果物保存規約に従う。
 
-### F06 今日やること（daily）
-- 接続済みコネクタから予定・タスクを参照し、ローカルの TODO と突き合わせて、その日の要点を提示する。
-- 各項目に根拠（サービス名・リンク・日付）を付す。外部データ本文はローカル保存しない。
-- 報告は3行型（やったこと／結果／次に何が起きるか）。
+### F19 節目プロトコル — 決定と相談文脈の記録
 
-### F07 自動コミット
-- 作業の節目（オンボーディング完了・成果物作成・記憶更新・案件の区切り）で `secretary/` 内をローカル commit（日本語メッセージ）。
-- **push はしない**（ユーザーの明示指示時のみ）。
+- 決定の合図を会話中に検出し、原文のまま1行確認して `remember-decision` へ渡す。既定は都度、設定により締めのまとめ確認へ切り替えられる。
+- 会話の締めで、その日の `decided` が0件なら会話を読み返し、拾い漏れを確認する。
+- 結論に至らない相談が一区切りしたら、要点を案件メモに残す旨を1行確認して `topic-add` へ渡す。
+- topicは `memory/topics/` に保存し、会話全文や逐語ログは残さない。
 
-### F08 成果物の出力規約
-- 成果物は `secretary/docs/YYYY/MM/YYYY-MM-DD_<title>.md`、frontmatter（`createdAt` / `tags`）必須、1ファイル1トピック、見出しに固有名詞。
+### F20 settings — パーソナライズ
 
-### F09 Google コネクタ接続ガイド（setup-google）
-- Gmail / Google Calendar / Google Drive を、手作業の Google Cloud Console 設定なしに、公式コネクタ（設定画面の OAuth）で接続する手順を案内する。
-- 接続確認テストを行い、英語エラーは「何が起きて・どうすれば直るか」に言い換えて示す（「実エラーで原因確定してから案内」）。
+- 初回と途中変更を同じ `settings` で扱う。初回は既存項目に「仕事・役割」「説明の詳しさ」を加え5問以内、口調は聞かず標準で開始する。
+- 「もっとフランクに」「専門用語そのままで」「呼び方を変えて」を受け、変更前に例文を見せて確認し、反映後に覚えた内容を宣言する。
+- `memory-tools.sh pref-set` は指定した構造化項目だけを更新し、`memory-tools.sh pref-note-add` は秘書のメモへ追記する。全文の read-modify-write を要求しない。
+- 自発的に秘書のメモへ追加するときも1行確認する。
+- 役割は保存するだけでなく、提案・例示・用語補足の題材へ反映する。
 
-### F10 非エンジニア文言ルール
-- `rules/plain-language.md` に「報告3行型・日常語彙・進行の見せ方（計画→道具→確認→結果）・英語エラー翻訳」を定義し、全スキル/エージェントから参照する。
+### F21 週次ふりかえり
 
-## 接続拡張（P2）
+- 毎回、対象週の日次 journal 原本から振り返りを作り、要約の要約をしない。
+- 決定・活動・翌週への申し送りを区別し、矛盾の統合や古い月の退避はユーザー確認後に行う。
+- 外部データを使う場合は出典を行内に明記し、本文を複製しない。
 
-### F11 Microsoft コネクタ接続ガイド（setup-microsoft）
-- Microsoft 365 を公式コネクタで接続する手順＋接続確認テスト。
+### F22 yasashii-harness の上流追随
 
-### F12 Notion 接続（任意）
-- `mcp.notion.com`（OAuth 自動）での Notion 接続を任意機能として案内する。
+- 本機能の実装・正本は別repo `yasashii-harness` に置く。`yasashii-secretary` は参照導線だけを持つ。
+- `mtaiseeei/yasashii-harness` はpublic・`fork=false`の独立downstreamで、`origin` を自身、`upstream` を `mtaiseeei/agentic-harness` に向け、fb9c303を初期基点とする。
+- 配布識別子はmarketplace `yasashii-harness` とplugin `harness` を分け、`harness@yasashii-harness` で導入する。remote manifestのrepository / homepage / sourceと必要なCodex marketplace識別子をdownstreamへ揃える。
+- 本文・スキル・agents・runtimeロジックの差分を「見出しに `yasashii` を含む追加セクションのみ」に限定し、上流由来の実装行を書換・削除しない。機械的例外は宣言済みの配布識別metadata fieldだけとする。
+- `gentle-overlay/`、アンカー、`metadata-overrides.json`、`scripts/sync-harness.sh`、やさしい版 agents 3種、独自回帰により、上流merge後も差分と規律を検証できる。
+- 上流HEADの前進は警告、取り込み済み上流＋overlayとの不一致、未分類の新規・削除ファイル、アンカー不在は失敗として扱う。
+- fork badge／parent relation／同じforkからの上流PRは提供しない。上流変更は本機能のスコープ外であり、将来あらためて明示承認された場合だけ `agentic-harness` 側の別branch / PR手順に分離する。
 
-### F13 接続診断
-- 複数コネクタの接続状態を診断し、失敗時は実エラーから原因を確定して日常語で案内する。
+## Gテーマと機能の対応
 
-## 開発機能（P3）
-
-### F14 やさしいハーネス同梱
-- `~/workspace/agentic-harness` を**リポジトリ内に複製**し、平易化フォークとして同梱する（元は変更しない）。
-- 平易化3点: Planner ヒアリングの日常語化／報告の型固定（全エージェントが `rules/plain-language.md` 参照）／進行の見せ方（計画→道具→確認→結果を毎回宣言）。
-- 裏側の docs/spec・sprint 契約等の技術的文脈は維持する。
-
-### F15 開発の入口（build）
-- 開発依頼を受け取り、やさしいハーネス（planner/generator/evaluator のやさしい版）に接続する。
-- 進行が非エンジニアに見える形（計画→道具→確認→結果）で走る。
-
-## 公開整備（P4）
-
-### F16 公開ドキュメント
-- README・使い方 docs・クレジット表記を整備する。第2期カリキュラムへの組み込みを想定した導線を書く。
-
-## フェーズ↔機能 対応
-
-| フェーズ | 含む機能 |
+| テーマ | 主な機能 |
 |---|---|
-| P1 秘書コア | F01 F02 F03 F04 F05 F06 F07 F08 F09 F10 |
-| P2 接続拡張 | F11 F12 F13 |
-| P3 開発機能 | F14 F15 |
-| P4 公開整備 | F16 |
+| G1 | F05 F06 F07 F08 F17 F18 F19 F21 |
+| G2 | F04 F10 F20 |
+| G3 | F14 F15 F22 |
+| G4 | F10 F14 F15 F20 F22 |

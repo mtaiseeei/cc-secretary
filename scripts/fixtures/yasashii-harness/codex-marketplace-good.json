@@ -1,0 +1,9 @@
+{
+  "name": "yasashii-harness",
+  "plugins": [
+    {
+      "name": "harness",
+      "source": { "source": "local", "path": "./plugins/harness" }
+    }
+  ]
+}

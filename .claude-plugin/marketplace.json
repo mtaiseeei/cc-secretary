@@ -1,5 +1,5 @@
 {
-  "name": "cc-secretary",
+  "name": "yasashii-secretary",
   "owner": {
     "name": "mtaiseeei"
   },
@@ -8,8 +8,8 @@
   },
   "plugins": [
     {
-      "name": "cc-secretary",
-      "source": "./plugins/cc-secretary",
+      "name": "yasashii-secretary",
+      "source": "./plugins/yasashii-secretary",
       "description": "あなた専属のAI秘書。記憶と成果物はローカルに置き、外部データは公式コネクタで都度参照する。",
       "version": "0.1.0",
       "author": {

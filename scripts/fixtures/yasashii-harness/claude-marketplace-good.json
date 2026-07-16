@@ -1,0 +1,10 @@
+{
+  "name": "yasashii-harness",
+  "plugins": [
+    {
+      "name": "harness",
+      "source": "./plugins/harness",
+      "repository": "https://github.com/mtaiseeei/yasashii-harness"
+    }
+  ]
+}

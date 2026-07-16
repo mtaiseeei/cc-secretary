@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# cc-secretary 回帰チェック（sprint-001）
+# yasashii-secretary 回帰チェック（sprint-001）
 #
 # 受入基準1〜7を対話 Claude に依存せず検証する。
 #   1. マニフェスト有効性（marketplace.json / plugin.json）
 #   2. スキル構文（frontmatter・name 一意・段階ロードの参照先実在）
 #   3. オンボーディング生成物（テンプレ実体化のドライラン → 構造・6規律・CLAUDE.md ポインタ・MEMORY.md 索引）
 #   4. git 初期化（init 済み・日本語の初回コミット1件・push されていない）
-#   5. 非エンジニア体験（plain-language.md が SKILL/onboarding から参照・報告3行型の骨子）
+#   5. 非エンジニア体験（既定3行＋明示「くわしく」だけ補足1つ・不変規律）
 #   6. 安全・規律（agentic-harness に書き込まない・同期層なし・資格情報を書かない）
 #
 # 使い方: bash scripts/regression-check.sh
@@ -15,11 +15,17 @@
 
 set -u
 
+MODE="${1:---offline}"
+case "$MODE" in
+  --offline|--online) ;;
+  *) printf '使い方: bash scripts/regression-check.sh [--offline|--online]\n' >&2; exit 2 ;;
+esac
+
 # リポジトリ直下を基準にする
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$SCRIPT_DIR/.." && pwd)"
-PLUGIN="$REPO/plugins/cc-secretary"
-# 雛形は配布プラグイン配下（plugins/cc-secretary/templates/）。
+PLUGIN="$REPO/plugins/yasashii-secretary"
+# 雛形は配布プラグイン配下（plugins/yasashii-secretary/templates/）。
 # SKILL と同じく ${CLAUDE_PLUGIN_ROOT} 相対で解決し、未設定時はプラグイン配下にフォールバックする。
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$PLUGIN}"
 TEMPLATES="$PLUGIN_ROOT/templates"
@@ -33,7 +39,7 @@ check(){ if eval "$2"; then ok "$1"; else ng "$1"; fi; }
 section(){ printf '\n== %s ==\n' "$1"; }
 
 # 一時ディレクトリ（生成物のドライラン用）。agentic-harness には一切触れない。
-WORK="$(mktemp -d "${TMPDIR:-/tmp}/cc-secretary-regression.XXXXXX")"
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/yasashii-secretary-regression.XXXXXX")"
 cleanup(){ rm -rf "$WORK"; }
 trap cleanup EXIT
 
@@ -81,11 +87,25 @@ else:
 with open(plugin_path) as f: pj = json.load(f)
 for k in ("name", "version"):
     if k not in pj: errs.append(f"plugin.json に {k} が無い")
+expected = "yasashii-secretary"
+if m.get("name") != expected:
+    errs.append(f"marketplace name が {expected} でない: {m.get('name')!r}")
+if plugins:
+    p = plugins[0]
+    if p.get("name") != expected:
+        errs.append(f"plugin entry name が {expected} でない: {p.get('name')!r}")
+    if p.get("source") != "./plugins/yasashii-secretary":
+        errs.append(f"plugin source が改名後パスでない: {p.get('source')!r}")
+if pj.get("name") != expected:
+    errs.append(f"plugin.json name が {expected} でない: {pj.get('name')!r}")
 if errs:
     print("MANIFEST_ERRORS:" + "|".join(errs)); sys.exit(1)
 sys.exit(0)
 PY
 check "必須フィールド・forkedFrom=cc-company・source 実在" "[ $? -eq 0 ]"
+check "旧 plugins/cc-secretary ディレクトリが無い" "[ ! -e '$REPO/plugins/cc-secretary' ]"
+check "現行配布面に旧名 cc-secretary が無い" \
+  "! grep -rqi 'cc-secretary' '$MARKET' '$PLUGINJSON' '$PLUGIN' '$REPO/README.md' '$REPO/LICENSE' '$REPO/docs/guide' '$REPO/CLAUDE.md'"
 
 # クレジット方針を配布物レベルで明示検査（骨抜き防止・単段方針の実検査）
 # 対象: marketplace.json / plugin.json / LICENSE / plugins/ 配下（docs/ の分析メモは対象外）
@@ -116,25 +136,29 @@ ONBOARD_SKILL="$PLUGIN/skills/onboarding/SKILL.md"
 MEMCARE_SKILL="$PLUGIN/skills/memory-care/SKILL.md"
 SETUP_GOOGLE_SKILL="$PLUGIN/skills/setup-google/SKILL.md"
 DAILY_SKILL="$PLUGIN/skills/daily/SKILL.md"
+WEEKLY_SKILL="$PLUGIN/skills/weekly/SKILL.md"
 SETUP_MS_SKILL="$PLUGIN/skills/setup-microsoft/SKILL.md"
 SETUP_NOTION_SKILL="$PLUGIN/skills/setup-notion/SKILL.md"
 CONNECTIONS_SKILL="$PLUGIN/skills/connections/SKILL.md"
 BUILD_SKILL="$PLUGIN/skills/build/SKILL.md"
+SETTINGS_SKILL="$PLUGIN/skills/settings/SKILL.md"
 RULES="$PLUGIN/rules/plain-language.md"
 # ユーザー向け SKILL 群の参照スキャン対象（同梱ファイル参照の検査に使う）。
-# ハーネス内部契約（agents/・harness/）は別カテゴリ（AI 向け・技術維持）で section 12 が扱う。
-SKILLS=("$SECRETARY_SKILL" "$ONBOARD_SKILL" "$MEMCARE_SKILL" "$SETUP_GOOGLE_SKILL" "$DAILY_SKILL" \
-        "$SETUP_MS_SKILL" "$SETUP_NOTION_SKILL" "$CONNECTIONS_SKILL" "$BUILD_SKILL")
+# 別プラグインへの参照導線と同梱物の不在は section 12 が扱う。
+SKILLS=("$SECRETARY_SKILL" "$ONBOARD_SKILL" "$MEMCARE_SKILL" "$SETUP_GOOGLE_SKILL" "$DAILY_SKILL" "$WEEKLY_SKILL" \
+        "$SETUP_MS_SKILL" "$SETUP_NOTION_SKILL" "$CONNECTIONS_SKILL" "$BUILD_SKILL" "$SETTINGS_SKILL")
 
 check "secretary/SKILL.md が存在" "[ -f '$SECRETARY_SKILL' ]"
 check "onboarding/SKILL.md が存在" "[ -f '$ONBOARD_SKILL' ]"
 check "memory-care/SKILL.md が存在" "[ -f '$MEMCARE_SKILL' ]"
 check "setup-google/SKILL.md が存在" "[ -f '$SETUP_GOOGLE_SKILL' ]"
 check "daily/SKILL.md が存在" "[ -f '$DAILY_SKILL' ]"
+check "weekly/SKILL.md が存在" "[ -f '$WEEKLY_SKILL' ]"
 check "setup-microsoft/SKILL.md が存在" "[ -f '$SETUP_MS_SKILL' ]"
 check "setup-notion/SKILL.md が存在" "[ -f '$SETUP_NOTION_SKILL' ]"
 check "connections/SKILL.md が存在" "[ -f '$CONNECTIONS_SKILL' ]"
 check "build/SKILL.md が存在" "[ -f '$BUILD_SKILL' ]"
+check "settings/SKILL.md が存在" "[ -f '$SETTINGS_SKILL' ]"
 check "rules/plain-language.md が存在" "[ -f '$RULES' ]"
 
 # frontmatter の name を取り出す（1行目 --- 以降）
@@ -144,21 +168,25 @@ ONAME="$(name_of "$ONBOARD_SKILL")"
 MNAME="$(name_of "$MEMCARE_SKILL")"
 GNAME="$(name_of "$SETUP_GOOGLE_SKILL")"
 DNAME="$(name_of "$DAILY_SKILL")"
+WNAME="$(name_of "$WEEKLY_SKILL")"
 MSNAME="$(name_of "$SETUP_MS_SKILL")"
 NNAME="$(name_of "$SETUP_NOTION_SKILL")"
 CNAME="$(name_of "$CONNECTIONS_SKILL")"
 BNAME="$(name_of "$BUILD_SKILL")"
+PNAME="$(name_of "$SETTINGS_SKILL")"
 check "secretary の name が 'secretary'" "[ '$SNAME' = 'secretary' ]"
 check "onboarding の name が 'onboarding'" "[ '$ONAME' = 'onboarding' ]"
 check "memory-care の name が 'memory-care'" "[ '$MNAME' = 'memory-care' ]"
 check "setup-google の name が 'setup-google'" "[ '$GNAME' = 'setup-google' ]"
 check "daily の name が 'daily'" "[ '$DNAME' = 'daily' ]"
+check "weekly の name が 'weekly'" "[ '$WNAME' = 'weekly' ]"
 check "setup-microsoft の name が 'setup-microsoft'" "[ '$MSNAME' = 'setup-microsoft' ]"
 check "setup-notion の name が 'setup-notion'" "[ '$NNAME' = 'setup-notion' ]"
 check "connections の name が 'connections'" "[ '$CNAME' = 'connections' ]"
 check "build の name が 'build'" "[ '$BNAME' = 'build' ]"
+check "settings の name が 'settings'" "[ '$PNAME' = 'settings' ]"
 check "name が一意（重複なし）" \
-  "[ \"\$(printf '%s\n' '$SNAME' '$ONAME' '$MNAME' '$GNAME' '$DNAME' '$MSNAME' '$NNAME' '$CNAME' '$BNAME' | sort -u | wc -l | tr -d ' ')\" = '9' ]"
+  "[ \"\$(printf '%s\n' '$SNAME' '$ONAME' '$MNAME' '$GNAME' '$DNAME' '$WNAME' '$MSNAME' '$NNAME' '$CNAME' '$BNAME' '$PNAME' | sort -u | wc -l | tr -d ' ')\" = '11' ]"
 
 # 同梱ファイル参照は ${CLAUDE_PLUGIN_ROOT} 相対に統一されている（constraints.md L40 / domain.md）。
 # (a) ${CLAUDE_PLUGIN_ROOT}/... の参照先が全て実在（プラグイン配下で解決）
@@ -170,12 +198,12 @@ done < <(grep -rhoE '\$\{CLAUDE_PLUGIN_ROOT\}/[A-Za-z0-9_./-]+(\.md|\.sh|/)?' "$
           | sed -E 's#^\$\{CLAUDE_PLUGIN_ROOT\}/##' | sort -u)
 check "SKILL の \${CLAUDE_PLUGIN_ROOT} 参照先が全て実在" "[ $deadlinks -eq 0 ]"
 
-# (b) 雛形が新配置（plugins/cc-secretary/templates/）に存在する
-check "雛形が plugins/cc-secretary/templates/ に存在" "[ -f '$PLUGIN/templates/AGENTS.md' ] && [ -f '$PLUGIN/templates/CLAUDE.md' ]"
+# (b) 雛形が新配置（plugins/yasashii-secretary/templates/）に存在する
+check "雛形が plugins/yasashii-secretary/templates/ に存在" "[ -f '$PLUGIN/templates/AGENTS.md' ] && [ -f '$PLUGIN/templates/CLAUDE.md' ]"
 
-# (c) 同梱ファイルへのリポジトリ直下相対参照（plugins/cc-secretary/... や bare templates/）が残っていない
-check "SKILL に plugins/cc-secretary/ 直下相対の同梱参照が無い" \
-  "! grep -rqE 'plugins/cc-secretary/' \"\${SKILLS[@]}\""
+# (c) 同梱ファイルへのリポジトリ直下相対参照（plugins/yasashii-secretary/... や bare templates/）が残っていない
+check "SKILL に plugins/yasashii-secretary/ 直下相対の同梱参照が無い" \
+  "! grep -rqE 'plugins/yasashii-secretary/' \"\${SKILLS[@]}\""
 check "SKILL に \${CLAUDE_PLUGIN_ROOT} を伴わない bare templates/ 参照が無い" \
   "! grep -rhoE '[^./{]templates/' \"\${SKILLS[@]}\" | grep -q ."
 # (d) 絶対パス直書き（先頭スラッシュのコード参照）が無い
@@ -190,6 +218,8 @@ OWNER_NAME="村山さん"
 PRIMARY_SERVICE="Google"
 PRIMARY_SERVICE_DETAIL="Gmail / Googleカレンダー / Googleドライブ"
 TASKS="今日やることの整理、調べもの・下書き"
+OWNER_ROLE="講師"
+REPORT_DETAIL="みじかく"
 CREATED_DATE="2026-07-08"
 CREATED_AT="2026-07-08 10:00"
 
@@ -200,13 +230,15 @@ cp -R "$TEMPLATES/." "$DEST/"
 # 決定ログの雛形を日付名にリネーム
 mv "$DEST/memory/decisions/_first-decision.md" "$DEST/memory/decisions/${CREATED_DATE}-decisions.md"
 # {{...}} をすべて置換
-export OWNER_NAME PRIMARY_SERVICE PRIMARY_SERVICE_DETAIL TASKS CREATED_DATE CREATED_AT
+export OWNER_NAME PRIMARY_SERVICE PRIMARY_SERVICE_DETAIL TASKS OWNER_ROLE REPORT_DETAIL CREATED_DATE CREATED_AT
 find "$DEST" -type f -name '*.md' -print0 | while IFS= read -r -d '' f; do
   perl -pi -e '
     s/\{\{OWNER_NAME\}\}/$ENV{OWNER_NAME}/g;
     s/\{\{PRIMARY_SERVICE_DETAIL\}\}/$ENV{PRIMARY_SERVICE_DETAIL}/g;
     s/\{\{PRIMARY_SERVICE\}\}/$ENV{PRIMARY_SERVICE}/g;
     s/\{\{TASKS\}\}/$ENV{TASKS}/g;
+    s/\{\{OWNER_ROLE\}\}/$ENV{OWNER_ROLE}/g;
+    s/\{\{REPORT_DETAIL\}\}/$ENV{REPORT_DETAIL}/g;
     s/\{\{CREATED_DATE\}\}/$ENV{CREATED_DATE}/g;
     s/\{\{CREATED_AT\}\}/$ENV{CREATED_AT}/g;
   ' "$f"
@@ -238,7 +270,7 @@ check "規律6 報告の型" "grep -q '規律6' '$A' && grep -q '報告の型' '
 check "資格情報を書かない旨の明記" "grep -q '資格情報' '$A'"
 check "push しない旨の明記" "grep -q 'push' '$A'"
 
-# CLAUDE.md は AGENTS.md へのポインタのみ（規律本文を持たない）
+# CLAUDE.md は AGENTS.md へのポインタを保ち、報告長の境界だけを明示する（6規律本文は重複させない）
 check "CLAUDE.md が AGENTS.md を案内" "grep -q 'AGENTS.md' '$DEST/CLAUDE.md'"
 check "CLAUDE.md に規律本文が無い（ポインタのみ）" "! grep -q '規律1' '$DEST/CLAUDE.md'"
 
@@ -269,17 +301,48 @@ check "リモートが未設定（push されていない）" "[ -z \"\$(git -C 
 check "upstream 追跡ブランチが無い（未 push）" "! git -C '$DEST' rev-parse --abbrev-ref '@{u}' >/dev/null 2>&1"
 
 # ---------------------------------------------------------------------------
-section "5. 非エンジニア体験（plain-language 参照・3行型骨子）"
+section "5. 非エンジニア体験（既定値＋許可上書き＋禁止事項）"
 # ---------------------------------------------------------------------------
+communication_contract_ok() {
+  local rules="$1" agents="$2" claude="$3"
+  grep -q '^## 第1部: 全員共通の不変規律' "$rules" &&
+    grep -q '^## 第2部: その人に合わせる設定' "$rules" &&
+    grep -q 'preferences が無い・空・一部欠損なら既定値へ戻る' "$rules" &&
+    grep -q '最終応答serializer（通常報告の唯一の正本）' "$rules" &&
+    grep -q '無言で完了する' "$rules" &&
+    grep -q 'serializerを1回だけ適用する' "$rules" &&
+    grep -q '明示的に「くわしく」の場合だけ' "$rules" &&
+    grep -q '口調・専門用語・役割は行数を変えない' "$rules" &&
+    grep -q '一般技術用語' "$rules" &&
+    grep -q '安全説明は省かない' "$rules" &&
+    grep -q '最終応答serializer.*唯一の出力形正本' "$agents" &&
+    grep -q 'schemaを複製・再包装しない' "$agents" &&
+    grep -q '最後にserializerを1回だけ適用する' "$agents" &&
+    grep -q '最終応答serializer.*だけを正本' "$claude" &&
+    grep -q 'schemaをここへ複製しません' "$claude" &&
+    ! grep -q '^やったこと:' "$agents" "$claude" &&
+    ! grep -q '固定prefix\|物理的に3行' "$agents" "$claude" &&
+    ! grep -qE '口調.*報告.*補足|専門用語.*報告.*補足|役割.*報告.*補足' "$rules" "$agents" "$claude"
+}
+
 check "secretary/SKILL が plain-language を参照" "grep -q 'plain-language.md' '$SECRETARY_SKILL'"
 check "onboarding/SKILL が plain-language を参照" "grep -q 'plain-language.md' '$ONBOARD_SKILL'"
 check "memory-care/SKILL が plain-language を参照" "grep -q 'plain-language.md' '$MEMCARE_SKILL'"
+check "settings/SKILL が plain-language を参照" "grep -q 'plain-language.md' '$SETTINGS_SKILL'"
 check "memory-care に削除前の日常語警告がある" "grep -q '消すと' '$MEMCARE_SKILL' && grep -q '本当に消して' '$MEMCARE_SKILL'"
 check "memory-care にしおり『前回の続き』提案がある" "grep -q '前回の続き' '$MEMCARE_SKILL'"
-check "plain-language に報告3行型の骨子" "grep -q '3行' '$RULES'"
+check "既定3行＋明示くわしくのみ補足1つはrules唯一正本＋2面参照" \
+  "communication_contract_ok '$RULES' '$PLUGIN/templates/AGENTS.md' '$PLUGIN/templates/CLAUDE.md'"
 check "plain-language に進行語彙（計画→道具→確認→結果）" "grep -q '計画' '$RULES' && grep -q '道具' '$RULES' && grep -q '確認' '$RULES' && grep -q '結果' '$RULES'"
 check "plain-language に英語エラー翻訳の方針" "grep -q '英語' '$RULES'"
-check "onboarding の完了報告に『次』の一言" "grep -q '次は' '$ONBOARD_SKILL'"
+check "onboarding は完了内容に次の操作を含めserializerへ渡す" \
+  "grep -q '次に試せる操作' '$ONBOARD_SKILL' && grep -q '通常報告の行数、prefix、完成例は持たず' '$ONBOARD_SKILL'"
+
+# 検査自体の意図的失敗fixture。口調設定が報告長を暗黙変更する違反を必ず検出する。
+cp "$PLUGIN/templates/AGENTS.md" "$WORK/AGENTS-invalid-report-override.md"
+printf '\n- 口調がフランクなら報告に補足を付ける。\n' >> "$WORK/AGENTS-invalid-report-override.md"
+check "意図的失敗fixture: 口調による暗黙の報告長変更を検出" \
+  "! communication_contract_ok '$RULES' '$WORK/AGENTS-invalid-report-override.md' '$PLUGIN/templates/CLAUDE.md'"
 
 # ---------------------------------------------------------------------------
 section "6. 安全・規律（不変条件）"
@@ -447,7 +510,8 @@ check "daily が外部本文をローカル保存しない旨" "grep -q '本文'
 check "daily が同期層（10_sources/キャッシュ）を作らない旨" "grep -q '10_sources' '$DAILY_SKILL' || grep -q 'キャッシュ' '$DAILY_SKILL'"
 check "daily が未接続時に setup-google へフォールバック" "grep -q 'setup-google/SKILL.md' '$DAILY_SKILL'"
 check "daily が plain-language を参照" "grep -q 'plain-language.md' '$DAILY_SKILL'"
-check "daily が3行型（次に何が起きるか）を含む" "grep -q '次は' '$DAILY_SKILL'"
+check "daily は内容だけを返しserializerへ出力形を委譲" \
+  "grep -q 'ユーザーが選べる次の行動' '$DAILY_SKILL' && grep -q '通常報告の行数、prefix、空行、前後の包装は定義せず' '$DAILY_SKILL'"
 
 # --- 語彙方針（改訂 ui.md）: sprint-003 で新規/変更した文言に『秘書の家』を使わない ---
 # （既存ファイル onboarding / memory-care / templates の一掃は別 Patch の担当・対象外）
@@ -506,7 +570,7 @@ check "成果物・TODO に資格情報の実値が無い" "! grep -rnEi '(passw
 # ---------------------------------------------------------------------------
 section "9. 文言規約（改訂 ui.md・過度な平易化の一掃）"
 # ---------------------------------------------------------------------------
-# 配布物全体を対象に検査する: プラグイン本体（plugins/cc-secretary・templates 含む）に加え、
+# 配布物全体を対象に検査する: プラグイン本体（plugins/yasashii-secretary・templates 含む）に加え、
 # リポジトリ直下のマーケットプレイス定義（.claude-plugin/marketplace.json）と LICENSE も含める。
 # （marketplace.json の metadata.description はユーザーが marketplace add 時に見る配布物文言）
 DIST=("$PLUGIN" "$REPO/.claude-plugin" "$REPO/LICENSE" "$REPO/README.md" "$REPO/docs/guide")
@@ -517,11 +581,19 @@ check "配布物に住まい擬人化『ローカルに住む』が無い" "! gr
 check "配布物に旧規定『言い換え併記』が無い" "! grep -rq '言い換え併記' \"\${DIST[@]}\""
 check "配布物に旧規定『専門用語は必ず』が無い" "! grep -rq '専門用語は必ず' \"\${DIST[@]}\""
 check "配布物に旧規定『言い換えを併記』が無い" "! grep -rq '言い換えを併記' \"\${DIST[@]}\""
-# (3) rules/plain-language.md が改訂 ui.md の方針を反映
+# (3) rules/plain-language.md が改訂 ui.md の不変規律＋許可上書きを反映
 check "plain-language が『そのまま使う語』方針を明記" "grep -q 'そのまま使う' '$RULES'"
 check "plain-language が『初出のみ補足』方針を明記" "grep -q '初出' '$RULES'"
 check "plain-language が幼稚メタファー禁止を明記" "grep -q 'メタファー' '$RULES' && grep -q '秘書ディレクトリ' '$RULES'"
 check "plain-language が過度な平易化をしない旨を明記" "grep -q '過度な平易化' '$RULES'"
+check "plain-language が不変規律とpreferences適用を二部化" \
+  "grep -q '^## 第1部: 全員共通の不変規律' '$RULES' && grep -q '^## 第2部: その人に合わせる設定' '$RULES'"
+check "ことば添えでも一般技術用語を置換しない" \
+  "grep -q 'ことば添え.*一般技術用語を別の語へ置換しない' '$RULES'"
+check "そのままOKでも安全説明を省かない" \
+  "grep -q 'そのままOK.*安全説明は省かない' '$RULES'"
+check "報告長はくわしく以外の設定で変わらない" \
+  "grep -q '口調・専門用語・役割は行数を変えない' '$RULES' && ! grep -qE '口調.*報告.*補足|専門用語.*報告.*補足|役割.*報告.*補足' '$RULES' '$PLUGIN/templates/AGENTS.md' '$PLUGIN/templates/CLAUDE.md'"
 # (4) 呼称の統一: secretary/ を「秘書ディレクトリ／秘書フォルダ」で呼ぶ
 check "onboarding 完了メッセージが『秘書ディレクトリ』を使う" "grep -q '秘書ディレクトリ' '$ONBOARD_SKILL'"
 check "plugin.json description に『秘書の家』が無い" "! grep -q '秘書の家' '$PLUGINJSON'"
@@ -605,7 +677,7 @@ check "M4: workspace-tools.sh に実行権限" "[ -x '$WT' ]"
 # --- M6: 秘書機能の配布 SKILL が同梱されない docs/spec・docs/sprints を参照しない ---
 # 対象は秘書ユーザー向け SKILL（skills/）と rules/。
 # 例外: ハーネス内部契約（agents/・harness/）は開発対象プロジェクトの docs/spec/sprints を指す
-#       AI 向け技術契約であり、cc-secretary の開発専用ファイル参照ではない（section 12 で別途扱う）。
+#       AI 向け技術契約であり、yasashii-secretary の開発専用ファイル参照ではない（section 12 で別途扱う）。
 check "M6: 秘書向け SKILL/rules に docs/spec 参照が無い" "! grep -rq 'docs/spec' '$PLUGIN/skills' '$PLUGIN/rules'"
 check "M6: 秘書向け SKILL/rules に docs/sprints 参照が無い" "! grep -rq 'docs/sprints' '$PLUGIN/skills' '$PLUGIN/rules'"
 
@@ -621,7 +693,7 @@ check "H2: onboarding が無確認で上書き・再 git init しない旨を明
 
 # --- F7: templates/AGENTS.md の家系メタファー・旧言い換え併記の撤去 ---
 check "F7: AGENTS.md に家系メタファーが無い" "! grep -qE '秘書の家|この家|お家|おうち' '$PLUGIN/templates/AGENTS.md'"
-check "F7: AGENTS.md に旧規定『言い換え併記』が無い" "! grep -qE '言い換え併記|専門用語は必ず' '$PLUGIN/templates/AGENTS.md'"
+check "F7: AGENTS.md に旧規定『言い換え併記』が無い" "! grep -qE '言い換え併記|専門用語は必ず|専門用語には、やさしい言い換えをカッコで併記する' '$PLUGIN/templates/AGENTS.md'"
 
 # ---------------------------------------------------------------------------
 section "11. 接続拡張（Microsoft / Notion / 診断・sprint-004）"
@@ -650,7 +722,8 @@ check "setup-notion が plain-language を参照" "grep -q 'plain-language.md' '
 check "connections が状態を一覧で返す（接続済み/未接続/エラー）" "grep -q '接続済み' '$CONNECTIONS_SKILL' && grep -q '未接続' '$CONNECTIONS_SKILL' && grep -q 'エラー' '$CONNECTIONS_SKILL'"
 check "connections が実エラーで原因確定の型を持つ" "grep -q '実エラーで原因確定' '$CONNECTIONS_SKILL' || grep -q '推測で断定しない' '$CONNECTIONS_SKILL'"
 check "connections が未接続を接続導線へ橋渡し" "grep -q 'setup-google/SKILL.md' '$CONNECTIONS_SKILL' && grep -q 'setup-microsoft/SKILL.md' '$CONNECTIONS_SKILL'"
-check "connections が3行報告（次にやること）" "grep -q '次にやること' '$CONNECTIONS_SKILL' || grep -q '次は' '$CONNECTIONS_SKILL'"
+check "connections は診断内容だけを返しserializerへ出力形を委譲" \
+  "grep -q 'ユーザーが選べる次の接続案内' '$CONNECTIONS_SKILL' && grep -q '通常報告の行数、prefix、完成例は持たず' '$CONNECTIONS_SKILL'"
 check "connections が Notion 任意・国内チャット未対応を明記" "grep -q '任意' '$CONNECTIONS_SKILL' && (grep -q 'Chatwork' '$CONNECTIONS_SKILL' || grep -q '国内チャット' '$CONNECTIONS_SKILL')"
 check "connections が plain-language を参照" "grep -q 'plain-language.md' '$CONNECTIONS_SKILL'"
 
@@ -670,97 +743,116 @@ check "ルーターに setup-notion モード" "grep -q 'skills/setup-notion/SKI
 check "ルーターに connections（診断）モード" "grep -q 'skills/connections/SKILL.md' '$SECRETARY_SKILL'"
 
 # ---------------------------------------------------------------------------
-section "12. やさしいハーネス同梱＋build（sprint-005）"
+section "12. yasashii-harness 参照導線（sprint-008）"
 # ---------------------------------------------------------------------------
-HARNESS_SRC="$HOME/workspace/agentic-harness"
-BASELINE="$REPO/scripts/harness-source-baseline.sha256"
-AGENTS_DIR="$PLUGIN/agents"
-HLOOP="$PLUGIN/harness/skills/harness-loop/SKILL.md"
-INITSH="$PLUGIN/harness/scripts/init-guidance.sh"
+HARNESS_REPO="mtaiseeei/yasashii-harness"
+HARNESS_URL="https://github.com/$HARNESS_REPO"
+README="$REPO/README.md"
+REFERENCE_VALIDATOR="$REPO/scripts/check-yasashii-harness-reference.py"
+ONLINE_CHECKER="$REPO/scripts/check-yasashii-harness-online.sh"
+REFERENCE_FIXTURES="$REPO/scripts/fixtures/yasashii-harness"
 
-# --- A1: 複製元 agentic-harness の非改変（C5・最優先・ゼロ許容）---
-NOW_FILE="$WORK/harness-now.sha256"
-( cd "$HARNESS_SRC" 2>/dev/null && find . -type f -not -path './.git/*' -print0 | sort -z | xargs -0 shasum -a 256 ) > "$NOW_FILE" 2>/dev/null
-check "A1: 複製元が sha256 マニフェストと一致（非改変）" "[ -s '$NOW_FILE' ] && diff -q '$BASELINE' '$NOW_FILE' >/dev/null"
-check "A1: 複製元 git HEAD が記録値と一致" "[ \"\$(git -C '$HARNESS_SRC' rev-parse HEAD 2>/dev/null)\" = '56ce6938cd76111dcb050ee8ed51f28a3e1a79db' ]"
-check "A1: 複製元 git 作業ツリーがクリーン（未変更）" "[ -z \"\$(git -C '$HARNESS_SRC' status --porcelain 2>/dev/null)\" ]"
-check "A1: 複製先が元リポジトリへ symlink していない" "[ -z \"\$(find '$AGENTS_DIR' '$PLUGIN/harness' -type l 2>/dev/null)\" ]"
+reference_guide_ok() {
+  local file="$1"
+  grep -q "$HARNESS_URL" "$file" &&
+    grep -q '/plugin marketplace add mtaiseeei/yasashii-harness' "$file" &&
+    grep -q '/plugin install harness@yasashii-harness' "$file" &&
+    grep -q '/harness <作りたいもの>' "$file"
+}
 
-# --- A2: 複製物の構文有効性（C2・ゼロ許容）---
-PNAME="$(name_of "$AGENTS_DIR/planner.md")"
-G2NAME="$(name_of "$AGENTS_DIR/generator.md")"
-ENAME="$(name_of "$AGENTS_DIR/evaluator.md")"
-HLNAME="$(name_of "$HLOOP")"
-check "A2: planner の name が 'planner'" "[ '$PNAME' = 'planner' ]"
-check "A2: generator の name が 'generator'" "[ '$G2NAME' = 'generator' ]"
-check "A2: evaluator の name が 'evaluator'" "[ '$ENAME' = 'evaluator' ]"
-check "A2: agents の name が一意" "[ \"\$(printf '%s\n' '$PNAME' '$G2NAME' '$ENAME' | sort -u | wc -l | tr -d ' ')\" = '3' ]"
-check "A2: harness-loop の name が 'harness-loop'" "[ '$HLNAME' = 'harness-loop' ]"
-check "A2: init-guidance.sh が bash 構文チェックを通る" "bash -n '$INITSH'"
-check "A2: init-guidance.sh に実行権限" "[ -x '$INITSH' ]"
-# 複製物（agents/build/harness-loop）の ${CLAUDE_PLUGIN_ROOT} 参照が全て実在
-vdead=0
+no_bundled_harness_ok() {
+  local plugin_dir="$1"
+  local baseline_file="$2"
+  [ ! -d "$plugin_dir/harness" ] &&
+    [ ! -d "$plugin_dir/agents" ] &&
+    [ ! -e "$baseline_file" ]
+}
+
+# --- A: 案内・識別子・接続導線 ---
+check "A1: build に yasashii-harness の正規URLと3コマンド" "reference_guide_ok '$BUILD_SKILL'"
+check "A1: README に同じ yasashii-harness URLと3コマンド" "reference_guide_ok '$README'"
+check "A2: build が導入状態を using-harness / harness-loop で確認" \
+  "grep -q 'using-harness' '$BUILD_SKILL' && grep -q 'harness-loop' '$BUILD_SKILL'"
+check "A2: build が Planner / Generator / Evaluator の正式名称を保持" \
+  "grep -q 'Planner' '$BUILD_SKILL' && grep -q 'Generator' '$BUILD_SKILL' && grep -q 'Evaluator' '$BUILD_SKILL'"
+check "A2: build が未導入と導入済みの両導線を持つ" \
+  "grep -q '未導入' '$BUILD_SKILL' && grep -q '導入済み' '$BUILD_SKILL'"
+check "A2: build が plain-language を参照" "grep -q 'plain-language.md' '$BUILD_SKILL'"
+check "A2: ルーターに build モード" "grep -q 'skills/build/SKILL.md' '$SECRETARY_SKILL'"
+
+# --- B: 配布物の境界（同梱コピー・agents・旧baselineを禁止） ---
+check "B1: 同梱harness・agents・旧source baselineが無い" \
+  "no_bundled_harness_ok '$PLUGIN' '$REPO/scripts/harness-source-baseline.sha256'"
+check "B1: 配布プラグイン内に harness / agents へのsymlinkも無い" \
+  "[ -z \"\$(find '$PLUGIN' -type l 2>/dev/null)\" ]"
+check "B2: build がローカル agentic-harness を導入判定・複製元にしない" \
+  "! grep -qE '~/workspace/agentic-harness|/Users/.*/workspace/agentic-harness' '$BUILD_SKILL'"
+check "B2: build に存在しない同梱 harness / agents 参照が無い" \
+  "! grep -qE '\$\{CLAUDE_PLUGIN_ROOT\}/(harness|agents)/|\$PLUGIN_ROOT/(harness|agents)/' '$BUILD_SKILL'"
+check "B2: 配布物に SessionStart hooks を同梱しない" \
+  "[ -z \"\$(find '$PLUGIN' \( -name 'hooks.json' -o -name 'session-start.sh' \) 2>/dev/null)\" ]"
+
+# --- C: ${CLAUDE_PLUGIN_ROOT} と $PLUGIN_ROOT のローカル参照健全性 ---
+build_deadlinks=0
 while IFS= read -r ref; do
   ref="${ref%/}"
-  [ -e "$PLUGIN_ROOT/$ref" ] || { echo "  デッドリンク: \${CLAUDE_PLUGIN_ROOT}/$ref"; vdead=$((vdead+1)); }
-done < <(grep -rhoE '\$\{CLAUDE_PLUGIN_ROOT\}/[A-Za-z0-9_./-]+(\.md|\.sh|/)?' \
-           "$AGENTS_DIR/planner.md" "$AGENTS_DIR/generator.md" "$AGENTS_DIR/evaluator.md" "$HLOOP" "$BUILD_SKILL" \
-           | sed -E 's#^\$\{CLAUDE_PLUGIN_ROOT\}/##' | sort -u)
-check "A2: 複製物の \${CLAUDE_PLUGIN_ROOT} 参照先が全て実在" "[ $vdead -eq 0 ]"
+  [ -e "$PLUGIN_ROOT/$ref" ] || { echo "  デッドリンク: plugin root/$ref"; build_deadlinks=$((build_deadlinks+1)); }
+done < <(grep -oE '\$\{CLAUDE_PLUGIN_ROOT\}/[A-Za-z0-9_./-]+|\$PLUGIN_ROOT/[A-Za-z0-9_./-]+' "$BUILD_SKILL" \
+          | sed -E 's#^\$\{CLAUDE_PLUGIN_ROOT\}/##; s#^\$PLUGIN_ROOT/##' | sort -u)
+check "C1: build の plugin root 参照先が全て実在" "[ $build_deadlinks -eq 0 ]"
+check "C1: build が配布されない docs/spec・docs/sprints を参照しない" \
+  "! grep -qE 'docs/spec|docs/sprints' '$BUILD_SKILL'"
 
-# --- A3: 配置の衝突回避（C1）---
-check "A3: harness テンプレと秘書テンプレが別ディレクトリに存在" \
-  "[ -f '$PLUGIN/harness/templates/AGENTS.md' ] && [ -f '$PLUGIN/templates/AGENTS.md' ]"
-check "A3: harness/AGENTS.md と 秘書/AGENTS.md が別物（内容が異なる）" \
-  "! diff -q '$PLUGIN/harness/templates/AGENTS.md' '$PLUGIN/templates/AGENTS.md' >/dev/null 2>&1"
+# --- D: 破損を意図的に作り、section 12 自身が検出できることを確認 ---
+grep -v '/plugin install harness@yasashii-harness' "$BUILD_SKILL" > "$WORK/build-missing-install.md"
+check "D1: installコマンド欠落を参照導線検査が検出" \
+  "! reference_guide_ok '$WORK/build-missing-install.md'"
+mkdir -p "$WORK/fake-plugin/harness"
+check "D1: 同梱harnessの復活を不在検査が検出" \
+  "! no_bundled_harness_ok '$WORK/fake-plugin' '$WORK/no-baseline'"
 
-# --- B4: (1) ヒアリング日常語化（C4）---
-check "B4: planner のヒアリングが日常語＋具体例" "grep -q '見る人を制限しますか' '$AGENTS_DIR/planner.md'"
+# --- E: GitHub API応答とremote manifestを同じvalidatorで検査 ---
+validate_reference_fixture() {
+  local repo_json="$1"
+  local claude_marketplace="$2"
+  python3 "$REFERENCE_VALIDATOR" \
+    --repo-json "$repo_json" \
+    --claude-marketplace "$claude_marketplace" \
+    --claude-plugin "$REFERENCE_FIXTURES/claude-plugin-good.json" \
+    --codex-marketplace "$REFERENCE_FIXTURES/codex-marketplace-good.json" \
+    --codex-plugin "$REFERENCE_FIXTURES/codex-plugin-good.json" \
+    --metadata-overrides "$REFERENCE_FIXTURES/metadata-overrides-good.json"
+}
 
-# --- B5: (2) 報告の型固定（各エージェントが plain-language を参照）---
-check "B5: planner が plain-language を参照" "grep -q 'plain-language.md' '$AGENTS_DIR/planner.md'"
-check "B5: generator が plain-language を参照" "grep -q 'plain-language.md' '$AGENTS_DIR/generator.md'"
-check "B5: evaluator が plain-language を参照" "grep -q 'plain-language.md' '$AGENTS_DIR/evaluator.md'"
+check "E1: remote validatorとonline checkerが存在" \
+  "[ -f '$REFERENCE_VALIDATOR' ] && [ -x '$ONLINE_CHECKER' ]"
+validate_reference_fixture \
+  "$REFERENCE_FIXTURES/repo-good.json" \
+  "$REFERENCE_FIXTURES/claude-marketplace-good.json" >/dev/null 2>&1
+GOOD_REFERENCE_RC=$?
+check "E1: public・fork=false・manifest整合fixtureは成功" "[ $GOOD_REFERENCE_RC -eq 0 ]"
 
-# --- B6: (3) 進行の見せ方（計画→実装→検証／計画→道具→確認→結果）---
-prog_re='計画→実装→検証|計画→道具→確認→結果'
-check "B6: planner に進行宣言がある" "grep -qE '$prog_re' '$AGENTS_DIR/planner.md'"
-check "B6: generator に進行宣言がある" "grep -qE '$prog_re' '$AGENTS_DIR/generator.md'"
-check "B6: evaluator に進行宣言がある" "grep -qE '$prog_re' '$AGENTS_DIR/evaluator.md'"
-check "B6: harness-loop に進行宣言がある" "grep -qE '$prog_re' '$HLOOP'"
+validate_reference_fixture \
+  "$REFERENCE_FIXTURES/repo-404.json" \
+  "$REFERENCE_FIXTURES/claude-marketplace-good.json" >/dev/null 2>&1
+NOT_FOUND_REFERENCE_RC=$?
+check "E2: GitHub 404 fixtureをremote健全性PASSにしない" "[ $NOT_FOUND_REFERENCE_RC -ne 0 ]"
 
-# --- C7: build 入口（C1, C3）---
-check "C7: build が harness-loop を参照" "grep -q 'harness/skills/harness-loop/SKILL.md' '$BUILD_SKILL'"
-check "C7: build が3エージェントを参照" "grep -q 'agents/planner.md' '$BUILD_SKILL' && grep -q 'agents/generator.md' '$BUILD_SKILL' && grep -q 'agents/evaluator.md' '$BUILD_SKILL'"
-check "C7: build に進行宣言がある" "grep -qE '$prog_re' '$BUILD_SKILL'"
-check "C7: build が plain-language を参照" "grep -q 'plain-language.md' '$BUILD_SKILL'"
-check "C7: ルーターに build モード" "grep -q 'skills/build/SKILL.md' '$SECRETARY_SKILL'"
+validate_reference_fixture \
+  "$REFERENCE_FIXTURES/repo-good.json" \
+  "$REFERENCE_FIXTURES/claude-marketplace-mismatch.json" >/dev/null 2>&1
+MISMATCH_REFERENCE_RC=$?
+check "E2: remote manifest不一致fixtureを検出" "[ $MISMATCH_REFERENCE_RC -ne 0 ]"
 
-# --- D8: ユーザー向け複製文言に家系メタファーが無い（内部契約テンプレは技術維持で対象外）---
-check "D8: 複製のユーザー向け文言（agents/build/harness-loop）に家系メタファーが無い" \
-  "! grep -rqE '秘書の家|この家|お家|おうち' '$AGENTS_DIR' '$BUILD_SKILL' '$HLOOP'"
-
-# --- D8(境界要素): evaluator は6軸スコア・証跡ルールの内部値を維持しつつ平易な言い換えを併置 ---
-check "D8: evaluator が rubric の6軸・閾値・証跡の内部値を維持" \
-  "grep -q '6軸' '$AGENTS_DIR/evaluator.md' && grep -q '閾値' '$AGENTS_DIR/evaluator.md' && grep -q '証跡' '$AGENTS_DIR/evaluator.md'"
-check "D8: evaluator が内部値を保ったまま平易な言い換えを併置" \
-  "grep -q '内部の値' '$AGENTS_DIR/evaluator.md' && grep -q '言い換え' '$AGENTS_DIR/evaluator.md'"
-
-# --- D9(一元化): 平易化文言を rules/plain-language.md に集約し、5面から参照（重複コピーを増やさない）---
-oneref=0
-for f in "$AGENTS_DIR/planner.md" "$AGENTS_DIR/generator.md" "$AGENTS_DIR/evaluator.md" "$BUILD_SKILL" "$HLOOP"; do
-  grep -q 'plain-language.md' "$f" || { echo "  未参照: $f"; oneref=$((oneref+1)); }
-done
-check "D9: planner/generator/evaluator/build/harness-loop が plain-language を一元参照" "[ $oneref -eq 0 ]"
-
-# --- D10(hooks 非衝突): cc-secretary は二重起動する SessionStart フックを登録していない ---
-# 設計判断: ハーネスの hooks は複製せず、build を明示入口にする（session-start 注入で本体起動と干渉させない）。
-check "D10: cc-secretary に hooks.json が同梱されていない（登録しない設計）" \
-  "[ -z \"\$(find '$PLUGIN' -name 'hooks.json' 2>/dev/null)\" ]"
-check "D10: cc-secretary に session-start 系フックが複製されていない" \
-  "[ -z \"\$(find '$PLUGIN' -name 'session-start.sh' 2>/dev/null)\" ]"
-check "D10: プラグイン定義に SessionStart フック登録が無い（二重起動なし）" \
-  "! grep -rq 'SessionStart' '$PLUGIN/.claude-plugin' '$REPO/.claude-plugin'"
+if [ "$MODE" = "--online" ]; then
+  if bash "$ONLINE_CHECKER"; then
+    ok "E3: GitHub API online実在検査"
+  else
+    ng "E3: GitHub API online実在検査（UNVERIFIED/FAILはPASSにしない）"
+  fi
+else
+  printf '  ONLINE=SKIPPED（offline回帰。Sprint合格には別途 --online が必須）\n'
+fi
 
 # ---------------------------------------------------------------------------
 section "13. 公開整備（README / guide / クレジット・sprint-006）"
@@ -782,7 +874,7 @@ skill_miss=0
 for s in $(ls "$PLUGIN/skills"); do
   grep -q "$s" "$README" || { echo "  README に未記載のスキル: $s"; skill_miss=$((skill_miss+1)); }
 done
-check "README の機能一覧が実スキル全9件と一致" "[ $skill_miss -eq 0 ]"
+check "README の機能一覧が実スキル全11件と一致" "[ $skill_miss -eq 0 ]"
 # README が実在しないスキルを機能として掲げていない（記載スキル名が実ディレクトリに存在）
 check "README が国内チャットを『今できる』と謳っていない（対象外と明記）" \
   "grep -q '対象外' '$README' && (grep -q 'Chatwork' '$README' || grep -q '国内チャット' '$README')"
@@ -812,6 +904,61 @@ NE_LINE="$(grep -n '受講者・非エンジニア向け' "$README" | head -1 | 
 TECH_LINE="$(grep -n '技術者向け' "$README" | head -1 | cut -d: -f1)"
 check "README が二層構成（非エンジニア前半→技術者後半の順）" \
   "[ -n '$NE_LINE' ] && [ -n '$TECH_LINE' ] && [ '$NE_LINE' -lt '$TECH_LINE' ]"
+
+# ---------------------------------------------------------------------------
+section "14. G1配管（journal・topics・TODO・reindex・sprint-009）"
+# ---------------------------------------------------------------------------
+SPRINT009_REGRESSION="$REPO/scripts/sprint-009-regression.sh"
+check "sprint-009実動作回帰が存在し実行可能" "[ -x '$SPRINT009_REGRESSION' ]"
+if bash "$SPRINT009_REGRESSION"; then
+  ok "sprint-009実動作41 assertが全て成功"
+else
+  ng "sprint-009実動作回帰に失敗"
+fi
+
+# ---------------------------------------------------------------------------
+section "15. G1体験（timeline・節目・朝夕daily統合・sprint-010）"
+# ---------------------------------------------------------------------------
+SPRINT010_REGRESSION="$REPO/scripts/sprint-010-regression.sh"
+check "sprint-010実動作回帰が存在し実行可能" "[ -x '$SPRINT010_REGRESSION' ]"
+if bash "$SPRINT010_REGRESSION"; then
+  ok "sprint-010実動作回帰が全て成功"
+else
+  ng "sprint-010実動作回帰に失敗"
+fi
+
+# ---------------------------------------------------------------------------
+section "16. G2 settings・preferences v2（sprint-011）"
+# ---------------------------------------------------------------------------
+SPRINT011_REGRESSION="$REPO/scripts/sprint-011-regression.sh"
+check "sprint-011実動作回帰が存在し実行可能" "[ -x '$SPRINT011_REGRESSION' ]"
+if bash "$SPRINT011_REGRESSION"; then
+  ok "sprint-011実動作回帰が全て成功"
+else
+  ng "sprint-011実動作回帰に失敗"
+fi
+
+# ---------------------------------------------------------------------------
+section "17. G1仕上げ（weekly・索引退避・sprint-012）"
+# ---------------------------------------------------------------------------
+SPRINT012_REGRESSION="$REPO/scripts/sprint-012-regression.sh"
+check "sprint-012実動作回帰が存在し実行可能" "[ -x '$SPRINT012_REGRESSION' ]"
+if bash "$SPRINT012_REGRESSION"; then
+  ok "sprint-012実動作回帰が全て成功"
+else
+  ng "sprint-012実動作回帰に失敗"
+fi
+
+# ---------------------------------------------------------------------------
+section "18. 最終監査（境界規約・serializer唯一正本・構成正本・sprint-012-patch-001）"
+# ---------------------------------------------------------------------------
+SPRINT012_PATCH001_REGRESSION="$REPO/scripts/sprint-012-patch-001-regression.sh"
+check "sprint-012-patch-001回帰が存在し実行可能" "[ -x '$SPRINT012_PATCH001_REGRESSION' ]"
+if bash "$SPRINT012_PATCH001_REGRESSION"; then
+  ok "sprint-012-patch-001回帰が全て成功"
+else
+  ng "sprint-012-patch-001回帰に失敗"
+fi
 
 # ---------------------------------------------------------------------------
 section "結果"
