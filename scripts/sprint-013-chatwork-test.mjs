@@ -2,7 +2,7 @@
 
 import { execFile } from "node:child_process";
 import { createServer } from "node:http";
-import { cpSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
@@ -25,6 +25,10 @@ function check(label, condition) {
 function json(path) { return JSON.parse(readFileSync(path, "utf8")); }
 function fixture(name) { const root = join(work, name); mkdirSync(root); cpSync(template, root, { recursive: true }); return root; }
 function message(id, body = `本文${id}`) { return { message_id: String(id), account: { account_id: 7, name: "合成人物" }, body, send_time: 1784160000 + Number(id), update_time: 1784160000 + Number(id) }; }
+function isBufferJson(text) { return /^\s*\{"type":"Buffer","data":\[/.test(text); }
+function isRealHtml(text) { return !isBufferJson(text) && /^\s*<!doctype html>/i.test(text) && /<html[\s>]/i.test(text); }
+function isRealCss(text) { return !isBufferJson(text) && /^\s*:root\s*\{/.test(text) && /\}/.test(text); }
+function isRealJavaScript(text) { return !isBufferJson(text) && /^\s*(?:const|let|var|function|import)\b/.test(text); }
 
 let mode = "normal";
 const requests = [];
@@ -103,7 +107,39 @@ wizard.stdout.on("data", (chunk) => { output += chunk; });
 for (let attempt = 0; attempt < 50 && !output.includes("http://"); attempt += 1) await new Promise((wait) => setTimeout(wait, 50));
 const url = output.match(/http:\/\/127\.0\.0\.1:\d+\//)?.[0];
 check("wizardはloopbackだけで起動", Boolean(url));
-const wizardHtml = await (await fetch(url)).text();
+const htmlResponse = await fetch(url);
+const wizardHtml = await htmlResponse.text();
+const cssResponse = await fetch(`${url}style.css`);
+const wizardCss = await cssResponse.text();
+const jsResponse = await fetch(`${url}app.js`);
+const wizardJavaScript = await jsResponse.text();
+check("HTMLはContent-Typeと実byte本文を正しく配信", htmlResponse.headers.get("content-type") === "text/html; charset=utf-8" && isRealHtml(wizardHtml));
+check("CSSはContent-Typeと実byte本文を正しく配信", cssResponse.headers.get("content-type") === "text/css; charset=utf-8" && isRealCss(wizardCss));
+check("JavaScriptはContent-Typeと実byte本文を正しく配信", jsResponse.headers.get("content-type") === "text/javascript; charset=utf-8" && isRealJavaScript(wizardJavaScript));
+const bufferJsonFixture = JSON.stringify(Buffer.from("<!doctype html><html></html>"));
+check("意図的Buffer JSON fixtureをHTML不正として検出", isBufferJson(bufferJsonFixture) && !isRealHtml(bufferJsonFixture));
+const browser = process.env.YASASHII_BROWSER_BIN || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+let runningDom = "";
+if (existsSync(browser)) {
+  try {
+    const rendered = await exec(browser, [
+      "--headless=new",
+      "--disable-background-networking",
+      "--disable-gpu",
+      "--no-first-run",
+      `--user-data-dir=${join(work, "chrome-profile")}`,
+      "--virtual-time-budget=3000",
+      "--dump-dom",
+      url,
+    ], { timeout: 20_000, maxBuffer: 4 * 1024 * 1024 });
+    runningDom = rendered.stdout;
+  } catch (error) {
+    process.stderr.write(`running DOM確認を実行できませんでした: ${error.code || error.message}\n`);
+  }
+}
+const roomUiRendered = /type="checkbox"/.test(runningDom) && runningDom.includes("空room") && runningDom.includes("営業");
+if (!roomUiRendered && runningDom) process.stderr.write(`running DOM抜粋: ${runningDom.slice(0, 1000).replace(/\s+/g, " ")}\n`);
+check("running DOMにroom選択UIを描画", roomUiRendered);
 check("wizard DOMにTokenが無い", !wizardHtml.includes(tokenMarker));
 const before = readFileSync(join(wizardRoot, "chatwork", "config.json"), "utf8");
 await fetch(`${url}api/bootstrap`);
@@ -118,5 +154,5 @@ wizard.kill("SIGTERM");
 
 api.close();
 rmSync(work, { recursive: true, force: true });
-process.stdout.write(`PASS=${29 - failures} FAIL=${failures}\n`);
+process.stdout.write(`PASS=${34 - failures} FAIL=${failures}\n`);
 process.exit(failures === 0 ? 0 : 1);

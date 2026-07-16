@@ -49,7 +49,15 @@ function send(response, status, body, type = "application/json; charset=utf-8") 
     "x-content-type-options": "nosniff",
     "content-security-policy": "default-src 'self'; connect-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
   });
-  response.end(typeof body === "string" ? body : JSON.stringify(body));
+  if (Buffer.isBuffer(body) || typeof body === "string") {
+    response.end(body);
+    return;
+  }
+  if (body !== null && Object.getPrototypeOf(body) === Object.prototype) {
+    response.end(JSON.stringify(body));
+    return;
+  }
+  throw new TypeError("response body must be a Buffer, string, or plain JSON object");
 }
 
 async function bodyJson(request) {

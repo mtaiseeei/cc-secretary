@@ -63,3 +63,24 @@
 - cancelシナリオ: 初期room画面でキャンセルし「変更せずに終了」を確認する。再起動後も選択0件であることを確認する。
 - mobileシナリオ: 767px未満で1 column、CTA縦積み、room full width、keyboard focus、200% zoomを確認し、desktop／mobile screenshotを `docs/feedback/sprint-013.md` の証跡にする。
 - 安全シナリオ: UIにToken入力欄・値が無い、Electric Blueがprimary CTAだけ、Tesla素材・gradient・shadow・scale hoverが0件であることをrunning DOM／computed styleでも確認する。
+
+## Retry 1 — static asset配信修正
+
+### 根本原因と修正
+
+- `readFileSync()` が返す `Buffer` を汎用 `send()` が plain JSON objectと同じ経路で `JSON.stringify()` していたため、HTML／CSS／JavaScriptが `{"type":"Buffer","data":[...]}` として配信されていた。
+- `send()` は `Buffer` と文字列を `response.end(body)` へそのまま渡し、plain JSON objectだけをJSON化するよう修正した。想定外のbody型は `TypeError` で拒否する。
+
+### 追加した回帰assert
+
+- `/`、`/style.css`、`/app.js` のContent-Typeと実byte本文を検証し、HTML／CSS／JavaScriptとして判定できることを確認する。
+- 意図的に作ったBuffer JSON fixtureが実HTML判定でFAILになることを確認する。
+- headless Chromeで配信済みHTML／CSS／JavaScriptを読み込み、running DOMにroom checkboxとroom名が描画されることを確認する。
+
+### Retry 1検証結果
+
+- 実起動: `bash scripts/start-sprint-013-wizard-fixture.sh 8765` — `http://127.0.0.1:8765/` で起動成功。
+- 内部Chatwork回帰: `node scripts/sprint-013-chatwork-test.mjs` — `PASS=34 FAIL=0`。
+- 専用回帰: `bash scripts/sprint-013-regression.sh` — `PASS=33 FAIL=0`。
+- 全offline回帰: `bash scripts/regression-check.sh --offline` — `PASS=296 FAIL=0`。
+- sandbox内の初回loopback実行は `listen EPERM` だったため、同じrepo内コマンドを承認付きで再実行した。
