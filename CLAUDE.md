@@ -18,8 +18,9 @@
   編集、存在確認、一覧、status / HEAD / branch / remote 確認、checkout / switch、commit、生成物作成、
   複製元利用、symlink 経由、当該 checkout を対象にしたコマンド実行を行わない。
   上流情報は GitHub 上の `mtaiseeei/agentic-harness` の remote / API だけを参照する。
-- 外部データは公式コネクタで都度参照し、ローカル同期層を作らない。
-- pushはユーザーが明示したときだけ行う。
+- 秘書の記憶・成果物・通常のプロジェクト・選択したChatwork room履歴は、1つのprivate GitHub repoでGit管理する。Chatwork専用repoへ分離しない。
+- Chatworkだけは、Repository SecretのAPI Tokenを使うGitHub Actions同期を許可する。その他の外部データは公式コネクタで都度参照し、同期層を作らない。
+- 初回private repo作成・初回pushと、設定時に同意したChatwork schedule pushは製品フローに含む。それ以外の予期しないpushは実行前に確認する。
 
 ## 報告
 

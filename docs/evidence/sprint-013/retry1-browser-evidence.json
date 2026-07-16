@@ -1,0 +1,89 @@
+{
+  "evaluatedAt": "2026-07-16",
+  "url": "http://127.0.0.1:8765/",
+  "errorFixtureUrl": "http://127.0.0.1:8766/",
+  "browserSurface": "Browser skill selected the existing Chrome extension surface for the local URL; headless/CDP fallback was not needed",
+  "network": [
+    { "method": "GET", "path": "/", "status": 200, "contentType": "text/html; charset=utf-8", "bytes": 999 },
+    { "method": "GET", "path": "/style.css", "status": 200, "contentType": "text/css; charset=utf-8", "bytes": 4692 },
+    { "method": "GET", "path": "/app.js", "status": 200, "contentType": "text/javascript; charset=utf-8", "bytes": 8900 },
+    { "method": "GET", "path": "/api/bootstrap", "status": 200, "contentType": "application/json; charset=utf-8", "bytes": 357 },
+    { "method": "POST", "path": "/api/confirm", "case": "unknown Room ID", "status": 400, "contentType": "application/json; charset=utf-8", "bytes": 65 }
+  ],
+  "desktop": {
+    "viewport": { "width": 1440, "height": 900, "devicePixelRatio": 1 },
+    "dom": { "scripts": 1, "stylesheets": 1, "roomCheckboxes": 4, "tokenInputs": 0, "images": 0 },
+    "computed": {
+      "bodyFontSize": "14px",
+      "bodyBackground": "rgb(255, 255, 255)",
+      "bodyColor": "rgb(57, 60, 65)",
+      "headlineFontSize": "40px",
+      "headlineColor": "rgb(23, 26, 32)",
+      "buttonCount": 2,
+      "primaryButtonCount": 1,
+      "primaryBackground": "rgb(62, 106, 225)",
+      "buttonRadius": "4px",
+      "buttonMinHeight": "48px",
+      "buttonFontSize": "14px",
+      "buttonFontWeight": "500",
+      "transition": "border-color 0.33s, background-color 0.33s, color 0.33s",
+      "gradient": false,
+      "shadow": false,
+      "transform": false,
+      "horizontalOverflow": false,
+      "teslaOrUniversalSans": false
+    },
+    "operations": [
+      "search room by 営業 and 商品",
+      "select Room ID 101 and 102 with checkboxes",
+      "verify all six intervals and select 3h",
+      "go back twice and retain room and interval state",
+      "cancel and verify config unchanged",
+      "confirm and show success results for 0 and 1 messages"
+    ]
+  },
+  "mobile": {
+    "viewport": { "width": 390, "height": 844, "devicePixelRatio": 1 },
+    "roomGridColumns": "310px",
+    "actionsDirection": "column-reverse",
+    "buttonWidths": ["350px", "350px"],
+    "buttonMinHeights": ["48px", "48px"],
+    "headlineFontSize": "28px",
+    "horizontalOverflow": false,
+    "keyboard": {
+      "roomSelection": "Space",
+      "stepNavigation": "Enter",
+      "frequencySelection": "Space",
+      "confirmation": "Enter",
+      "cancellation": "Enter",
+      "focusOutline": "3px solid rgb(23, 26, 32)",
+      "focusOutlineOffset": "3px"
+    }
+  },
+  "zoom200Equivalent": {
+    "method": "Browser viewport capability at half of 1440x900 CSS area because page zoom shortcut was not exposed by this browser surface",
+    "viewport": { "width": 720, "height": 450 },
+    "roomCheckboxes": 4,
+    "actionsDirection": "column-reverse",
+    "buttonWidths": [680, 680],
+    "buttonHeights": [48, 48],
+    "horizontalOverflow": false,
+    "fullPageScrollHeight": 973
+  },
+  "errorCases": {
+    "http400": "role=alert displayed: room一覧にないRoom IDは保存できません。",
+    "partial": [
+      "営業チーム — 成功・0件",
+      "採用プロジェクト — 失敗・一時的な通信失敗です。GitHub Actionsの結果を確認して再実行してください。"
+    ]
+  },
+  "consoleWarningsOrErrors": [],
+  "minorObservation": "Checking a room re-renders the list and momentarily returns focus to body. Tab restores visible focus to search then checkbox, and the complete keyboard-only flow remained operable.",
+  "screenshots": [
+    "retry1-desktop-review.png",
+    "retry1-mobile-room-selection.png",
+    "retry1-zoom200-equivalent.png",
+    "retry1-400-error.png",
+    "retry1-partial-result.png"
+  ]
+}

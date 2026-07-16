@@ -1,6 +1,7 @@
 # UI / UX
 
-本製品のUIはGUIではなく、対話、ファイル、コマンド案内、作業報告である。
+本製品の主UIは対話、ファイル、コマンド案内、作業報告である。
+Chatworkのroom・同期間隔設定だけは、loopbackで開くローカル設定wizardを使う。
 対象は技術に多少関心がある非エンジニアであり、**専門家同士の正確さと頭に入りやすさの中間**を目指す。
 
 ## 体験の原則
@@ -37,6 +38,50 @@
 
 口調は初回に聞かない。丁寧で堅すぎない標準設定で開始し、完了報告で「いつでも『設定変えたい』で変えられます」と伝える。
 既存 `secretary/` がある場合は通常オンボーディングへ進まず、バックアップ提案と明示確認を行う。
+
+秘書設定後は、同じ導線の中でprivate GitHub repoの名前と保存内容を確認し、repo作成、初期commit、初回pushまで完了する。
+既存remoteを検出した場合は別repoを作らず、現在のrepoを使うか確認する。
+完了画面はprivate状態、remote、初回push結果と、Chatwork接続へ進む次の1手を示す。
+
+## Chatwork設定wizard
+
+### 体験フロー
+
+1. `/chatwork` は最初に「未接続／room選択待ち／同期済み／要確認」の状態と、次の行動を1つ示す。
+2. 未接続ではAPI TokenをGitHub Actions Repository Secretへ登録する方法を案内する。Tokenをwizardへ入力させない。
+3. Secret登録後、GitHub Actionsが参加room一覧を同じprivate repoへ反映し、wizardをローカルで開く。roomが0件、取得失敗、認証失敗は別メッセージにする。
+4. room選択ではroom名を主表示、Room IDを補助表示し、検索と全解除を提供する。初期状態で全roomを選ばない。
+5. 頻度選択では30分／1時間／3時間／6時間／12時間／手動のみ、既定推奨1時間、30日換算run数を並べる。
+6. 確認stepで、対象room、頻度、保存先が同じprivate repoであること、共同編集者が本文を読めること、最新100件制約、自動push同意を1画面にまとめる。
+7. 確定後に初回取得を実行し、0件でも成功として「今後の同期から蓄積される」と伝える。成功room／失敗room／取得件数を区別する。
+8. 既存設定の変更後は、現在の選択room、現在の頻度、schedule有効／無効を結果stepに表示する。「初回設定の結果」と変更前のroom・取得件数を再表示しない。
+
+各stepは1つのprimary messageに絞り、CTAはprimaryとsecondaryの最大2つ。
+戻る操作で選択値を失わず、確定前のキャンセルはrepo・workflow・履歴を変更しない。
+
+### デザイン言語
+
+- Pure White `#FFFFFF` とLight Ash `#F4F4F4`を面に使い、見出しはCarbon Dark `#171A20`、本文はGraphite `#393C41`、補助はPewter `#5C5E62`とする。
+- Electric Blue `#3E6AE1`は各stepのprimary CTAだけに使い、状態ラベルや装飾へ広げない。
+- gradient、shadow、pattern、装飾borderを使わず、余白で階層を作る。入力やfocusに必要な最小borderはCloud Gray／Pale Silverを使う。
+- system sansを使い、400と500の2 weight、本文・label・buttonは14px中心、headlineはdesktop最大40px、mobile目安28pxとする。
+- interactive elementは4px radius。8px spacing systemを使い、desktopは中央寄せで広い余白、1画面1メッセージの静かな構成にする。
+- transitionはcolor／background／borderを0.33秒。hoverでscale・translateを使わない。`prefers-reduced-motion`を尊重する。
+- Teslaの商標、wordmark、車写真、Universal Sans等のライセンス不明フォントを使わない。添付資料の視覚原則を応用し、Teslaサイトの複製にしない。
+
+### Responsive・accessibility
+
+- 768px未満は1 column、CTA縦積み、room項目をfull widthにする。desktopは選択一覧と説明を読みやすい最大幅に収める。
+- keyboardだけでstep移動、room選択、頻度選択、確定、キャンセルができる。focusを明確に表示する。
+- checkbox、radio、入力、エラーに可視labelと関連付けを持たせる。色だけで選択・成功・失敗を伝えない。
+- touch targetは44px相当を確保し、200% zoomでも情報や操作を失わない。
+
+## `/chatwork search` の対話導線
+
+- まずpull中であることを短く示し、保存済み履歴を検索する。見つかった場合はroom名、日付、該当箇所を返す。
+- 見つからない場合は、AskUserQuestionまたはCodexのstructured input等の構造化質問で「同期して再検索（推奨）」「同期しない」「対象roomを見直す」を提示する。
+- 同期承認後は「workflow開始→待機→成功確認→pull→再検索」の現在地を示す。失敗やtimeoutを黙って再試行しない。
+- 再検索でも見つからない場合は、導入前／100件制約／未選択room／キーワード／編集・削除／同期失敗のどれが残るかを示し、存在しないと断定しない。
 
 ## 節目プロトコル
 
@@ -92,6 +137,7 @@
 ## 非機能要件
 
 - macOS / Windowsで、ファイル構造と案内が破綻しない。
+- Chatwork wizardは主要desktop browserで動き、外部interfaceへbindしない。
 - `CC_SECRETARY_NOW` により日付依存の体験を固定して検証できる。
 - 中断後は `_resume.md`、翌日への申し送りはjournal `next` で役割を混ぜずに再開できる。
 - 破壊的操作、設定変更、記憶追加の確認規約を守る。

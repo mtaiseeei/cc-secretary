@@ -16,19 +16,31 @@
 
 ## 2. 外部データ・プライバシー・Git
 
-1. 外部データのローカル同期層、キャッシュ層、`10_sources` 型の複製を作らない。公式リモートコネクタで都度参照し、根拠はサービス名＋URL/ID＋日付で示す。
-2. コネクタ由来の本文を記憶やjournalへ複製しない。事実を記録する必要があるときは出典を行内に明記する。
-3. 資格情報、トークン、パスワード、APIキーを保存・コミットしない。自動コミットは無差別なstageで秘密情報を黙って履歴化しない。
-4. 自動コミットはローカルだけ。pushはユーザーの明示指示時のみ。ただし sprint-008 のlocal/remote改名と、独立public repo `mtaiseeei/yasashii-harness` の新設・初期公開に必要なリモート操作は承認済み。
-5. コミットメッセージは、何をしたかが分かる日本語1行とし、可能な範囲で固有名詞を含める。`git log` を予備のタイムラインとして使える粒度を保つ。
-6. public / MIT と Shin-sibainu/cc-company の単段クレジットを維持する。中間フォークを必須クレジットとして追加しない。
+1. Gmail / Calendar / Drive / Microsoft 365 / Notion等は公式リモートコネクタで都度参照し、同期層や `10_sources` 型の複製を作らない。**唯一の同期例外は、選択したChatwork roomを同じprivate repoへ保存する承認済みGitHub Actions**とする。
+2. コネクタ由来の本文を記憶やjournalへ複製しない。Chatwork本文は専用の履歴領域だけに保存し、取得件数・room・時刻等の同期状態もjournalではなくChatwork専用の状態記録に分ける。
+3. Chatwork API Tokenを含む資格情報、パスワード、APIキーを保存・コミットしない。Chatwork API Tokenの正本はGitHub Actions Repository Secretだけであり、repo本文、設定、ログ、エラー、fixture、スクリーンショットに値を出さない。
+4. ユーザーワークスペースはprivate GitHub repoでなければならない。public repoへの初回pushまたはChatwork保存を拒否し、privateからpublicへ変更されたことを検出した場合は同期を止める。
+5. private repoの共同編集者は保存されたChatwork本文を読める。wizardはroom選択確定前にこの影響を表示し、ユーザーは所属組織の情報管理方針に従う。
+6. 初回オンボーディングはrepo作成、初期commit、初回pushを完了条件とする。既存remoteがある場合は現在のrepoを使う確認を行い、Chatwork専用repoを黙って作らない。
+7. scheduleによるChatworkの自動commit・pushは、対象room・頻度・保存内容を示して同意を得た後だけ許可する。検索不成立等から開始する予期しない手動同期は、実行直前に構造化質問で確認する。
+8. 通常の秘書・開発成果のpushは同じrepoのGit運用に従う。Chatworkを別repoへ分離したり、秘書の記憶・成果物だけを永続的なローカル専用正本にしたりしない。
+9. Chatworkの取得は選択roomだけに限定し、message ID単位で冪等、つまり同じ取得を繰り返しても重複しない。API応答に無いことだけを理由に取得済み履歴を削除しない。
+10. Chatwork APIの最新100件制約をユーザーへ明示する。導入前履歴の欠落、初回0件、100件より古い履歴を取得できない状態をエラーや「存在しない」の根拠にしない。
+11. コミットメッセージは、何をしたかが分かる日本語1行とし、可能な範囲で固有名詞を含める。`git log` を予備のタイムラインとして使える粒度を保つ。
+12. public / MIT と Shin-sibainu/cc-company の単段クレジットを維持する。中間フォークを必須クレジットとして追加しない。
+13. public配布repo `yasashii-secretary` へChatworkのRepository Secret、同期workflow、room設定、同期状態、履歴を置かない。これらは利用者ごとのsingle private workspaceだけに置く。
+14. 実API評価は専用private test workspaceで行う。test workspaceもpluginの利用設定・生成物、秘書、通常project、Chatwork設定・workflow・履歴を同じrepoに置き、Chatwork専用repoへ分離しない。public配布ソース自体の複製は要求しない。
+15. private test workspaceの作成、Repository Secret設定、workflow dispatch、remote push、Chatwork API送信はexternal live gateとする。各操作へのユーザー明示許可と、test用token・非機密test roomの準備が揃う前に実行しない。
+16. external live gateの準備が無い場合、合成fixtureで実APIを代替せずSprintを不合格とする。ただし理由は `external-live-gate-unavailable` と明記し、実装不具合としてGeneratorへ誤分類しない。
+17. live gateの権限は、専用private test workspaceと非機密test roomの読取・同期に必要な範囲へ限定する。証跡にはSecret名の存在、workflow run状態、件数、commit、push／pull、検索状態だけを残し、token値、不要なroom名、Chatwork本文を残さない。
+18. live gate完了後はscheduleを停止し、Repository Secretを削除し、test roomの選択を解除する。test workspaceと取得済み履歴を削除・archiveする場合は対象と影響を示し、ユーザーの明示確認後だけ行う。
 
 ## 3. 記憶保護と封じ込め
 
 1. 空内容・実質空で既存記憶を上書きしない。
 2. 削除は、対象を示す警告とユーザーの明示確認を分ける2段階にする。
 3. 記憶の増減時は `MEMORY.md` 索引を追従させ、200行以内を保つ。
-4. すべての読み書き・削除・ディレクトリ作成は path guard を先に通し、symlink解決後も `secretary/` 内である場合だけ許可する。基点自体が外部を指す symlink の場合も拒否し、拒否前に副作用を出さない。
+4. `secretary/` の記憶・成果物に対する読み書き・削除・ディレクトリ作成は path guard を先に通し、symlink解決後も `secretary/` 内である場合だけ許可する。基点自体が外部を指す symlink の場合も拒否し、拒否前に副作用を出さない。
 5. 境界外、空・`.`・親方向への脱出を非ゼロで拒否する。境界外 symlink は `exit 3` とし、文字列の前方一致だけで判定しない。
 6. 再セットアップは既存 `secretary/` のバックアップ提案と明示確認を先に行い、無確認で上書き・再初期化しない。
 
@@ -76,3 +88,14 @@
 3. 同梱スクリプトの実行権限と案内する実行方法を一致させる。
 4. 薄いルーターと段階ロードを維持し、部署制・自動case生成・patterns自動統合・hooksを追加しない。
 5. `yasashii-secretary` から同梱ハーネス、agents、ハーネスベースラインを撤去し、section 12 は参照導線の健全性を検査する。
+
+## 8. Chatwork設定wizard
+
+1. wizardはloopbackだけで利用するローカル設定画面とし、外部公開サーバーや常設サービスにしない。
+2. 画面へAPI Token入力欄を作らない。Repository Secret登録は値を画面やrepoへ戻さない導線で案内する。
+3. 変更は確認画面まで副作用を出さず、確定後だけroom設定・同期間隔・scheduleへ一貫して反映する。キャンセル時は0変更。
+4. 30分／1時間／3時間／6時間／12時間／手動のみを選べ、既定推奨は1時間。scheduleは17分起点とし、選択値と実際の動作を一致させる。
+5. 30日換算run数1440／720／240／120／60／0は概算として表示し、実課金分数ではないこと、GitHub Free privateの2,000分は変更されうる参考値であることを併記する。
+6. wizardは白／薄灰、Carbon Dark／Graphite／Pewter、primary CTAだけElectric Blue `#3E6AE1`を用いる。gradient・shadow・装飾写真・Tesla商標／wordmark・ライセンス不明フォントを使わない。
+7. UIは4px radius、8px spacing、400/500 weight、14px中心、headline最大40px、1 step 1 primary message、CTA最大2を守る。hoverは0.33秒のcolor／border変化だけで、scale／translateを使わない。
+8. 768px未満は1 column・CTA縦積みとし、desktopは中央寄せの広い余白を持つ。keyboard操作、visible focus、ラベル、エラー関連付け、十分なcontrastを必須にする。

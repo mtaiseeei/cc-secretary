@@ -1,6 +1,6 @@
 # Features
 
-機能IDと、ユーザーから見える振る舞いの正本。F01〜F16 は受け入れ済みの既存機能、F17〜F22 は 2026-07-15 方針転換で追加・再定義した機能。
+機能IDと、ユーザーから見える振る舞いの正本。F01〜F16 は受け入れ済みの既存機能、F17〜F22 は 2026-07-15 方針転換、F23〜F27 は 2026-07-16 のsingle-repo Git-first + Chatwork方針で追加・再定義した機能。
 
 ## 既存機能（F01〜F16）
 
@@ -9,10 +9,10 @@
 | F01 | マーケットプレイス配布 | `yasashii-secretary` を public / MIT で配布し、Shin-sibainu/cc-company の単段クレジットを維持する |
 | F02 | 3コマンド導入 | marketplace add → install → `/secretary` で導入できる |
 | F03 | 薄いルーター | 自然な言い回しを必要なスキルへ段階ロードし、全機能を一度に読まない |
-| F04 | オンボーディング | 5問以内で `secretary/` を安全に生成し、`git init` と初回ローカルコミットを行う |
+| F04 | オンボーディング | 5問以内で `secretary/` を安全に生成し、1つのprivate GitHub repoの作成、初期commit、初回pushまで完了する |
 | F05 | 記憶ケア | 空上書き禁止、削除2段階、索引追従、`_resume.md` による再開を提供する |
 | F06 | daily | 外部予定・タスクとローカルTODOを根拠つきで突き合わせる |
-| F07 | 自動コミット | 節目で何をしたか分かる日本語メッセージをローカルcommitし、pushしない |
+| F07 | Git履歴 | 節目で何をしたか分かる日本語メッセージをcommitし、秘書・開発・Chatworkを同じrepoの履歴として扱う。初回pushと同意済みChatwork schedule以外の予期しないpushは確認する |
 | F08 | 成果物規約 | `docs/YYYY/MM/YYYY-MM-DD_<title>.md` に frontmatter つきで保存する |
 | F09 | Google 接続 | Gmail / Calendar / Drive の公式コネクタ接続と診断を案内する |
 | F10 | 文言ルール | 一般技術用語を保ち、馴染みの薄い語だけ短く補足し、3行報告と進行表示を守る |
@@ -70,6 +70,50 @@
 - 上流HEADの前進は警告、取り込み済み上流＋overlayとの不一致、未分類の新規・削除ファイル、アンカー不在は失敗として扱う。
 - fork badge／parent relation／同じforkからの上流PRは提供しない。上流変更は本機能のスコープ外であり、将来あらためて明示承認された場合だけ `agentic-harness` 側の別branch / PR手順に分離する。
 
+## Chatwork・single-repo機能（F23〜F27）
+
+### F23 single-repo Git-first workspace
+
+- `yasashii-secretary` を使うrepoを、秘書の記憶・成果物、通常のプロジェクト開発、Chatwork履歴の共通ワークスペースにする。
+- public配布repo `yasashii-secretary` と利用者のprivate workspaceを分離する。Repository Secret、Chatwork workflow、room設定、履歴は利用者のprivate workspaceだけに置く。
+- 新規オンボーディングはprivate GitHub repoの作成、初期commit、初回pushを完了条件とする。public repoは選べない。
+- 既存remoteがあるrepoでは、別repoを黙って作らず、現在のrepoを使うかを確認する。Chatwork専用repoは作らない。
+- privateであること、remoteが接続済みであること、初回pushが成功したことをユーザーが確認できる。
+- 実API評価用の専用private test workspaceも、pluginの利用設定・生成物、秘書、通常project、Chatwork設定／workflow／履歴を1つのrepoに置き、Chatwork専用test repoを作らない。public配布ソース自体の複製は要求しない。
+
+### F24 Chatwork接続・room選択wizard
+
+- `/chatwork` から接続状態と次の行動を確認でき、未設定ならAPI TokenをGitHub Actions Repository Secretへ登録する手順へ進める。
+- API Tokenの値はrepo本文、設定ファイル、ログ、journal、fixture、画面キャプチャへ保存しない。
+- Secret登録後、GitHub Actionsが参加中のroom一覧を取得して同じprivate repoへ反映し、ローカル設定wizardはその一覧を読み、room名を見ながら複数選択できる。Git管理するのはroom一覧・選択結果・Room IDであり、tokenではない。
+- wizardは選択room、同期頻度、保存内容、private repoの共同編集者にも履歴が見えることを確定前に示す。
+- 0 room、認証エラー、rate limit、ネットワーク失敗を区別し、設定を失わず再試行できる。
+
+### F25 初回取得と基本検索
+
+- 選択roomごとにChatwork APIが返す最新100件以内を初回取得し、同じrepoへ保存する。0件でも正常完了する。
+- 導入以前の履歴は自動で遡れず、初回取得より古いメッセージが無いことを明示する。
+- message IDを基準に重複を作らず、選択していないroomを取得しない。取得済み履歴をAPI応答から消えたことだけで削除しない。
+- `/chatwork search` は最新のGit状態を取り込んでから、room、発言者、日付、キーワードで保存済み履歴を検索し、該当箇所とroom/dateの根拠を返す。
+
+### F26 定期同期と設定変更
+
+- 同期間隔は30分、1時間、3時間、6時間、12時間、手動のみから選べ、既定推奨は1時間。実行は毎時0分を避け、17分を起点にする。
+- wizardは30日換算の概算run数を順に1440、720、240、120、60、0と表示する。この数はrun回数であり、GitHub Actionsの実課金分数ではないこと、private GitHub Freeの2,000分は変更されうる参考値であることを併記する。
+- 選択した間隔は表示値だけでなく、実際のscheduleへ反映される。手動のみではscheduleを無効にする。
+- 選択roomのうち最も忙しいroomの最新100件が覆う時間幅を参考に、取りこぼしにくい間隔を提案してよい。最終決定はユーザーが行う。
+- roomと間隔はwizardから見直せる。確定前は設定・workflow・履歴へ副作用を出さず、確定後に変更内容をcommitする。
+- 設定変更後の結果は、変更後の選択room、頻度、schedule有効／無効を現在値として表示する。変更前の初回取得結果を再表示して、反映失敗と誤解させない。
+- scheduleによる自動取得・commit・pushは、セットアップで内容を示して同意を得た後だけ有効になる。
+
+### F27 見つからない時の確認付き手動同期
+
+- `/chatwork search` は最初にrepoをpullして保存済み履歴を検索する。
+- 見つからない場合、AskUserQuestionまたはCodexのstructured input等、hostの構造化質問で「同期して再検索（推奨）／同期しない／対象roomを見直す」を提示する。質問前に手動同期しない。
+- 承認時だけ手動workflowを開始し、完了まで待ち、成功を確認し、pullして同じ条件で再検索する。
+- 再検索でも見つからない場合は、導入前の履歴、最新100件制約、未選択room、キーワード不一致、編集・削除、workflow失敗を区別して示し、「Chatworkに存在しない」と断定しない。
+- 手動同期のキャンセル、失敗、timeout時はrepo内容を壊さず、何が起きたかと次の選択肢を示す。
+
 ## Gテーマと機能の対応
 
 | テーマ | 主な機能 |
@@ -78,3 +122,4 @@
 | G2 | F04 F10 F20 |
 | G3 | F14 F15 F22 |
 | G4 | F10 F14 F15 F20 F22 |
+| G5 | F04 F07 F23 F24 F25 F26 F27 |
