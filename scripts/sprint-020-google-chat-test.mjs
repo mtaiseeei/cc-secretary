@@ -108,6 +108,22 @@ try {
   } catch (error) { zeroAutomaticError = error; }
   check(zeroAutomaticError?.code === "space-required" && !existsSync(join(zeroAutomatic, "google-chat")) && readFileSync(join(zeroAutomatic, "before.txt"), "utf8") === "変更前のまま\n", "対象0件の自動取得を拒否し確定前0変更");
 
+  delete process.env.YASASHII_GOOGLE_CHAT_TEST_SECRETS;
+  for (const [interval, automaticPushConsent, label] of [["manual", false, "対象が残る手動取得"], ["3h", true, "自動取得"]]) {
+    const missingSecrets = temp(`yasashii-gchat-missing-secrets-${interval}-`);
+    let missingSecretsError;
+    try {
+      await applyGoogleChatConfig({
+        root: missingSecrets,
+        selectedSpaces: [{ name: "spaces/AAA", displayName: "営業", spaceType: "SPACE" }],
+        interval,
+        automaticPushConsent,
+        commitPushConsent: true,
+      });
+    } catch (error) { missingSecretsError = error; }
+    check(missingSecretsError?.code === "secret-missing" && !existsSync(join(missingSecrets, "google-chat")), `${label}はRepository Secret 3件がなければ変更0件で拒否`);
+  }
+
   const manual = temp("yasashii-gchat-manual-");
   const retainedHistory = join(manual, "google-chat", "history", "営業--AAA", "2026-07-18.md");
   mkdirSync(dirname(retainedHistory), { recursive: true });
@@ -122,9 +138,10 @@ try {
   });
   const manualConfig = json(join(manual, "google-chat", "config.json"));
   const manualWorkflow = readFileSync(join(manual, ".github", "workflows", "google-chat-sync.yml"), "utf8");
-  check(manualResult.status === "saved" && manualConfig.selectedSpaceNames.length === 0 && manualConfig.selectedSpaces.length === 0, "対象0件と手動のみを安全に保存");
+  check(manualResult.status === "saved" && manualConfig.selectedSpaceNames.length === 0 && manualConfig.selectedSpaces.length === 0, "Secret 0件でも対象0件と手動のみを安全に保存");
   check(manualConfig.scheduleEnabled === false && manualConfig.automaticPushConsent === false && !manualWorkflow.includes("  schedule:"), "対象0件の手動のみは同意値を残さずworkflow schedule 0件");
   check(readFileSync(retainedHistory, "utf8").includes("この履歴は残す"), "対象0件へ変更しても既存履歴を保持");
+  process.env.YASASHII_GOOGLE_CHAT_TEST_SECRETS = "1";
   delete process.env.YASASHII_GOOGLE_CHAT_SKIP_GIT;
 
   const syncRoot = temp("yasashii-gchat-sync-");

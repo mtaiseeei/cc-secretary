@@ -202,3 +202,14 @@
 
 - Generatorはlive private test workspace、Google OAuth grant、Repository Secretを操作していない。実環境の選択解除とOAuth revokeは、独立Evaluatorがユーザー許可済みのlive gateとして再確認する。
 - wizard全体の文言簡素化は別Patch Sprintの対象であり、本Retryには含めていない。
+
+### Retry 3 live追試 — Secret削除後の停止
+
+- **追加不具合**: live後始末ではRepository Secret 3件を先に削除していたため、対象0件＋手動のみの停止設定もSecret確認で拒否され、変更前へrollbackした。
+- **修正**: 対象0件かつ `interval=manual` は、今後Google APIを呼ばない停止状態としてSecret確認を不要にした。private repo確認、commit・push同意、管理path限定commit、Git状態保護は省略しない。
+- **境界維持**: 通常スペースが1件でも残る手動取得と、1h／3h／6h／12hの自動取得は、従来どおりRepository Secret 3件が必須。Secret不足時は設定、workflow、commit、pushを変更前のまま拒否する。
+- **専用回帰**: `node scripts/sprint-020-google-chat-test.mjs` → `SPRINT020_PASS=50 SPRINT020_FAIL=0`。Secret 0件の停止成功、対象ありmanualの拒否、automaticの拒否を追加した。
+- **敵対的回帰**: `node scripts/sprint-020-adversarial-test.mjs` → `SPRINT020_ADVERSARIAL_PASS=16 SPRINT020_ADVERSARIAL_FAIL=0`。Secret 0件のlocal bare remoteで停止commit・push、schedule 0件、履歴保持、既存index保持を確認した。
+- **wrapper**: `bash scripts/sprint-020-regression.sh` → `SPRINT020_WRAPPER_PASS=16 SPRINT020_WRAPPER_FAIL=0`。
+- **全回帰**: `bash scripts/regression-check.sh --offline` → `PASS=314 FAIL=0`、`bash scripts/regression-check.sh --online` → `PASS=315 FAIL=0`。
+- **UI**: wizard assetは変更していない。直前のactual wizard browser確認で成立した対象0件＋手動導線、Google Chat明示、`#11BB62`、3時間推奨、desktop／mobile／200%相当を維持する。

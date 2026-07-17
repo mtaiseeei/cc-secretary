@@ -55,6 +55,7 @@ export async function applyGoogleChatConfig({ root, selectedSpaces, availableSpa
   if (selected.some((space) => !availableNames.has(space.name))) throw Object.assign(new Error("候補にないスペースは設定できません。"), { code: "space-not-allowed" });
   if (commitPushConsent !== true) throw Object.assign(new Error("設定ファイルと自動取得処理のcommit・pushへの明示同意が必要です。"), { code: "consent-required" });
   const scheduleEnabled = interval !== "manual";
+  const stoppingAllSync = !scheduleEnabled && selected.length === 0;
   if (scheduleEnabled && automaticPushConsent !== true) throw Object.assign(new Error("定期取得と自動commit・pushへの明示同意が必要です。"), { code: "consent-required" });
 
   const git = process.env.YASASHII_GIT_BIN || "git";
@@ -67,7 +68,9 @@ export async function applyGoogleChatConfig({ root, selectedSpaces, availableSpa
       throw Object.assign(new Error("非公開のGitHubリポジトリを確認できないため、設定を変更していません。"), { code: "private-required" });
     }
   }
-  if (process.env.YASASHII_GOOGLE_CHAT_TEST_SECRETS !== "1") {
+  // 全対象を外して手動のみにする後始末は、今後APIを呼ばないためSecretを必要としない。
+  // 1件でも対象が残る場合と自動取得では、従来どおり3 Secretを必須にする。
+  if (!stoppingAllSync && process.env.YASASHII_GOOGLE_CHAT_TEST_SECRETS !== "1") {
     try {
       const list = JSON.parse((await run(gh, ["secret", "list", "--json", "name"], root)).stdout || "[]");
       const names = new Set(list.map((item) => item.name));

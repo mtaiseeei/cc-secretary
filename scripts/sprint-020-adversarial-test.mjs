@@ -138,7 +138,7 @@ try {
   mkdirSync(join(local, "google-chat", "history", "fixture--AAA"), { recursive: true });
   writeFileSync(retainedHistory, "# 取得済み履歴\n\n削除しない本文\n");
   process.env.YASASHII_GOOGLE_CHAT_TEST_PRIVATE = "1";
-  process.env.YASASHII_GOOGLE_CHAT_TEST_SECRETS = "1";
+  delete process.env.YASASHII_GOOGLE_CHAT_TEST_SECRETS;
   const stopped = await applyGoogleChatConfig({
     root: local,
     selectedSpaces: [],
@@ -154,7 +154,7 @@ try {
   const stoppedConfig = JSON.parse(readFileSync(join(local, "google-chat", "config.json"), "utf8"));
   const stoppedWorkflow = readFileSync(join(local, ".github", "workflows", "google-chat-sync.yml"), "utf8");
   const stagedAfterStop = run("git", ["diff", "--cached", "--name-only"], { cwd: local }).trim().split("\n").filter(Boolean);
-  check(stopped.status === "pushed" && stoppedConfig.selectedSpaceNames.length === 0 && stoppedConfig.selectedSpaces.length === 0 && stoppedConfig.scheduleEnabled === false && stoppedConfig.automaticPushConsent === false, "0件＋手動のみをcommit・pushして停止状態を固定する");
+  check(stopped.status === "pushed" && stoppedConfig.selectedSpaceNames.length === 0 && stoppedConfig.selectedSpaces.length === 0 && stoppedConfig.scheduleEnabled === false && stoppedConfig.automaticPushConsent === false, "Secret 0件でも0件＋手動のみをcommit・pushして停止状態を固定する");
   check(!stoppedWorkflow.includes("  schedule:") && readFileSync(retainedHistory, "utf8").includes("削除しない本文"), "停止後はworkflow schedule 0件で既存履歴を保持する");
   check(stagedAfterStop.length === 1 && stagedAfterStop[0] === "user-staged.md", "0件＋手動のみのcommit後も利用者の既存index状態を保持する", stagedAfterStop.join(","));
 
