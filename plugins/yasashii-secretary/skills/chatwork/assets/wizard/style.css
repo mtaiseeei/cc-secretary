@@ -1,4 +1,5 @@
 :root {
+  --service-accent: #F03747;
   color-scheme: light;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", sans-serif;
   color: #393c41;
@@ -21,6 +22,7 @@ code { padding: 2px 4px; color: #171a20; background: #ffffff; overflow-wrap: any
 .steps [aria-current="step"] { color: #171a20; border-color: #171a20; }
 #app { margin-top: 72px; }
 .eyebrow { margin: 0 0 16px; color: #5c5e62; font-size: 12px; font-weight: 500; letter-spacing: .12em; }
+.service-context { margin: 0 0 12px; color: #171a20; font-size: 14px; font-weight: 600; letter-spacing: .04em; }
 h1 { max-width: 720px; margin: 0; color: #171a20; font-size: clamp(28px, 4vw, 40px); line-height: 1.18; font-weight: 500; letter-spacing: -.02em; }
 .lead { max-width: 680px; margin: 24px 0 0; color: #5c5e62; font-size: 16px; line-height: 1.75; }
 .panel { margin-top: 48px; padding: 32px; background: #f4f4f4; }
@@ -33,6 +35,8 @@ details p { margin: 12px 0 0; }
 .search-label { display: block; margin-bottom: 8px; color: #171a20; font-weight: 500; }
 .search { width: 100%; min-height: 48px; padding: 0 14px; color: #171a20; background: #ffffff; border: 1px solid #d0d1d2; border-radius: 4px; outline: none; transition: border-color .33s, background-color .33s, color .33s; }
 .search:focus { border-color: #171a20; outline: 3px solid #171a20; outline-offset: 3px; }
+.text-button { min-height: 44px; margin-top: 12px; padding: 0; color: #171a20; background: transparent; border: 0; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.text-button:focus-visible { outline: 3px solid #171a20; outline-offset: 3px; }
 .room-list, .frequency-list { margin: 24px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; list-style: none; }
 .choice { min-height: 64px; display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: #ffffff; border: 1px solid #e2e3e3; border-radius: 4px; cursor: pointer; transition: border-color .33s, background-color .33s, color .33s; }
 .choice:hover { border-color: #8e8e8e; }
@@ -45,9 +49,9 @@ details p { margin: 12px 0 0; }
 .actions { margin-top: 40px; display: flex; justify-content: flex-end; gap: 8px; }
 .button { min-width: 160px; min-height: 48px; padding: 0 24px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 4px; font-weight: 500; text-align: center; text-decoration: none; cursor: pointer; transition: border-color .33s, background-color .33s, color .33s; }
 .button:focus-visible, .choice input:focus-visible { outline: 3px solid #171a20; outline-offset: 3px; }
-.button-primary { color: #ffffff; background: #3e6ae1; }
-.button-primary:hover { background: #3457b1; }
-.button-primary:disabled { background: #a9b7d8; cursor: not-allowed; }
+.button-primary { color: #000000; background: var(--service-accent); }
+.button-primary:hover { color: #000000; background: var(--service-accent); filter: brightness(.94); }
+.button-primary:disabled { color: #000000; background: var(--service-accent); cursor: not-allowed; opacity: .5; }
 .button-secondary { color: #171a20; background: transparent; border-color: #8e8e8e; }
 .button-secondary:hover { background: #f4f4f4; border-color: #171a20; }
 .summary { margin: 48px 0 0; display: grid; gap: 1px; background: #e2e3e3; }

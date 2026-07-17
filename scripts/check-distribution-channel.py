@@ -24,7 +24,10 @@ CURRENT_FILES = {
     "docs/spec.md": "current specification index",
     "docs/sprints/state.md": "current orchestration state",
     "docs/sprints/sprint-018.md": "current sprint contract",
+    "docs/sprints/sprint-019.md": "current sprint contract",
+    "docs/sprints/sprint-020.md": "next sprint contract",
     "docs/progress/sprint-018.md": "current generator handoff",
+    "docs/progress/sprint-019.md": "current generator handoff",
 }
 
 TARGET_PREFIXES = {
@@ -155,11 +158,16 @@ def protected_history_changes(root: Path) -> list[str]:
     for path in changed:
         if path.startswith(("backup/", "docs/evidence/", "docs/feedback/")):
             protected.append(path)
-        elif path.startswith("docs/progress/") and path != "docs/progress/sprint-018.md":
+        elif path.startswith("docs/progress/") and path not in {
+            "docs/progress/sprint-018.md",
+            "docs/progress/sprint-019.md",
+        }:
             protected.append(path)
         elif path.startswith("docs/sprints/") and path not in {
             "docs/sprints/state.md",
             "docs/sprints/sprint-018.md",
+            "docs/sprints/sprint-019.md",
+            "docs/sprints/sprint-020.md",
         }:
             protected.append(path)
     return protected
@@ -202,26 +210,9 @@ def preservation_errors(root: Path) -> list[str]:
             errors.append(f"update support script is missing: {required}")
     if not (root / "plugins/yasashii-secretary/migrations/0.3.0-to-0.4.0.json").is_file():
         errors.append("version-specific workspace migration is missing")
+    if not (root / "plugins/yasashii-secretary/migrations/0.4.0-to-0.5.0.json").is_file():
+        errors.append("current release workspace migration boundary is missing")
 
-    public_paths = [
-        root / "README.md",
-        root / "CLAUDE.md",
-        root / ".claude-plugin/marketplace.json",
-        root / "plugins/yasashii-secretary",
-        root / "docs/guide",
-    ]
-    future_terms = ("Google" + " Chat", "GOOGLE" + "_CHAT")
-    for candidate in public_paths:
-        files = [candidate] if candidate.is_file() else sorted(candidate.rglob("*"))
-        for path in files:
-            if not path.is_file():
-                continue
-            try:
-                text = path.read_text()
-            except UnicodeDecodeError:
-                continue
-            if any(term in text for term in future_terms):
-                errors.append(f"future integration leaked into {path.relative_to(root)}")
     errors.extend(f"protected record changed:{path}" for path in protected_history_changes(root))
     return errors
 
@@ -282,7 +273,7 @@ def main() -> int:
     print("PASS current target surfaces contain no legacy channel-specific expression")
     print("PASS MIT, direct credit, forkedFrom, identities, and release version are preserved")
     print("PASS protected audit records and completed sprint contracts are unchanged")
-    print("PASS Sprint 018 update surfaces and version-specific migration exist without future chat integration leakage")
+    print("PASS Sprint 018 update surfaces and release migration boundaries exist")
     return 0
 
 

@@ -52,6 +52,7 @@ trigger: /secretary
 | 「Microsoft につなぎたい」「Outlook／Teams を見て」 | Microsoft 接続ガイド（setup-microsoft） | `${CLAUDE_PLUGIN_ROOT}/skills/setup-microsoft/SKILL.md` |
 | 「Notion につなぎたい」 | Notion 接続ガイド（任意・setup-notion） | `${CLAUDE_PLUGIN_ROOT}/skills/setup-notion/SKILL.md` |
 | 「Chatworkにつなぎたい」「roomを選びたい」「Chatworkで探して」「/chatwork」 | Chatwork接続・room設定・履歴検索（chatwork） | `${CLAUDE_PLUGIN_ROOT}/skills/chatwork/SKILL.md` |
+| 「Google Chatにつなぎたい」「GChatで探して」「/google-chat」 | Google Chat高度接続・通常スペース履歴検索（google-chat） | `${CLAUDE_PLUGIN_ROOT}/skills/google-chat/SKILL.md` |
 | 「繋がってる？」「接続の調子」「診断して」「どれが使える？」 | 接続診断（connections） | `${CLAUDE_PLUGIN_ROOT}/skills/connections/SKILL.md` |
 | 「設定変えたい」「もっとフランクに」「専門用語そのままで」「呼び方を変えて」 | 個人設定（settings） | `${CLAUDE_PLUGIN_ROOT}/skills/settings/SKILL.md` |
 | 「プロジェクトにまとめたい」「案件を整理したい」「プロジェクトの状況」「完了にしたい」「再開したい」 | 継続する仕事の整理（projects） | `${CLAUDE_PLUGIN_ROOT}/skills/projects/SKILL.md` |
@@ -60,7 +61,7 @@ trigger: /secretary
 | 「作って」「開発したい」「アプリ／ツールにして」 | 開発の入口（build） | `${CLAUDE_PLUGIN_ROOT}/skills/build/SKILL.md` |
 | 「もう一度セットアップ」「作り直したい」 | 再セットアップ（保護あり） | 下記「作り直し（再セットアップ）の保護」 |
 
-LINE等の未対応サービスは準備中。ChatworkだけはRepository SecretとGitHub Actionsを使う読取専用同期に対応する。Notion は任意で、繋がなくても他の機能は普通に使える。
+LINE等の未対応サービスは準備中。Chatworkと明示設定済みGoogle Chatは、Repository Secretを使う読取専用同期に対応する。Notion は任意で、繋がなくても他の機能は普通に使える。
 準備中の機能を求められたら、正直に「その機能は準備中です」と伝え、いまできることを代わりに提案する。断定せず、できないことはできないと言う。
 
 どのロード先でも、同じ成果に向けた複数行動・複数セッションを含む候補シグナルが2つ以上揃ったら、
@@ -115,6 +116,7 @@ LINE等の未対応サービスは準備中。ChatworkだけはRepository Secret
 - Microsoft 接続: `${CLAUDE_PLUGIN_ROOT}/skills/setup-microsoft/SKILL.md`
 - Notion 接続（任意）: `${CLAUDE_PLUGIN_ROOT}/skills/setup-notion/SKILL.md`
 - Chatwork 接続・検索: `${CLAUDE_PLUGIN_ROOT}/skills/chatwork/SKILL.md`
+- Google Chat 接続・検索: `${CLAUDE_PLUGIN_ROOT}/skills/google-chat/SKILL.md`
 - 接続診断: `${CLAUDE_PLUGIN_ROOT}/skills/connections/SKILL.md`
 - 個人設定: `${CLAUDE_PLUGIN_ROOT}/skills/settings/SKILL.md`
 - 週次ふりかえり・索引退避: `${CLAUDE_PLUGIN_ROOT}/skills/weekly/SKILL.md`

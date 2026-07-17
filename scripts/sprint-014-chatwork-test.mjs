@@ -213,7 +213,8 @@ await fetch(`${wizardUrl}api/confirm`, { method: "POST", headers: { "content-typ
 check("room解除は今後の取得だけ停止し既存履歴を保持", existsSync(join(wizardRoot, "chatwork", "history", "102.json")) && !readFileSync(join(wizardRoot, ".github", "workflows", "chatwork-sync.yml"), "utf8").includes("  schedule:"));
 const changedStatus = await (await fetch(`${wizardUrl}api/status`)).json();
 check("設定変更statusは現在のroom・頻度・scheduleを返す", changedStatus.dispatch.operation === "configuration-change" && changedStatus.dispatch.config.selectedRoomIds.join() === "101" && changedStatus.dispatch.config.interval === "manual" && changedStatus.dispatch.config.scheduleEnabled === false);
-const appSource = readFileSync(join(plugin, "skills", "chatwork", "assets", "wizard", "app.js"), "utf8");
+const appSource = readFileSync(join(plugin, "skills", "chatwork", "assets", "wizard", "app.js"), "utf8")
+  .replace(/^import \{ installWizardShell \} from "\/common\.js";\n/, 'const installWizardShell = () => ({ app: document.querySelector("#app") });\n');
 const appDom = { innerHTML: "", querySelector: () => ({ onclick: null }) };
 const browserContext = {
   document: { querySelector: (selector) => selector === "#app" ? appDom : null, querySelectorAll: () => [] },
@@ -245,7 +246,7 @@ const officialUrls = [
 check("wizardは4段階Token導線と組織申請分岐を持つ", ["接続 1 / 4", "接続 2 / 4", "接続 3 / 4", "接続 4 / 4", "承認前はルーム一覧を取得しません", "CHATWORK_API_TOKEN"].every((text) => wizardSource.includes(text)));
 check("wizard外部リンクは新しいタブと日本語accessible name", wizardSource.includes('target="_blank"') && wizardSource.includes("新しいタブで開く") && wizardSource.includes('rel="noopener noreferrer"'));
 check("wizardにToken入力surfaceなし", !/type=\\?['\"]password|name=\\?['\"][^'\"]*token/i.test(wizardSource));
-check("6間隔と30日換算の概算実行回数を表示", ["30分ごと", "1時間ごと（おすすめ）", "3時間ごと", "6時間ごと", "12時間ごと", "手動のみ", "1440", "720", "240", "120", "60"].every((text) => wizardSource.includes(text)));
+check("6間隔と3時間推奨・30日換算の概算実行回数を表示", ["30分ごと", "1時間ごと", "3時間ごと（おすすめ・初期値）", "6時間ごと", "12時間ごと", "手動のみ", "1440", "720", "240", "120", "60"].every((text) => wizardSource.includes(text)));
 check("2,000分は処理時間枠としてdetailsに分離", wizardSource.includes("料金と実行時間について") && wizardSource.includes("2,000回の実行枠ではありません") && wizardSource.includes("2026年7月時点"));
 check("確認stepは目的先行の自動保存同意", wizardSource.includes("取得結果をこのリポジトリへ自動保存します（Gitのcommit・push）"));
 check("wizard・Skill・README・公開guideの公式URLが一致", [wizardSource, skill, readme, connectorGuide].every((source) => officialUrls.every((url) => source.includes(url))));

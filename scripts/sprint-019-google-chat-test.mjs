@@ -1,0 +1,122 @@
+#!/usr/bin/env node
+
+import { execFileSync, spawn } from "node:child_process";
+import { mkdtempSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { createPkceState, authorizationRequest, GOOGLE_CHAT_SCOPES, parseDesktopClientJson, validateCallback } from "../plugins/yasashii-secretary/skills/google-chat/scripts/oauth-session.mjs";
+import { initialGoogleChatSync } from "../plugins/yasashii-secretary/skills/google-chat/scripts/sync.mjs";
+import { searchGoogleChat } from "../plugins/yasashii-secretary/skills/google-chat/scripts/search.mjs";
+
+const repo = resolve(fileURLToPath(new URL("..", import.meta.url)));
+const fixturePath = join(repo, "scripts", "fixtures", "google-chat-wizard", "google-chat.json");
+const fixture = JSON.parse(readFileSync(fixturePath, "utf8"));
+let passed = 0;
+let failed = 0;
+function check(name, condition) { if (condition) { passed += 1; process.stdout.write(`  PASS ${name}\n`); } else { failed += 1; process.stdout.write(`  FAIL ${name}\n`); } }
+function temp(name) { const root = mkdtempSync(join(tmpdir(), `yasashii-s019-${name}-`)); execFileSync("git", ["init", "-q", "-b", "main"], { cwd: root }); writeFileSync(join(root, "README.md"), "fixture\n"); execFileSync("git", ["add", "README.md"], { cwd: root }); execFileSync("git", ["-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "fixture"], { cwd: root }); execFileSync("git", ["remote", "add", "origin", `https://github.com/fixture/${name}.git`], { cwd: root }); return root; }
+
+const pkce = createPkceState();
+check("PKCE verifier/challengeとstateを別々に生成", pkce.verifier.length >= 43 && pkce.challenge.length >= 43 && pkce.state.length >= 32 && ![pkce.challenge, pkce.state].includes(pkce.verifier));
+const runtimeId = ["runtime", "client", Date.now(), process.pid].join("-");
+const runtimeSecret = ["runtime", "secret", process.pid, Date.now()].join("-");
+const client = parseDesktopClientJson({ installed: { client_id: runtimeId, client_secret: runtimeSecret, auth_uri: "https://accounts.google.com/o/oauth2/v2/auth", token_uri: "https://oauth2.googleapis.com/token", redirect_uris: ["http://localhost"] } });
+const auth = authorizationRequest({ ...client, redirectUri: "http://127.0.0.1:54321/oauth/callback", ...pkce });
+check("OAuth要求はread-only 3 scopeだけ", auth.searchParams.get("scope").split(" ").sort().join() === [...GOOGLE_CHAT_SCOPES].sort().join() && !/write|admin|membership/.test(auth.searchParams.get("scope")));
+check("OAuth要求はPKCE S256とstateとloopback", auth.searchParams.get("code_challenge_method") === "S256" && auth.searchParams.get("state") === pkce.state && auth.searchParams.get("redirect_uri").startsWith("http://127.0.0.1:"));
+check("Web clientをDesktop appへfallbackしない", (() => { try { parseDesktopClientJson({ web: { client_id: runtimeId } }); return false; } catch (error) { return error.code === "desktop-client-required"; } })());
+check("Google公式以外のOAuth endpointへ資格情報を送らない", (() => { try { parseDesktopClientJson({ installed: { client_id: runtimeId, client_secret: runtimeSecret, auth_uri: "https://example.invalid/auth", token_uri: "https://example.invalid/token", redirect_uris: ["http://localhost"] } }); return false; } catch (error) { return error.code === "client-json-invalid"; } })());
+check("callback成功は認可コードだけを即時返す", validateCallback({ expectedState: "state-ok", expectedOrigin: "http://127.0.0.1:5000", requestUrl: "http://127.0.0.1:5000/oauth/callback?state=state-ok&code=runtime-code" }) === "runtime-code");
+check("state不一致を拒否", (() => { try { validateCallback({ expectedState: "expected", expectedOrigin: "http://127.0.0.1:5000", requestUrl: "http://127.0.0.1:5000/oauth/callback?state=wrong&code=x" }); return false; } catch (error) { return error.code === "state-mismatch"; } })());
+check("callback不一致を拒否", (() => { try { validateCallback({ expectedState: "s", expectedOrigin: "http://127.0.0.1:5000", requestUrl: "http://127.0.0.1:5001/oauth/callback?state=s&code=x" }); return false; } catch (error) { return error.code === "callback-mismatch"; } })());
+check("同意拒否を区別", (() => { try { validateCallback({ expectedState: "s", expectedOrigin: "http://127.0.0.1:5000", requestUrl: "http://127.0.0.1:5000/oauth/callback?error=access_denied&state=s" }); return false; } catch (error) { return error.code === "access-denied"; } })());
+
+function fixtureClient(data = fixture) {
+  return {
+    async listSpaces() { return data.spaces; },
+    async getSpace(name) { return data.spaces.find((space) => space.name === name); },
+    async listAllMessages(name) { const pages = data.messagePages[name] || [[]]; if (pages.some((page) => page?.error)) throw Object.assign(new Error("部分失敗"), { code: pages.find((page) => page.error).error }); return pages.flat(); },
+    async displayName(name) { return data.people[name] || null; },
+  };
+}
+
+const storageRoot = temp("storage");
+const normalSpaces = fixture.spaces.filter((space) => space.spaceType === "SPACE");
+const sync = await initialGoogleChatSync({ root: storageRoot, selectedSpaceNames: ["spaces/space-a", "spaces/space-empty", "spaces/space-fail"], spaces: normalSpaces, client: fixtureClient() });
+check("全page・0件・space部分失敗を区別", sync.status === "partial" && sync.results.find((item) => item.name === "spaces/space-a").messages === 3 && sync.results.find((item) => item.name === "spaces/space-empty").messages === 0 && sync.results.find((item) => item.name === "spaces/space-fail").status === "failed");
+const historyFiles = readdirSync(join(storageRoot, "google-chat", "history", "営業会議--space-a")).sort();
+check("Asia/Tokyo日界で日付別Markdown", historyFiles.join() === "2026-07-16.md,2026-07-17.md");
+const day17Path = join(storageRoot, "google-chat", "history", "営業会議--space-a", "2026-07-17.md");
+const day17 = readFileSync(day17Path, "utf8");
+check("thread・発言者fallback・添付metadata・削除metadataを保存", day17.includes("threads/thread-1") && day17.includes("Google Chatユーザー 200") && day17.includes("確認資料.pdf") && day17.includes("drive-reference-1") && day17.includes("削除済みメッセージ"));
+check("添付本文を保存しない", !day17.includes("attachmentData") && !day17.includes("downloadUri"));
+const before = day17;
+await initialGoogleChatSync({ root: storageRoot, selectedSpaceNames: ["spaces/space-a"], spaces: normalSpaces, client: fixtureClient() });
+const repeated = readFileSync(day17Path, "utf8");
+check("同一message再取得で重複せず既存投稿を保持", (repeated.match(/google-chat-message:/g) || []).length === 2 && repeated === before);
+const tamperedSpaces = [...normalSpaces, { name: "spaces/direct-a", displayName: "個別DM", spaceType: "SPACE" }];
+const rejected = await initialGoogleChatSync({ root: temp("tamper"), selectedSpaceNames: ["spaces/direct-a"], spaces: tamperedSpaces, client: fixtureClient() });
+check("取得実行時のspaceType再検証でDM拒否", rejected.status === "failed" && rejected.results[0].code === "space-type-rejected");
+const found = searchGoogleChat({ root: storageRoot, query: "見積書", skipPull: true });
+const missing = searchGoogleChat({ root: storageRoot, query: "存在しない語", skipPull: true });
+check("基本検索foundはspace・日付・該当箇所", found.status === "found" && found.matches[0].path.includes("営業会議") && found.matches[0].date === "2026-07-16" && found.matches[0].line > 0);
+check("not foundは保存済み範囲に限定", missing.status === "not-found-locally" && !missing.message.includes("Google Chatに存在しません"));
+
+async function startServer(extraEnv = {}) {
+  const root = temp(`wizard-${Date.now()}`);
+  const child = spawn(process.execPath, [join(repo, "plugins", "yasashii-secretary", "skills", "google-chat", "scripts", "wizard-server.mjs"), "--root", root, "--port", "0"], { env: { ...process.env, YASASHII_GOOGLE_CHAT_SYNTHETIC: "1", YASASHII_GOOGLE_CHAT_TEST_PRIVATE: "1", YASASHII_GOOGLE_CHAT_SKIP_GIT: "1", YASASHII_GOOGLE_CHAT_FIXTURE: fixturePath, ...extraEnv } });
+  let output = ""; child.stdout.on("data", (chunk) => { output += chunk; });
+  let errors = ""; child.stderr.on("data", (chunk) => { errors += chunk; });
+  for (let attempt = 0; attempt < 80 && !output.match(/http:\/\//); attempt += 1) await new Promise((wait) => setTimeout(wait, 50));
+  const base = output.match(/http:\/\/127\.0\.0\.1:\d+\//)?.[0];
+  if (!base) throw new Error(`wizard did not start: ${errors}`);
+  return { child, root, base };
+}
+
+async function api(base, path, body) { const response = await fetch(`${base}${path}`, { method: body === undefined ? "GET" : "POST", headers: { "content-type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) }); return { response, json: await response.json() }; }
+const wizard = await startServer();
+const bootstrap = await api(wizard.base, "api/bootstrap");
+check("Google Chat wizardはloopbackだけで起動し3時間初期値", wizard.base.startsWith("http://127.0.0.1:") && bootstrap.json.defaultInterval === "3h" && bootstrap.json.intervals.join() === "1h,3h,6h,12h,manual");
+for (const [mode, code] of [["denied", "access-denied"], ["state-mismatch", "state-mismatch"], ["callback-mismatch", "callback-mismatch"], ["admin-blocked", "admin-blocked"], ["api-disabled", "api-disabled"]]) {
+  const result = await api(wizard.base, "api/oauth/synthetic", { mode });
+  check(`synthetic ${mode}を区別`, result.response.status === 400 && result.json.code === code && result.json.secretNames.length === 0);
+}
+const authorized = await api(wizard.base, "api/oauth/synthetic", { mode: "success" });
+check("成功時は3 Secret名だけを返し値を返さない", authorized.response.ok && authorized.json.secretNames.join() === "GOOGLE_OAUTH_CLIENT_ID,GOOGLE_OAUTH_CLIENT_SECRET,GOOGLE_OAUTH_REFRESH_TOKEN_GCHAT" && !JSON.stringify(authorized.json).includes(runtimeId));
+const discovered = await api(wizard.base, "api/spaces", {});
+check("候補はSPACEだけ・DM/group DM 0件・初期選択0", discovered.json.spaces.length === 3 && discovered.json.excluded === 2 && !JSON.stringify(discovered.json).includes("個別DM") && !JSON.stringify(discovered.json).includes("グループDM"));
+const noConsent = await api(wizard.base, "api/initial-sync", { selectedSpaceNames: ["spaces/space-a"], interval: "3h", saveConsent: true, commitPushConsent: false });
+check("専用確認の同意前は設定・履歴・commit・push 0", noConsent.response.status === 400 && !readFileSync(join(wizard.root, "README.md"), "utf8").includes("google-chat") && !readdirSync(wizard.root).includes("google-chat"));
+const completed = await api(wizard.base, "api/initial-sync", { selectedSpaceNames: ["spaces/space-a", "spaces/space-empty"], interval: "3h", saveConsent: true, commitPushConsent: true });
+check("初回ローカル取得はtoken破棄・workflow dispatch 0", completed.response.ok && completed.json.tokenDiscarded === true && completed.json.workflowDispatches === 0 && readFileSync(join(wizard.root, "google-chat", "config.json"), "utf8").includes('"interval": "3h"'));
+const cancelled = await api(wizard.base, "api/cancel", {});
+check("OAuth後キャンセルはSecret削除とgrant revoke状態", cancelled.json.cleanup.secretsDeleted === true && cancelled.json.cleanup.grantRevoked === true && cancelled.json.oauth.secretNames.length === 0);
+const persisted = readdirSync(wizard.root, { recursive: true }).filter((name) => typeof name === "string").map((name) => { try { return readFileSync(join(wizard.root, name), "utf8"); } catch { return ""; } }).join("\n");
+check("runtime client ID・secret・tokenを永続化しない", !persisted.includes(runtimeId) && !persisted.includes(runtimeSecret) && !persisted.includes("memory-") && !persisted.includes("runtime-code"));
+wizard.child.kill("SIGTERM");
+
+const failedServer = await startServer({ YASASHII_GOOGLE_CHAT_SECRET_FAILURE: "1" });
+const secretFailure = await api(failedServer.base, "api/oauth/synthetic", { mode: "success" });
+check("Secret登録失敗で接続済みにしない", secretFailure.response.status === 400 && secretFailure.json.code === "secret-registration-failed" && secretFailure.json.secretNames.length === 0);
+failedServer.child.kill("SIGTERM");
+
+const wizardServerSource = readFileSync(join(repo, "plugins", "yasashii-secretary", "skills", "google-chat", "scripts", "wizard-server.mjs"), "utf8");
+check("Repository Secret値はghのstdinへ渡しハイフン文字を登録しない", wizardServerSource.includes('["secret", "set", name]') && wizardServerSource.includes("child.stdin.end(value)") && !wizardServerSource.includes('["secret", "set", name, "--body", "-"]'));
+
+const common = readFileSync(join(repo, "plugins", "yasashii-secretary", "skills", "chatwork", "assets", "wizard", "common.js"), "utf8");
+const css = readFileSync(join(repo, "plugins", "yasashii-secretary", "skills", "chatwork", "assets", "wizard", "style.css"), "utf8");
+const chatApp = readFileSync(join(repo, "plugins", "yasashii-secretary", "skills", "chatwork", "assets", "wizard", "app.js"), "utf8");
+const googleApp = readFileSync(join(repo, "plugins", "yasashii-secretary", "skills", "google-chat", "assets", "wizard", "app.js"), "utf8");
+check("両wizardは同じshell・index・CSS assetを共有", chatApp.includes('installWizardShell("chatwork")') && googleApp.includes('installWizardShell("google-chat")') && common.includes("Chatworkの設定") && common.includes("Google Chatの設定"));
+check("指定CTA色・黒前景・旧青0", common.includes("#F03747") && common.includes("#11BB62") && css.includes("color: #000000") && !/#3e6ae1/i.test(`${common}\n${css}\n${chatApp}\n${googleApp}`));
+function luminance(hex) { const channels = hex.match(/[0-9a-f]{2}/gi).map((part) => parseInt(part, 16) / 255).map((value) => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4); return .2126 * channels[0] + .7152 * channels[1] + .0722 * channels[2]; }
+check("指定背景と黒前景はcontrast 4.5:1以上", ["F03747", "11BB62"].every((hex) => (luminance(hex) + .05) / .05 >= 4.5));
+check("両サービス3時間推奨・初期値", chatApp.includes('interval: "3h"') && chatApp.includes("3時間ごと（おすすめ・初期値）") && googleApp.includes('interval: "3h"') && googleApp.includes("3時間ごと（おすすめ・初期値）"));
+
+const distributed = [readFileSync(join(repo, "README.md"), "utf8"), readFileSync(join(repo, "plugins", "yasashii-secretary", "skills", "google-chat", "SKILL.md"), "utf8")].join("\n");
+check("README高度設定と管理者順序・People API限界", distributed.includes("Google Chatをつなぐ（少し高度な設定）") && distributed.includes("Google Workspace管理者") && distributed.includes("Internal") && distributed.includes("Desktop app") && distributed.includes("連絡先にない同僚名"));
+check("public repoにGoogle Chat workflow・利用者設定・履歴なし", !readdirSync(join(repo, "plugins", "yasashii-secretary", "workspace-templates", ".github", "workflows")).some((name) => /google|gchat/i.test(name)) && !readdirSync(join(repo, "plugins", "yasashii-secretary", "workspace-templates")).some((name) => name === "google-chat"));
+
+process.stdout.write(`SPRINT019_PASS=${passed} SPRINT019_FAIL=${failed}\n`);
+process.exit(failed ? 1 : 0);

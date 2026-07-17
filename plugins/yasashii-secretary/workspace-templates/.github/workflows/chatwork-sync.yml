@@ -1,6 +1,8 @@
 name: Chatwork sync
 
 on:
+  # 3時間ごと（おすすめ・初期値）を有効にする例: cron: '17 */3 * * *'
+  # wizardで明示同意するまではscheduleを作らない。
   workflow_dispatch:
     inputs:
       mode:

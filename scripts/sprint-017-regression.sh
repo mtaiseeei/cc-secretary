@@ -216,7 +216,7 @@ guide = (repo / "docs/guide/updates.md").read_text()
 skill = (plugin / "skills/update/SKILL.md").read_text()
 check("第三者marketplaceの自動更新既定offを明記", "第三者marketplaceの自動更新は既定で無効" in guide and "第三者marketplaceの自動更新は既定で無効" in skill)
 check("自動更新でもworkspaceは自動置換しないと明記", "workspaceへコピー" in guide and "自動では置き換わりません" in guide)
-check("Google Chatを実装していない", "Google" + " Chat" not in (repo / "README.md").read_text() and "Google" + " Chat" not in skill)
+check("更新診断へGoogle Chat変更を混在させない", "skills/google-chat" not in skill and "google-chat/" not in source and "wizard-server" not in source)
 
 print(f"PASS={passed} FAIL={failed}")
 sys.exit(1 if failed else 0)

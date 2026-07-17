@@ -16,24 +16,24 @@
 
 ## 2. 外部データ・プライバシー・Git
 
-1. Gmail / Calendar / Drive / Microsoft 365 / Notion等は公式リモートコネクタで都度参照し、同期層や `10_sources` 型の複製を作らない。**唯一の同期例外は、選択したChatwork roomを同じprivate repoへ保存する承認済みGitHub Actions**とする。
-2. コネクタ由来の本文を記憶やjournalへ複製しない。Chatwork本文は専用の履歴領域だけに保存し、取得件数・room・時刻等の同期状態もjournalではなくChatwork専用の状態記録に分ける。
+1. Gmail / Calendar / Drive / Microsoft 365 / Notion等は公式リモートコネクタで都度参照し、同期層や `10_sources` 型の汎用複製を作らない。**同期例外は、選択したChatwork roomとGoogle Chat通常スペースを同じprivate repoへ保存する承認済みGitHub Actions**に限定する。
+2. コネクタ由来の本文を記憶やjournalへ複製しない。Chatwork／Google Chat本文はサービス別の履歴領域だけに保存し、取得件数・対象・時刻等の同期状態もjournalではなく各サービス専用の状態記録に分ける。
 3. Chatwork API Tokenを含む資格情報、パスワード、APIキーを保存・コミットしない。Chatwork API Tokenの正本はGitHub上の安全な保管場所（Repository Secret）だけであり、repo本文、設定、ログ、エラー、fixture、スクリーンショット、会話、wizardに値を出さない。Tokenは有効期限がなくChatwork機能へフルアクセスできる資格情報として扱い、第三者へ開示しない。
-4. ユーザーワークスペースはprivate GitHub repoでなければならない。public repoへの初回pushまたはChatwork保存を拒否し、privateからpublicへ変更されたことを検出した場合は同期を止める。
-5. private repoの共同編集者は保存されたChatwork本文を読める。wizardはroom選択確定前にこの影響を表示し、ユーザーは所属組織の情報管理方針に従う。
+4. ユーザーワークスペースはprivate GitHub repoでなければならない。public repoへの初回pushまたはチャット保存を拒否し、privateからpublicへ変更されたことを検出した場合は同期を止める。
+5. private repoの共同編集者は保存されたChatwork／Google Chat本文を読める。wizardは対象選択確定前にこの影響を表示し、ユーザーは所属組織の情報管理方針に従う。
 6. 初回オンボーディングはrepo作成、初期commit、初回pushを完了条件とする。既存remoteがある場合は現在のrepoを使う確認を行い、Chatwork専用repoを黙って作らない。
-7. scheduleによるChatworkの自動commit・pushは、対象room・頻度・保存内容を示して同意を得た後だけ許可する。検索不成立等から開始する予期しない手動同期は、実行直前に構造化質問で確認する。
-8. 通常の秘書・一般プロジェクト成果のpushは同じworkspace repoのGit運用に従う。別repoを正本にした開発PJはそのrepoのGit運用に従い、workspace側へ履歴や正本を複製しない。Chatworkを別repoへ分離したり、秘書の記憶・成果物だけを永続的なローカル専用正本にしたりしない。
+7. scheduleによるChatwork／Google Chatの自動commit・pushは、対象・間隔・保存内容を示して同意を得た後だけ許可する。検索不成立等から開始する予期しない手動同期は、実行直前に構造化質問で確認する。
+8. 通常の秘書・一般プロジェクト成果のpushは同じworkspace repoのGit運用に従う。別repoを正本にした開発PJはそのrepoのGit運用に従い、workspace側へ履歴や正本を複製しない。チャットを別repoへ分離したり、秘書の記憶・成果物だけを永続的なローカル専用正本にしたりしない。
 9. Chatworkの取得は選択roomだけに限定し、message ID単位で冪等、つまり同じ取得を繰り返しても重複しない。API応答に無いことだけを理由に取得済み履歴を削除しない。
 10. Chatwork APIの最新100件制約をユーザーへ明示する。導入前履歴の欠落、初回0件、100件より古い履歴を取得できない状態をエラーや「存在しない」の根拠にしない。
 11. コミットメッセージは、何をしたかが分かる日本語1行とし、可能な範囲で固有名詞を含める。`git log` を予備のタイムラインとして使える粒度を保つ。
 12. public / MIT と Shin-sibainu/cc-company の単段クレジットを維持する。中間フォークを必須クレジットとして追加しない。
-13. public配布repo `yasashii-secretary` へChatworkのRepository Secret、同期workflow、room設定、同期状態、履歴を置かない。これらは利用者ごとのsingle private workspaceだけに置く。
-14. 実API評価は専用private test workspaceで行う。test workspaceもpluginの利用設定・生成物、秘書、通常project、Chatwork設定・workflow・履歴を同じrepoに置き、Chatwork専用repoへ分離しない。public配布ソース自体の複製は要求しない。
-15. private test workspaceの作成、Repository Secret設定、workflow dispatch、remote push、Chatwork API送信はexternal live gateとする。各操作へのユーザー明示許可と、test用token・非機密test roomの準備が揃う前に実行しない。
+13. public配布repo `yasashii-secretary` へChatwork／Google ChatのRepository Secret、同期workflow、対象設定、同期状態、履歴を置かない。これらは利用者ごとのsingle private workspaceだけに置く。
+14. 実API評価は専用private test workspaceで行う。test workspaceもpluginの利用設定・生成物、秘書、通常project、Chatwork／Google Chat設定・workflow・履歴を同じrepoに置き、チャット専用repoへ分離しない。public配布ソース自体の複製は要求しない。
+15. private test workspaceの作成、Repository Secret設定、workflow dispatch、remote push、Chatwork／Google Chat API送信はexternal live gateとする。各操作へのユーザー明示許可と、サービス別のtest資格情報・非機密test room／spaceの準備が揃う前に実行しない。
 16. external live gateの準備が無い場合、合成fixtureで実APIを代替せずSprintを不合格とする。ただし理由は `external-live-gate-unavailable` と明記し、実装不具合としてGeneratorへ誤分類しない。
-17. live gateの権限は、専用private test workspaceと非機密test roomの読取・同期に必要な範囲へ限定する。証跡にはSecret名の存在、workflow run状態、件数、commit、push／pull、検索状態だけを残し、token値、不要なroom名、Chatwork本文を残さない。
-18. live gate完了後はscheduleを停止し、Repository Secretを削除し、test roomの選択を解除する。test workspaceと取得済み履歴を削除・archiveする場合は対象と影響を示し、ユーザーの明示確認後だけ行う。
+17. live gateの権限は、専用private test workspaceと非機密test room／spaceの読取・同期に必要な範囲へ限定する。証跡にはSecret名の存在、workflow run状態、件数、commit、push／pull、検索状態だけを残し、token値、不要な対象名、チャット本文を残さない。
+18. live gate完了後はscheduleを停止し、Repository Secretを削除し、test room／spaceの選択を解除する。Google ChatではGoogle側のOAuth grant／tokenもrevokeし、アプリ権限の取消を確認する。test workspaceと取得済み履歴を削除・archiveする場合は対象と影響を示し、ユーザーの明示確認後だけ行う。
 
 ## 3. 記憶保護と封じ込め
 
@@ -97,14 +97,15 @@
 3. Chatwork公式のTokenページ、発行ヘルプ、組織契約のAPI利用申請ヘルプへ直接案内する。パーソナルプランを除き組織管理者への申請が必要であり、実際にAPIを利用するアカウントで申請する。承認前はルーム一覧取得へ進めない。Tokenページが利用できない状態では「組織管理者へAPI利用申請→承認後に戻る」を示し、設定途中の選択を保持する。
 4. Secret追加画面は `https://github.com/<owner>/<repo>/settings/secrets/actions/new` を現在のrepo情報から組み立て、CTAを「GitHub上の安全な保管場所を開く」とする。固定owner／repo pathを使わず、外部リンクは新しいタブで開き、行き先と目的が分かる日本語ラベルを付ける。
 5. 変更は確認画面まで副作用を出さず、確定後だけルーム設定・自動取得の間隔・scheduleへ一貫して反映する。キャンセル時は0変更。
-6. 「30分ごと」「1時間ごと（おすすめ）」「3時間ごと」「6時間ごと」「12時間ごと」「手動のみ」を選べる。scheduleは17分起点とし、選択値と実際の動作を一致させる。
+6. 「30分ごと」「1時間ごと」「3時間ごと（おすすめ・初期値）」「6時間ごと」「12時間ごと」「手動のみ」を選べる。scheduleは17分起点とし、選択値と実際の動作を一致させる。
 7. 30日換算の概算実行回数1,440／720／240／120／60／0回を表示する。実行回数と処理時間を区別し、GitHub Freeの非公開リポジトリに含まれる月2,000分は2,000回ではなくGitHub Actionsの処理時間枠であることを明記する。2026年7月確認の参考情報であり、プランや1回の処理時間で実使用量が変わり、料金・枠は変更されうることと、GitHub公式billingページへのリンクを併記する。
 8. ユーザー向け表示では `room` を原則「ルーム」、識別子が必要な箇所を「ルームID」、`頻度` を「自動取得の間隔」、`runs` を「実行回数」とする。`schedule` は「自動実行」、`workflow` は「自動取得処理（GitHub Actions）」、`private repo` は「非公開のGitHubリポジトリ」、`Repository Secret` は初出で「GitHub上の安全な保管場所（Repository Secret）」とする。内部コード、設定key、CLI、正式なAPI名は対象外。
 9. GitHub Actionsの初出には「決めた間隔で自動取得を動かすGitHubの仕組み」と短く補足する。`同期` の初出は「最新メッセージの取り込み（同期）」とし、commit・pushは正式名称を保ったまま「取得結果をこのリポジトリへ自動保存します（Gitのcommit・push）」と目的を先に示す。
 10. wizard本文は決定に必要な情報へ絞り、料金・実行時間などの補足は「料金と実行時間について」のdetailsまたは短いhelpへ置く。1 step 1 primary message、CTA最大2、既存デザイン言語を維持する。
-11. wizardは白／薄灰、Carbon Dark／Graphite／Pewter、primary CTAだけElectric Blue `#3E6AE1`を用いる。gradient・shadow・装飾写真・Tesla商標／wordmark・ライセンス不明フォントを使わない。
-12. UIは4px radius、8px spacing、400/500 weight、14px中心、headline最大40pxを守る。hoverは0.33秒のcolor／border変化だけで、scale／translateを使わない。
-13. 768px未満は1 column・CTA縦積みとし、desktopは中央寄せの広い余白を持つ。keyboard操作、visible focus、可視ラベル、accessible name、エラー関連付け、十分なcontrast、200% zoomでの非欠落を必須にする。日本語化で折返しや横overflowを増やさない。
+11. ChatworkとGoogle Chatは同じwizard骨格、step構造、responsive・accessibility基準を使う。全画面で「Chatworkの設定」または「Google Chatの設定」を可視見出しとaccessible nameに明示し、取り違えを防ぐ。
+12. primary CTAの背景色はChatwork `#F03747`、Google Chat `#11BB62` に固定し、前景は両方とも `#000000` とする。背景色を変えてコントラスト不足を隠さず、文字・アイコンとのcontrast ratio 4.5:1以上を満たす。青色primary CTAはこの2サービスのwizardに残さない。
+13. UIは4px radius、8px spacing、400/500 weight、14px中心、headline最大40pxを守る。hoverは0.33秒のcolor／border変化だけで、scale／translateを使わない。
+14. 768px未満は1 column・CTA縦積みとし、desktopは中央寄せの広い余白を持つ。keyboard操作、visible focus、可視ラベル、accessible name、エラー関連付け、十分なcontrast、200% zoomでの非欠落を必須にする。日本語化で折返しや横overflowを増やさない。
 
 ### 公式情報の確認基準（2026年7月）
 
@@ -150,9 +151,39 @@
 4. 実更新はF30の説明後にユーザーが明示了承した場合だけ行う。了承前、拒否、キャンセル、説明不能、影響判定不能では変更しない。
 5. 更新直前の保護はpushを伴わないローカルcommitとする。commitの対象と結果を示し、secretや資格情報らしきファイルを含めない。commitを安全に作れない場合は更新を止める。
 6. 管理対象ファイルが配布時の基準hashから変わっている場合は、ファイルごとに選択を求め、既定を「現状を残す」とする。無応答を上書き同意とみなさず、一括置換を既定にしない。
-7. 最小台帳が保持できるのは管理対象path、配布版、配布時の基準hash、明示的に許可した非機密のテンプレート変数だけ。私的内容になり得る変数値は保存せず、ファイル本文、差分本文、記憶、会話、外部データ、Chatwork本文、API Token、password、secret、資格情報も保存しない。
+7. 最小台帳が保持できるのは管理対象path、配布版、配布時の基準hash、明示的に許可した非機密のテンプレート変数だけ。私的内容になり得る変数値は保存せず、ファイル本文、差分本文、記憶、会話、外部データ、Chatwork／Google Chat本文、API Token、OAuth token、password、secret、資格情報も保存しない。
 8. migrationは対象versionと予定変更をdry-runで示し、明示確認後だけ実行する。同じversionのmigrationを複数回実行しても追加変更が出ない冪等性を必須とし、実行済み状態を安全に判定する。
 9. 台帳無し0.2.0は正常な既存利用者として扱う。現状ファイルを未変更とも全変更とも決めつけず、上書きしない側へ倒したbootstrap判定を行う。
 10. 更新後はversion、管理対象ファイル、主要導線を検証し、失敗を成功と報告しない。失敗時は更新直前commitを基準にrollbackできる手順と影響を示す。
-11. 更新に伴うpushは自動で行わない。private workspace、記憶保護、一般PJ／別repo開発PJ、Chatworkのsecret・同期同意、配布チャネル非依存の境界を変更理由で緩めない。
+11. 更新に伴うpushは自動で行わない。private workspace、記憶保護、一般PJ／別repo開発PJ、Chatwork／Google Chatのsecret・同期同意、配布チャネル非依存の境界を変更理由で緩めない。
 12. Google Chat、OAuth、Google Chat同期、Google Chat設定画面はF30/F31の対象外とし、更新導線へ混在させない。
+
+## 12. Google Chat OAuth・同期境界
+
+1. 各利用組織が所有するGoogle Cloudプロジェクトを使い、同じGoogle Workspace組織の利用者だけを対象にOAuth Audienceを `Internal` とする。ShigApps共通の `External` OAuth app、サービスアカウント、Domain-Wide Delegationへ自動的に切り替えない。
+2. OAuth Clientは `Desktop app` とし、利用者本人によるユーザーOAuth、PKCE、state検証、loopbackのローカル受付を使う。外部公開callback serverや常設Webアプリを作らない。認可コードは受領直後にtokenへ交換し、記録しない。
+3. 必須scopeは `https://www.googleapis.com/auth/chat.spaces.readonly`、`https://www.googleapis.com/auth/chat.messages.readonly`、発言者表示名補完用の `https://www.googleapis.com/auth/contacts.readonly` の3つだけ。未使用のChat scope、write scope、管理者scopeを要求しない。People APIで一部の同僚表示名を取得できない可能性をREADMEで説明し、取得不能時は安定した代替表示にして、追加scopeへ黙って拡張しない。
+4. 厳格secretはclient secret、認可コード、access token、refresh token、OAuth client JSON全文であり、tracked file、設定、Git差分・履歴、ログ、会話、journal、fixture、スクリーンショット、評価証跡、再読込後も残るDOMへ表示・保存しない。client IDは識別子として、一時的なOAuth認可リクエストURLと管理者向けチェックリストには表示できるが、同じ永続物へ保存しない。
+5. 一時的なOAuth認可リクエストURLとloopback callback URLは漏えいゼロ検査の対象外だが、URL自体をログ、スクリーンショット、評価証跡へ記録しない。callbackの認可コードは即時交換し、エラー表示にも含めない。
+6. `GOOGLE_OAUTH_CLIENT_ID`、`GOOGLE_OAUTH_CLIENT_SECRET`、`GOOGLE_OAUTH_REFRESH_TOKEN_GCHAT` の値はRepository Secretを継続取得の正本とする。OAuth client JSONはローカル設定中だけ読み、通常導線では厳格secretを表示・コピーさせずRepository Secretへ直接登録する。登録できない場合は値を会話へ貼らせず、安全に停止して管理者向けの不足事項を示す。
+7. 初回取得はOAuth完了直後の同じwizardセッションで、メモリ上のtokenだけを使ってローカル実行する。tokenはセッション終了時に破棄し、以後の取得はGitHub Actionsが担う。初回取得結果の保存とGitのcommit・pushは、実行前の確認画面で明示同意を得た場合だけ行う。
+8. 同期対象は利用者が選択した `spaceType=SPACE` だけ。`DIRECT_MESSAGE`、`GROUP_CHAT`、未選択スペース、全スペース自動選択を禁止する。候補表示時だけでなく初回・継続取得の実行時にもspace typeを再確認し、不正な設定値では取得しない。
+9. Google Chatは読取専用。メッセージ、reaction、space、membershipの作成・更新・削除を行わない。添付ファイルは名前、種類、参照先等のメタデータだけを保存し、本文をダウンロードしない。
+10. 初回はAPIと組織の保持設定が返せる範囲を取得し、0件を正常として扱う。取得不能な過去履歴を「存在しない」と断定せず、保持設定、権限、未選択、検索条件の可能性を示す。
+11. message resource name単位で冪等に統合し、再取得で重複・同日既存投稿の消失を起こさない。編集・削除の反映は、その取得実行でAPIが返した範囲に限る。`createTime` 差分の範囲外にある過去メッセージの編集・削除が反映されないことを正常仕様として説明し、削除済み本文を復元せず、API応答から消えたことだけを理由に保存済み履歴を削除しない。
+12. scheduleによるcommit・pushは、選択スペース、間隔、保存内容、共同編集者への可視性を示した後の明示同意でだけ許可する。既定推奨・初期値はChatworkと同じ3時間ごとで、手動のみを選べる。
+13. public配布repoにはGoogle ChatのSecret、workflow、スペース設定、同期状態、履歴を置かない。実APIは専用private test workspaceと非機密test spaceでだけ評価し、ユーザー許可前にCloud project作成、Secret設定、OAuth認可、workflow dispatch、API送信、pushを行わない。
+14. OAuth後のキャンセルとlive gate後始末では、schedule停止、Google Chat用Secret削除、test space選択解除に加えて、Google側のOAuth grant／tokenをrevokeする。アプリ権限ページからの取消手順を示し、取得履歴やtest workspaceの削除は別の明示確認を必要とする。
+
+### Google公式情報の確認基準（2026年7月）
+
+- Google Chat authentication: `https://developers.google.com/workspace/chat/authenticate-authorize`
+- User OAuth setup: `https://developers.google.com/workspace/chat/authenticate-authorize-chat-user`
+- OAuth consent and scope categories: `https://developers.google.com/workspace/guides/configure-oauth-consent`
+- Restricted scope verification and internal-use exception: `https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification`
+- Desktop app loopback OAuth: `https://developers.google.com/identity/protocols/oauth2/native-app`
+- Spaces list and space types: `https://developers.google.com/workspace/chat/api/reference/rest/v1/spaces/list`
+- Messages list: `https://developers.google.com/workspace/chat/api/reference/rest/v1/spaces.messages/list`
+- Attachment metadata: `https://developers.google.com/workspace/chat/api/reference/rest/v1/spaces.messages.attachments`
+
+公開ガイドには「公式情報は2026年7月確認。Google側の画面・scope分類・管理者設定は変更される可能性がある」と明記する。

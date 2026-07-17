@@ -113,7 +113,7 @@ async function main() {
   const result = await applyChatworkConfig({
     root: args.get("--root") || process.cwd(),
     selectedRoomIds,
-    interval: args.get("--interval") || "1h",
+    interval: args.get("--interval") || "3h",
     automaticPushConsent: args.get("--consent") === "yes",
   });
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);

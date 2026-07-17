@@ -5,6 +5,7 @@ import {
   existsSync,
   lstatSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   realpathSync,
   renameSync,
@@ -446,16 +447,36 @@ function retryPlugin(args) {
   output(args, { title: "plugin更新を再試行できました", message: "保護commitは増やしていません。/reload-plugins 後に更新を再開してください。", protectionCommit: session.protectionCommit, pushCount: 0 });
 }
 
+function migrationFiles(pluginRoot, fromVersion, toVersion) {
+  const directory = join(pluginRoot, "migrations");
+  const edges = readdirSync(directory)
+    .map((file) => ({ file, match: file.match(/^(\d+\.\d+\.\d+)-to-(\d+\.\d+\.\d+)\.json$/) }))
+    .filter(({ match }) => match)
+    .map(({ file, match }) => ({ file, from: match[1], to: match[2] }))
+    .sort((left, right) => left.file.localeCompare(right.file));
+  const queue = [{ version: fromVersion, files: [] }];
+  const visited = new Set([fromVersion]);
+  while (queue.length) {
+    const current = queue.shift();
+    if (current.version === toVersion) return current.files;
+    for (const edge of edges.filter((candidate) => candidate.from === current.version)) {
+      if (visited.has(edge.to)) continue;
+      visited.add(edge.to);
+      queue.push({ version: edge.to, files: [...current.files, edge.file] });
+    }
+  }
+  fail("対応するversion別migrationを確認できません。workspaceは変更していません。", EXIT_REFUSED);
+}
+
 function loadMigration(pluginRoot, fromVersion, toVersion) {
-  const files = fromVersion === "0.2.0" && toVersion === "0.4.0"
-    ? ["0.2.0-to-0.3.0.json", "0.3.0-to-0.4.0.json"]
-    : [`${fromVersion}-to-${toVersion}.json`];
+  const files = migrationFiles(pluginRoot, fromVersion, toVersion);
   const operations = [];
   for (const file of files) {
     const manifestPath = join(pluginRoot, "migrations", file);
     let manifest;
     try { manifest = JSON.parse(readFileSync(manifestPath, "utf8")); } catch { fail("対応するversion別migrationを確認できません。workspaceは変更していません。", EXIT_REFUSED); }
-    if (manifest.schemaVersion !== 1 || !SEMVER.test(manifest.fromVersion) || !SEMVER.test(manifest.toVersion) || !Array.isArray(manifest.operations)) fail("migration定義が不正なため停止しました。", EXIT_REFUSED);
+    const expected = file.match(/^(\d+\.\d+\.\d+)-to-(\d+\.\d+\.\d+)\.json$/);
+    if (manifest.schemaVersion !== 1 || manifest.fromVersion !== expected?.[1] || manifest.toVersion !== expected?.[2] || !Array.isArray(manifest.operations)) fail("migration定義が不正なため停止しました。", EXIT_REFUSED);
     for (const operation of manifest.operations) {
       if (!ALLOWED_MANAGED_PATHS.has(operation.path) || operation.type !== "append-section" || typeof operation.marker !== "string" || typeof operation.asset !== "string") fail("migrationに許可外の操作があるため停止しました。", EXIT_REFUSED);
       const asset = realpathSync(join(pluginRoot, "migrations", operation.asset));

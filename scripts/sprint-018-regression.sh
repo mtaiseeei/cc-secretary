@@ -21,6 +21,7 @@ plugin = repo / "plugins/yasashii-secretary"
 apply_cli = plugin / "scripts/update-apply.mjs"
 manifest = repo / ".claude-plugin/marketplace.json"
 changelog = plugin / "CHANGELOG.md"
+release_version = json.loads(manifest.read_text())["plugins"][0]["version"]
 passed = 0
 failed = 0
 
@@ -191,7 +192,7 @@ raise SystemExit(0)
     dry = cli("resume", approved)
     dry_data = parse(dry)
     plan_hash = dry_data.get("plan", {}).get("planHash")
-    check("reload後にversionを再確認してdry-run", dry.returncode == 0 and plan_hash and dry_data.get("pluginVersion") == "0.4.0")
+    check("reload後にversionを再確認してdry-run", dry.returncode == 0 and plan_hash and dry_data.get("pluginVersion") == release_version)
     check("dry-run前後でworkspace変更0", initial_files == snapshot(approved))
     wrong = cli("resume", approved, extra=["--apply", "--plan-hash", "sha256:" + "0" * 64])
     check("plan hash不一致はmigration 0件", wrong.returncode != 0 and initial_files == snapshot(approved))
@@ -200,7 +201,7 @@ raise SystemExit(0)
     check("確認済みplanだけを適用", applied.returncode == 0 and applied_data.get("verification", {}).get("ok") is True)
     check("0.2.0既知baselineだけをbootstrap台帳化", (approved / ".yasashii-secretary/update-ledger.json").is_file())
     ledger = json.loads((approved / ".yasashii-secretary/update-ledger.json").read_text())
-    check("bootstrap台帳は確認済み2件・許可4fieldだけ", len(ledger) == 2 and all(set(item) == {"path", "installedVersion", "baselineHash", "templateVariables"} and item["installedVersion"] == "0.4.0" for item in ledger))
+    check("bootstrap台帳は確認済み2件・許可4fieldだけ", len(ledger) == 2 and all(set(item) == {"path", "installedVersion", "baselineHash", "templateVariables"} and item["installedVersion"] == release_version for item in ledger))
     check("migrationは更新安全性sectionと入口pointerだけを追加", "yasashii-secretary:update-safety:v1:start" in (approved / "secretary/AGENTS.md").read_text() and "yasashii-secretary:update-entry:v1:start" in (approved / "secretary/CLAUDE.md").read_text())
     first_hash = hashlib.sha256((approved / "secretary/AGENTS.md").read_bytes()).hexdigest()
     again = cli("resume", approved)
@@ -329,7 +330,7 @@ raise SystemExit(0)
     check("push/remote変更の実行経路0", not any(line.startswith("push") or " remote " in f" {line} " for line in log.read_text().splitlines()))
     new_plugin_files = [apply_cli, plugin / "skills/update/SKILL.md"] + list((plugin / "migrations").rglob("*"))
     leaked = [path for path in new_plugin_files if path.is_file() and "Google" + " Chat" in path.read_text()]
-    check("Google Chat実装漏出0", leaked == [])
+    check("更新実行へGoogle Chat変更を混在させない", leaked == [])
     check("migrationは記憶・PJ・Chatwork本文を変更しない", all("memory/" not in item and "projects/" not in item and "chatwork/" not in item for item in source.split('ALLOWED_MANAGED_PATHS = new Set([')[1].split(']);', 1)[0].split(',')))
 
 print(f"SPRINT018_PASS={passed} SPRINT018_FAIL={failed}")

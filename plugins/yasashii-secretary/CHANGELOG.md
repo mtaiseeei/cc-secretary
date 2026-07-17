@@ -1,5 +1,32 @@
 # 変更履歴
 
+## [0.5.0] - 2026-07-17
+
+### 対象者
+
+- Google Workspaceの通常スペース履歴を、秘書と同じ非公開リポジトリへ保存したい方。
+
+### 変わること
+
+- 各社所有のGoogle CloudプロジェクトとDesktop OAuthを使う、Google Chatの高度な接続wizardを追加します。
+- 選択した通常スペースだけを、Asia/Tokyoの日付別Markdownとして初回取得・検索できます。
+- ChatworkとGoogle Chatのwizardを同じ骨格へ揃え、自動取得のおすすめ・初期値を3時間に統一します。
+
+### 設定・ファイルへの影響
+
+- Google Chatを使う場合だけ、private workspaceの `google-chat/` と3つのRepository Secretを利用します。
+- DM、グループDM、添付本文、投稿・編集・削除は対象外です。public配布repoへ利用者の設定や履歴は置きません。
+
+### 必要な操作
+
+- Google Workspace管理者またはCloud project作成権限者に、Audience `Internal`、Google Chat API／People API、Desktop app clientの準備を依頼します。
+- `/google-chat` の確認画面で、対象、保存内容、Gitのcommit・pushへ同意した後だけ初回取得します。
+
+### 互換性上の注意
+
+- `chat.messages.readonly` は読み取り専用でもRestricted scopeです。管理者設定で許可が必要な場合があります。
+- People APIで一部の同僚名を補完できない場合は、安定した代替表示を使います。
+
 ## [0.4.0] - 2026-07-17
 
 ### 対象者

@@ -1,6 +1,6 @@
 {
   "version": 1,
   "selectedRoomIds": [],
-  "interval": "1h",
+  "interval": "3h",
   "scheduleEnabled": false
 }

@@ -1,16 +1,18 @@
-const app = document.querySelector("#app");
+import { installWizardShell } from "/common.js";
+
+const { app } = installWizardShell("chatwork");
 const state = {
   step: 0,
   rooms: [],
   selected: new Set(),
   originalSelected: new Set(),
-  interval: "1h",
+  interval: "3h",
   consent: false,
   query: "",
   repository: null,
 };
 const frequencies = [
-  ["30m", "30分ごと", 1440], ["1h", "1時間ごと（おすすめ）", 720], ["3h", "3時間ごと", 240],
+  ["30m", "30分ごと", 1440], ["1h", "1時間ごと", 720], ["3h", "3時間ごと（おすすめ・初期値）", 240],
   ["6h", "6時間ごと", 120], ["12h", "12時間ごと", 60], ["manual", "手動のみ", 0],
 ];
 const officialLinks = {
@@ -139,7 +141,7 @@ function renderRooms() {
 
 function renderFrequency() {
   state.step = 2; progress(2);
-  app.innerHTML = `<p class="eyebrow">STEP 2 / 4</p><h1>自動取得の間隔を選びます。</h1><p class="lead">1時間ごとがおすすめです。表示する実行回数は30日換算の概算です。</p>
+  app.innerHTML = `<p class="eyebrow">STEP 2 / 4</p><h1>自動取得の間隔を選びます。</h1><p class="lead">3時間ごとがおすすめ・初期値です。負担と新しさのバランスを取りやすい間隔です。表示する実行回数は30日換算の概算です。</p>
     <div class="panel"><ul class="frequency-list">${frequencies.map(([value, label, runs]) => `<li><label class="choice"><input type="radio" name="interval" value="${value}" ${state.interval === value ? "checked" : ""}><span class="choice-copy"><span class="choice-title">${label}</span><span class="choice-meta">約${runs.toLocaleString("ja-JP")}回 / 30日</span></span></label></li>`).join("")}</ul>
     <details><summary>料金と実行時間について</summary><p>実行回数とGitHub Actionsの処理時間は別です。GitHub Freeの非公開リポジトリでは、2026年7月時点で月2,000分の処理時間が含まれます。2,000回の実行枠ではありません。実使用量はプラン、runner、1回あたりの処理時間で変わり、料金や利用枠も変更される可能性があります。</p><p>${externalLink(officialLinks.billing, "GitHub Actionsの料金と利用枠を見る")}</p></details>
     <p class="hint">この画面ではまだ自動実行を有効にしません。</p></div>${actions("内容を確認する")}`;
@@ -190,7 +192,7 @@ async function renderResult() {
     const config = result.dispatch.config || {};
     const selected = new Set((config.selectedRoomIds || []).map(String));
     const selectedRooms = state.rooms.filter((room) => selected.has(room.roomId));
-    const frequency = frequencies.find(([value]) => value === config.interval) || frequencies[1];
+    const frequency = frequencies.find(([value]) => value === config.interval) || frequencies[2];
     const automaticExecution = config.scheduleEnabled === true;
     const done = ["success", "failed", "fixture"].includes(result.dispatch.status);
     const heading = result.dispatch.status === "failed" ? "設定は変更しましたが、最新メッセージの取り込みを完了できませんでした。" : done ? "設定変更が完了しました。" : "設定変更を進めています。";
@@ -227,7 +229,7 @@ fetch("/api/bootstrap").then((response) => response.json()).then(({ rooms, confi
   state.rooms = rooms.rooms || [];
   state.selected = new Set((config.selectedRoomIds || []).map(String));
   state.originalSelected = new Set((config.selectedRoomIds || []).map(String));
-  state.interval = config.interval || "1h";
+  state.interval = config.interval || "3h";
   state.consent = config.automaticPushConsent === true;
   state.repository = repository;
   if (state.selected.size > 0 && rooms.status === "ready") renderRooms();

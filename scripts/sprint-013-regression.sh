@@ -73,12 +73,12 @@ check_eval "資格情報候補を検出するとcommit・pushしない" "[ '$SEC
 check "Chatwork API・search・wizard挙動回帰" node "$REPO/scripts/sprint-013-chatwork-test.mjs"
 
 CSS="$CHATWORK/assets/wizard/style.css"; HTML="$CHATWORK/assets/wizard/index.html"; JS="$CHATWORK/assets/wizard/app.js"
-check_eval "wizardは指定palette・4px・0.33s・system font" "grep -qi '#3e6ae1' '$CSS' && grep -q '#171a20' '$CSS' && grep -q 'border-radius: 4px' '$CSS' && grep -q '\.33s' '$CSS' && grep -q -- '-apple-system' '$CSS'"
-check_eval "Electric Blueはprimary CTAだけに使う" "[ \"\$(grep -ci '#3e6ae1' '$CSS')\" -eq 1 ] && grep -q '.button-primary' '$CSS'"
+check_eval "wizardはChatwork指定色・4px・0.33s・system font" "grep -qi '#F03747' '$CSS' && grep -q '#171a20' '$CSS' && grep -q 'border-radius: 4px' '$CSS' && grep -q '\.33s' '$CSS' && grep -q -- '-apple-system' '$CSS'"
+check_eval "primary CTAはservice色と黒前景" "grep -q 'var(--service-accent)' '$CSS' && grep -q 'color: #000000' '$CSS' && ! grep -qi '#3e6ae1' '$CSS'"
 check_eval "wizardはgradient・shadow・画像・Tesla商標を使わない" "! grep -RqiE 'gradient|box-shadow:|text-shadow:|<img|tesla|Universal Sans' '$HTML' '$CSS' '$JS'"
 check_eval "mobile 1 column・CTA縦積み・reduced motion" "grep -q 'max-width: 767px' '$CSS' && grep -q 'grid-template-columns: 1fr' '$CSS' && grep -q 'flex-direction: column-reverse' '$CSS' && grep -q 'prefers-reduced-motion' '$CSS'"
 check_eval "Token入力欄・token値surfaceが無い" "! grep -RqiE 'type=\"password\"|name=\"token\"|CHATWORK_API_TOKEN=' '$HTML' '$CSS' '$JS' '$CHATWORK/SKILL.md'"
-check_eval "6頻度・既定1時間・run数を挙動データで定義" "node -e \"const s=require('fs').readFileSync(process.argv[1],'utf8'); for(const v of ['30m','1h','3h','6h','12h','manual','1440','720','240','120','60']) if(!s.includes(v)) process.exit(1)\" '$JS'"
+check_eval "6頻度・既定3時間・run数を挙動データで定義" "node -e \"const s=require('fs').readFileSync(process.argv[1],'utf8'); for(const v of ['30m','1h','3h','6h','12h','manual','1440','720','240','120','60']) if(!s.includes(v)) process.exit(1)\" '$JS' && grep -q 'interval: \"3h\"' '$JS'"
 check_eval "wizardはprivate repoを検証し確定後だけ設定commit・push" "grep -q 'verifyPrivateRepo' '$CHATWORK/scripts/wizard-server.mjs' && grep -q 'applyChatworkConfig' '$CHATWORK/scripts/wizard-server.mjs' && grep -q '\[\"push\"\]' '$CHATWORK/scripts/config-transaction.mjs'"
 
 cp "$TEMPLATES/.github/workflows/chatwork-sync.yml" "$WORK/workflow-invalid.yml"
@@ -86,10 +86,10 @@ apply_patch <<PATCH
 *** Begin Patch
 *** Update File: $WORK/workflow-invalid.yml
 @@
- on:
+-  workflow_dispatch:
 +  schedule:
 +    - cron: '17 * * * *'
-   workflow_dispatch:
++  workflow_dispatch:
 *** End Patch
 PATCH
 check_eval "意図的失敗fixture: Sprint 013のschedule混入を検出" "grep -q 'schedule:' '$WORK/workflow-invalid.yml' && ! grep -q 'schedule:' '$TEMPLATES/.github/workflows/chatwork-sync.yml'"

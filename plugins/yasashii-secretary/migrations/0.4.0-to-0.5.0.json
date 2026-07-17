@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "fromVersion": "0.4.0",
+  "toVersion": "0.5.0",
+  "operations": [],
+  "note": "新機能の設定は利用者が明示的に開始するため、既存workspaceを自動変更しません。"
+}

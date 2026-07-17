@@ -174,7 +174,7 @@ const server = createServer(async (request, response) => {
   const url = new URL(request.url || "/", `http://${host}`);
   if (request.method === "GET" && url.pathname === "/api/bootstrap") {
     const rooms = readJson(join(root, "chatwork", "rooms.json"), { status: "not-discovered", rooms: [] });
-    const config = readJson(join(root, "chatwork", "config.json"), { selectedRoomIds: [], interval: "1h", scheduleEnabled: false });
+    const config = readJson(join(root, "chatwork", "config.json"), { selectedRoomIds: [], interval: "3h", scheduleEnabled: false });
     return send(response, 200, { rooms, config, repository: githubRepository(), discovery });
   }
   if (request.method === "POST" && url.pathname === "/api/discover") {
@@ -213,7 +213,7 @@ const server = createServer(async (request, response) => {
     }
   }
   if (request.method !== "GET") return send(response, 405, { error: "Method not allowed" });
-  const names = new Map([["/", "index.html"], ["/app.js", "app.js"], ["/style.css", "style.css"]]);
+  const names = new Map([["/", "index.html"], ["/app.js", "app.js"], ["/common.js", "common.js"], ["/style.css", "style.css"]]);
   const name = names.get(url.pathname);
   if (!name) return send(response, 404, "Not found", "text/plain; charset=utf-8");
   const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8" };

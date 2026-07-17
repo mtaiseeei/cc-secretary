@@ -1,0 +1,51 @@
+{
+  "spaces": [
+    { "name": "spaces/space-a", "displayName": "営業会議", "spaceType": "SPACE" },
+    { "name": "spaces/space-empty", "displayName": "空のスペース", "spaceType": "SPACE" },
+    { "name": "spaces/space-fail", "displayName": "一部失敗確認", "spaceType": "SPACE" },
+    { "name": "spaces/direct-a", "displayName": "個別DM", "spaceType": "DIRECT_MESSAGE" },
+    { "name": "spaces/group-a", "displayName": "グループDM", "spaceType": "GROUP_CHAT" }
+  ],
+  "people": {
+    "users/100": "山田 花子"
+  },
+  "messagePages": {
+    "spaces/space-a": [
+      [
+        {
+          "name": "spaces/space-a/messages/001",
+          "createTime": "2026-07-16T14:59:00.000Z",
+          "sender": { "name": "users/100" },
+          "text": "見積書の初回確認",
+          "thread": { "name": "spaces/space-a/threads/thread-1" }
+        }
+      ],
+      [
+        {
+          "name": "spaces/space-a/messages/002",
+          "createTime": "2026-07-16T15:01:00.000Z",
+          "sender": { "name": "users/200" },
+          "text": "翌日の返信",
+          "thread": { "name": "spaces/space-a/threads/thread-1" },
+          "attachment": [
+            {
+              "name": "spaces/space-a/messages/002/attachments/a1",
+              "contentName": "確認資料.pdf",
+              "contentType": "application/pdf",
+              "source": "DRIVE_FILE",
+              "driveDataRef": { "driveFileId": "drive-reference-1" }
+            }
+          ]
+        },
+        {
+          "name": "spaces/space-a/messages/003",
+          "createTime": "2026-07-16T16:00:00.000Z",
+          "sender": { "name": "users/200" },
+          "deletionMetadata": { "deletionType": "CREATOR" }
+        }
+      ]
+    ],
+    "spaces/space-empty": [[]],
+    "spaces/space-fail": [{ "error": "rate-limit" }]
+  }
+}

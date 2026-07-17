@@ -1,6 +1,6 @@
 # Features
 
-機能IDと、ユーザーから見える振る舞いの正本。F01〜F16 は受け入れ済みの既存機能、F17〜F22 は 2026-07-15 方針転換、F23〜F27 は 2026-07-16 のsingle-repo Git-first + Chatwork方針、F28 は 2026-07-17 の一般プロジェクト管理方針、F29 は配布チャネルから独立した製品説明、F30〜F31 は更新の説明と実行を分ける安全な更新体験である。
+機能IDと、ユーザーから見える振る舞いの正本。F01〜F16 は受け入れ済みの既存機能、F17〜F22 は 2026-07-15 方針転換、F23〜F27 は 2026-07-16 のsingle-repo Git-first + Chatwork方針、F28 は 2026-07-17 の一般プロジェクト管理方針、F29 は配布チャネルから独立した製品説明、F30〜F31 は更新の説明と実行を分ける安全な更新体験、F32〜F35 は各社所有Google Cloudプロジェクトを使うGoogle Chat同期である。
 
 ## 既存機能（F01〜F16）
 
@@ -12,7 +12,7 @@
 | F04 | オンボーディング | 5問以内で `secretary/` を安全に生成し、1つのprivate GitHub repoの作成、初期commit、初回pushまで完了する |
 | F05 | 記憶ケア | 空上書き禁止、削除2段階、索引追従、`_resume.md` による再開を提供する |
 | F06 | daily | 外部予定・タスクとローカルTODOを根拠つきで突き合わせる |
-| F07 | Git履歴 | 節目で何をしたか分かる日本語メッセージをcommitし、秘書・一般プロジェクト・Chatworkを同じworkspace repoの履歴として扱う。別repo開発PJの履歴はその正本repoに残す。初回pushと同意済みChatwork schedule以外の予期しないpushは確認する |
+| F07 | Git履歴 | 節目で何をしたか分かる日本語メッセージをcommitし、秘書・一般プロジェクト・Chatwork／Google Chatを同じworkspace repoの履歴として扱う。別repo開発PJの履歴はその正本repoに残す。初回pushと同意済みチャットschedule以外の予期しないpushは確認する |
 | F08 | 成果物規約 | 単発成果物は `docs/YYYY/MM/YYYY-MM-DD_<title>.md`、確認済み一般PJの成果物は当該PJ内にfrontmatterつきで保存し、確定版を `outputs/`、旧版を `archive/` へ分ける |
 | F09 | Google 接続 | Gmail / Calendar / Drive の公式コネクタ接続と診断を案内する |
 | F10 | 文言ルール | 一般技術用語を保ち、馴染みの薄い語だけ短く補足し、3行報告と進行表示を守る |
@@ -85,6 +85,7 @@
 
 ### F24 Chatwork接続・room選択wizard
 
+- ChatworkとGoogle Chatは同じローカルwizard骨格を共有する。Chatworkの各画面には「Chatworkの設定」を見出しとaccessible nameで明示し、primary CTAの背景色を `#F03747` にする。
 - `/chatwork` から接続状態と次の行動を確認でき、未設定ならChatworkのAPI Token取得、GitHub上の安全な保管場所への登録、ルーム選択を順に進められる。
 - API Token取得ではChatwork公式のTokenページと発行ヘルプへ直接進める。組織契約でTokenページを利用できない場合は、実際にAPIを使うアカウントで組織管理者へ利用申請し、承認後に同じ設定へ戻る導線を示す。承認前はルーム一覧取得へ進めない。
 - Tokenはwizardや会話へ貼らせない。現在のGitHub repoのowner／nameから組み立てたSecret追加画面を「GitHub上の安全な保管場所を開く」と案内し、利用者自身が名前 `CHATWORK_API_TOKEN` で登録する。固定ownerや固定repo pathへ誘導しない。
@@ -102,7 +103,7 @@
 
 ### F26 定期同期と設定変更
 
-- 自動取得の間隔は「30分ごと」「1時間ごと（おすすめ）」「3時間ごと」「6時間ごと」「12時間ごと」「手動のみ」から選べる。実行は毎時0分を避け、17分を起点にする。
+- 自動取得の間隔は「30分ごと」「1時間ごと」「3時間ごと（おすすめ・初期値）」「6時間ごと」「12時間ごと」「手動のみ」から選べる。実行は毎時0分を避け、17分を起点にする。
 - wizardは30日換算の概算実行回数を順に1,440回、720回、240回、120回、60回、0回と表示する。実行回数とGitHub Actionsの処理時間は別であり、2,000分を2,000回と誤解させない。
 - 2026年7月時点では、GitHub Freeの非公開リポジトリに月2,000分のGitHub Actions処理時間が含まれることを参考情報として示す。プラン・runner・1回あたりの処理時間で実使用量が変わり、料金や枠も変更されうるため、GitHub公式のbillingページへ案内する。
 - 選択した間隔は表示値だけでなく、実際のscheduleへ反映される。手動のみではscheduleを無効にする。
@@ -168,6 +169,47 @@
 - 台帳が存在しない0.2.0利用者は、現状ファイルを新規配布物として決めつけず、安全な初回判定を行うbootstrap経路から更新する。
 - 失敗または利用者の希望時は、更新直前のローカルcommitを基準にrollbackできる。pushは別の操作として扱い、秘書が勝手に行わない。
 
+## Google Chat高度接続（F32〜F35）
+
+### F32 各社所有Google CloudプロジェクトとユーザーOAuth
+
+- READMEに「Google Chatをつなぐ（少し高度な設定）」を設け、Google Workspace管理者またはGoogle Cloudプロジェクトを作成できる人向けであることを最初に示す。
+- 利用者の会社ごとに、そのGoogle Workspace組織が所有するGoogle Cloudプロジェクトを使う。OAuth Audienceは `Internal`、OAuth Clientは `Desktop app` とし、ShigApps共通の外部向けOAuthアプリは使わない。
+- Google Chat APIと、発言者名の補完に必要なGoogle People APIを有効にする。権限は `chat.spaces.readonly`、`chat.messages.readonly`、`contacts.readonly` だけに限定し、未使用の `chat.memberships.readonly` は要求しない。People APIで一部の同僚名を補完できない場合があることと代替表示をREADMEで説明する。
+- ローカルwizardはダウンロードしたOAuth client JSONを資格情報として扱う。client secret、認可コード、access token、refresh token、client JSON全文は厳格secretとして永続物へ表示・保存しない。client IDは識別子であり、一時的なOAuth認可URLと管理者チェックリストには表示できるが、tracked file、Git差分・履歴、ログ、journal、fixture、スクリーンショット、評価証跡、再読込後も残るDOMへ保存しない。
+- OAuthはPKCEとstateを併用し、利用者のブラウザとloopbackのローカル受付だけで完了する。認可コードは受領後すぐtokenへ交換して記録しない。取得した3つの値は現在のprivate repoのRepository Secret `GOOGLE_OAUTH_CLIENT_ID`、`GOOGLE_OAUTH_CLIENT_SECRET`、`GOOGLE_OAUTH_REFRESH_TOKEN_GCHAT` へ直接登録し、値のコピー＆ペーストを通常導線にしない。
+- Google ChatはChatworkと同じwizard骨格を共有する。各画面には「Google Chatの設定」を見出しとaccessible nameで明示し、primary CTAの背景色を `#11BB62` にする。
+- `Internal` にできない、管理者がAPI access controlsで拒否した、必要APIが無効、OAuth同意が拒否・失効した場合を区別し、Googleの英語エラーより先に必要な対応を日本語で示す。
+
+### F33 通常スペース選択・初回取得・基本検索
+
+- OAuth接続後、利用者本人が参加するスペースを名前で一覧表示する。選択候補は `spaceType=SPACE` の通常スペースだけとし、`DIRECT_MESSAGE` と `GROUP_CHAT` は候補にも履歴にも含めない。
+- 初期状態で全スペースを選ばない。検索、複数選択、全解除を提供し、確定前に対象スペース、保存内容、private repoの共同編集者が本文を読めることを示す。
+- 初回取得は、選択スペースについてGoogle Chat APIと組織の保持設定が返せるメッセージをページングして取得する。0件は正常とし、APIが返さない履歴を取得済みと見せない。
+- 初回取得はOAuth完了直後の同じwizardセッション内で、メモリ上のtokenだけを使ってローカル実行する。tokenはセッション終了時に破棄し、以後の取得はGitHub Actionsが担う。取得前の確認画面で、取得結果の保存とGitのcommit・pushへ明示同意を得る。
+- 初回取得時にも選択済みspace IDの `spaceType=SPACE` を再確認し、設定ファイルの直編集等でDM／グループDMが混入しても取得を拒否する。
+- `my-vault` の現行Google Chat同期を製品上の基準にし、スペース別・日付別Markdown、Asia/Tokyoの時刻、スレッド親子関係、発言者、本文、添付ファイル名・種類・参照先等のメタデータを保存する。添付ファイル本文はダウンロードしない。
+- message resource nameを同一性の基準にして再取得時の重複を防ぐ。同日ファイルへ新しい投稿を追加しても既存投稿を失わず、部分失敗時は成功スペースと失敗スペースを区別する。
+- `/google-chat search` は最新のGit状態を取り込んでから、スペース、発言者、日付、キーワードで保存済み履歴を検索し、該当箇所とスペース・日付の根拠を返す。
+
+### F34 定期取得・設定変更・再認証
+
+- 自動取得の間隔は「1時間ごと」「3時間ごと（おすすめ・初期値）」「6時間ごと」「12時間ごと」「手動のみ」から選べる。既定推奨はChatworkと同じ3時間ごとで、毎時0分を避ける。
+- 選択スペース、間隔、保存内容、commit・push、共同編集者への可視性を確認画面にまとめ、明示同意後だけscheduleを有効にする。手動のみではscheduleを持たない。
+- 新規投稿、スレッド返信、その取得実行でAPIが返した範囲の編集・削除状態を既存履歴へ統合する。`createTime` に基づく差分取得の範囲外にある過去メッセージの編集・削除は反映されないことを正常仕様として利用者へ説明する。削除済み本文を復元せず、削除情報だけを扱い、API応答から消えたことだけで保存済み履歴を削除しない。
+- 継続取得時にもspace IDの `spaceType=SPACE` を再確認し、DM／グループDMを取得しない。
+- 設定変更は確定前0変更、確定後だけ選択スペースとscheduleへ一貫して反映する。選択解除は今後取得しないという意味で、取得済み履歴を削除しない。
+- refresh token失効、管理者によるブロック、scope不足、API無効、rate limit、network失敗を区別する。再認証はF32と同じloopback経路を使い、既存履歴を壊さない。
+- 自動取得のcommit・pushは同意済み設定の範囲だけで行う。public配布repo、public workspace、選択外スペース、DM／グループDMへ範囲を広げない。
+
+### F35 見つからない時の確認付き再取得
+
+- `/google-chat search` は最初にrepoをpullし、保存済み履歴を検索する。見つからないだけではGoogle Chatに存在しないと断定しない。
+- 見つからない場合、構造化質問で「取得して再検索（推奨）／取得しない／対象スペースを見直す」を提示し、質問前にworkflowを開始しない。
+- 承認時だけ手動workflowを開始し、完了を待ち、成功を確認し、pullして同じ条件で再検索する。
+- 再検索でも見つからない場合は、未選択スペース、組織の保持設定、APIが返さない履歴、キーワード差、編集・削除、認証・workflow失敗を区別する。
+- キャンセル、失敗、timeout、再認証待ちではrepo内容を壊さず、何が起きたかと次の選択肢を示す。
+
 ## Gテーマと機能の対応
 
 | テーマ | 主な機能 |
@@ -180,3 +222,4 @@
 | G6 | F03 F05 F06 F07 F08 F15 F17 F18 F19 F28 |
 | G7 | F01 F02 F04 F10 F16 F29 |
 | G8 | F01 F02 F07 F10 F16 F20 F30 F31 |
+| G9 | F03 F07 F10 F16 F23 F32 F33 F34 F35 |
