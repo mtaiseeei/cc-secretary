@@ -29,12 +29,30 @@ export function installWizardShell(service) {
   return { app, detail, ensureContext };
 }
 
+export function renderWizardScreen(app, { id, state = "ready", html }) {
+  app.dataset.screen = id;
+  app.dataset.state = state;
+  app.innerHTML = html;
+}
+
 export function escapeHtml(value) {
   return String(value).replace(/[&<>\"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '\"': "&quot;" }[character]));
 }
 
 export function externalLink(url, label, className = "text-link") {
   return `<a class="${className}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(label)}（新しいタブで開く）">${escapeHtml(label)}</a>`;
+}
+
+export function nowCopy(text) {
+  return `<p class="lead" data-copy-role="now">今すること: ${escapeHtml(text)}</p>`;
+}
+
+export function technicalDetails(summary, body, kind = "details") {
+  return `<details data-copy-role="technical" data-detail-kind="${escapeHtml(kind)}"><summary>${escapeHtml(summary)}</summary>${body}</details>`;
+}
+
+export function safetyList(items) {
+  return `<ul class="safety-list" data-copy-role="safety">${items.map(({ label, text }) => `<li><strong>${escapeHtml(label)}</strong><span>${escapeHtml(text)}</span></li>`).join("")}</ul>`;
 }
 
 export function setProgress(step) {
@@ -45,5 +63,5 @@ export function setProgress(step) {
 }
 
 export function wizardActions(primary, secondary = "戻る") {
-  return `<div class="actions"><button class="button button-secondary" data-action="back">${escapeHtml(secondary)}</button><button class="button button-primary" data-action="next">${escapeHtml(primary)}</button></div>`;
+  return `<div class="actions" data-copy-role="actions"><button class="button button-secondary" data-action="back" aria-label="${escapeHtml(secondary)}">${escapeHtml(secondary)}</button><button class="button button-primary" data-action="next" aria-label="${escapeHtml(primary)}">${escapeHtml(primary)}</button></div>`;
 }

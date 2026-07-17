@@ -1,15 +1,17 @@
 export function cleanupDescription(cleanup, { networkFailure = false } = {}) {
   if (networkFailure || !cleanup) return {
     kind: "manual",
-    text: "自動取消の結果を確認できませんでした。GitHubのRepository SecretsとGoogleのアプリ権限を手動で確認してください。",
+    text: "接続情報を自動で消せたか確認できませんでした。管理者に確認を依頼してください。",
+    technical: "GitHubのRepository SecretsとGoogleのアプリ権限を手動で確認してください。",
   };
-  if (!cleanup.hadConnection) return { kind: "none", text: "接続前だったため、設定や認証情報は変更していません。" };
+  if (!cleanup.hadConnection) return { kind: "none", text: "接続前だったため、設定や接続情報は変更していません。", technical: "Repository SecretやGoogle OAuth grantは作成していません。" };
   if (!cleanup.manualCheckRequired && cleanup.secretsDeleted && cleanup.grantRevoked) return {
     kind: "success",
-    text: "Repository Secretを削除し、Google OAuth grant／tokenを取り消しました。",
+    text: "作成した接続情報を削除してから終了しました。",
+    technical: "Repository Secretを削除し、Google OAuth grant／tokenを取り消しました。",
   };
   const missing = [];
   if (!cleanup.secretsDeleted) missing.push("GitHubリポジトリの Settings → Secrets and variables → Actions");
   if (!cleanup.grantRevoked) missing.push("Googleのアプリ権限ページ");
-  return { kind: "manual", text: `自動取消を完了できませんでした。${missing.join(" と ")}を手動で確認してください。` };
+  return { kind: "manual", text: "接続情報の一部を自動で消せませんでした。管理者に確認を依頼してください。", technical: `${missing.join(" と ")}を手動で確認してください。` };
 }

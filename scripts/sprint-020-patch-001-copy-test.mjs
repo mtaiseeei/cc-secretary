@@ -1,0 +1,105 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { renderWizardScreen } from "../plugins/yasashii-secretary/skills/chatwork/assets/wizard/common.js";
+
+const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
+const files = {
+  chatwork: join(repo, "plugins/yasashii-secretary/skills/chatwork/assets/wizard/app.js"),
+  google: join(repo, "plugins/yasashii-secretary/skills/google-chat/assets/wizard/app.js"),
+  common: join(repo, "plugins/yasashii-secretary/skills/chatwork/assets/wizard/common.js"),
+  inventory: join(repo, "docs/progress/sprint-020-patch-001-copy-inventory.md"),
+};
+
+const expectedScreens = {
+  chatwork: [
+    "prepare-connection", "admin-approval", "register-connection", "confirm-registration", "discover", "discover-loading",
+    "discover-empty", "discover-failure", "select-rooms", "select-interval", "review", "saving", "save-failure",
+    "result-loading", "settings-result", "settings-result-failure", "initial-result-loading", "initial-result",
+    "initial-result-empty", "initial-result-failure", "complete", "cancelled", "bootstrap-failure",
+  ],
+  google: [
+    "prepare-cloud", "prepare-access", "prepare-file", "authorize", "authorize-waiting", "authorize-popup-failure",
+    "authorize-failure", "discover-loading", "discover-empty", "select-spaces", "select-interval", "review",
+    "initial-sync-loading", "initial-sync-failure", "initial-result", "initial-result-empty", "initial-result-partial",
+    "initial-result-failure", "settings-select-spaces", "settings-select-interval", "settings-review", "settings-saving",
+    "settings-failure", "settings-result", "settings-result-manual", "settings-result-stopped", "cancelled", "complete",
+    "bootstrap-failure",
+  ],
+};
+
+const forbidden = /\b(?:wizard|workflow|commit|push|Repository Secret|loopback|runtime|scope|token|OAuth client JSON|Sprint[- ]?\d*)\b/i;
+const primaryPatterns = [
+  /<h1>([\s\S]*?)<\/h1>/g,
+  /nowCopy\("([^"]*)"\)/g,
+  /<p class="lead[^>]*>([\s\S]*?)<\/p>/g,
+  /<(?:button|a)[^>]*class="[^"]*button[^"]*"[^>]*>([\s\S]*?)<\/(?:button|a)>/g,
+];
+
+function plain(value) {
+  return value.replace(/<[^>]*>|\$\{[^}]*\}/g, " ").replace(/\s+/g, " ").trim();
+}
+
+export function validateCopyFixture({ chatwork, google, common, inventory }) {
+  const errors = [];
+  const sources = { chatwork, google };
+  for (const [service, screens] of Object.entries(expectedScreens)) {
+    for (const screen of screens) {
+      if (!sources[service].includes(`"${screen}"`)) errors.push(`${service}: screen ${screen} がありません`);
+      if (!inventory.includes(`| ${service === "chatwork" ? "Chatwork" : "Google Chat"} | ${screen} |`)) errors.push(`${service}: inventory ${screen} がありません`);
+    }
+  }
+
+  for (const [service, source] of Object.entries(sources)) {
+    for (const pattern of primaryPatterns) {
+      for (const match of source.matchAll(pattern)) {
+        const text = plain(match[1]);
+        if (forbidden.test(text)) errors.push(`${service}: primary禁止語: ${text}`);
+      }
+    }
+    const customButtons = [...source.matchAll(/<button\b([^>]*)>/g)];
+    if (customButtons.some((match) => !/aria-label=/.test(match[1]))) errors.push(`${service}: accessible nameのないbuttonがあります`);
+  }
+
+  const combined = `${chatwork}\n${google}`;
+  const requiredMeanings = [
+    "読む対象", "保存先", "見える人", "自動取得・保存", "履歴の保持",
+    "現在の非公開GitHubリポジトリ", "共同編集者にも保存内容が見えます", "取得済み履歴を削除しません",
+    "3時間ごと（おすすめ・初期値）", "ダイレクトメッセージとグループDMは対象外", "投稿、編集、削除は行いません",
+  ];
+  for (const meaning of requiredMeanings) if (!combined.includes(meaning)) errors.push(`必須意味がありません: ${meaning}`);
+  for (const [service, source] of Object.entries(sources)) {
+    for (const meaning of ["現在の非公開GitHubリポジトリ", "共同編集者にも保存内容が見えます", "取得済み履歴を削除しません"]) {
+      if (!source.includes(meaning)) errors.push(`${service}: 安全上の必須意味がありません: ${meaning}`);
+    }
+  }
+  if ((chatwork.match(/label: "読む対象"/g) || []).length !== 1 || (google.match(/label: "読む対象"/g) || []).length !== 2) errors.push("安全5要素の画面別構造が不正です");
+  if (!common.includes('app.setAttribute("aria-label", detail.context)') || !common.includes("app.dataset.screen") || !common.includes("app.dataset.state")) errors.push("service accessible nameまたはDOM状態がありません");
+  if (!combined.includes('data-copy-role="technical"') && !common.includes('data-copy-role="technical"')) errors.push("technical detailsがありません");
+  if (!combined.includes("API Token") || !combined.includes("Repository Secret") || !google.includes("OAuth client JSON") || !google.includes("PKCE")) errors.push("管理者向け正式名称が不足しています");
+
+  const inventoryRows = inventory.split("\n").filter((line) => /^\| (?:Chatwork|Google Chat) \|/.test(line));
+  const expectedCount = expectedScreens.chatwork.length + expectedScreens.google.length;
+  if (inventoryRows.length !== expectedCount) errors.push(`inventory件数 ${inventoryRows.length}/${expectedCount}`);
+  return errors;
+}
+
+const fixture = Object.fromEntries(Object.entries(files).map(([key, path]) => [key, readFileSync(path, "utf8")]));
+const errors = validateCopyFixture(fixture);
+if (errors.length) {
+  for (const error of errors) process.stderr.write(`  FAIL ${error}\n`);
+  process.exit(1);
+}
+
+const fakeApp = { dataset: {}, innerHTML: "" };
+renderWizardScreen(fakeApp, { id: "chatwork-review", state: "ready", html: "<h1>確認</h1>" });
+if (fakeApp.dataset.screen !== "chatwork-review" || fakeApp.dataset.state !== "ready" || fakeApp.innerHTML !== "<h1>確認</h1>") throw new Error("DOM状態遷移を記録できません");
+renderWizardScreen(fakeApp, { id: "chatwork-saving", state: "loading", html: "<h1>保存中</h1>" });
+if (fakeApp.dataset.screen !== "chatwork-saving" || fakeApp.dataset.state !== "loading") throw new Error("DOM loading状態へ遷移できません");
+
+const brokenMeaning = { ...fixture, chatwork: fixture.chatwork.replace("共同編集者にも保存内容が見えます", "保存内容が見えます") };
+const brokenScreen = { ...fixture, google: fixture.google.replace('"settings-result-manual"', '"settings-result-removed"') };
+const brokenForbidden = { ...fixture, chatwork: fixture.chatwork.replace("Chatworkの公式ページで、接続に使う情報を発行します。", "wizardでtokenを発行します。") };
+if (!validateCopyFixture(brokenMeaning).length || !validateCopyFixture(brokenScreen).length || !validateCopyFixture(brokenForbidden).length) throw new Error("壊したfixtureを検出できません");
+
+process.stdout.write(`SPRINT020_PATCH001_COPY_PASS=${expectedScreens.chatwork.length + expectedScreens.google.length + 8} SPRINT020_PATCH001_COPY_FAIL=0 INVENTORY=${expectedScreens.chatwork.length + expectedScreens.google.length}\n`);

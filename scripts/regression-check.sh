@@ -1055,6 +1055,17 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+section "26. Chatwork／Google ChatのMore Simple copy（sprint-020-patch-001）"
+# ---------------------------------------------------------------------------
+SPRINT020_PATCH001_REGRESSION="$REPO/scripts/sprint-020-patch-001-regression.sh"
+check "sprint-020-patch-001回帰が存在し実行可能" "[ -x '$SPRINT020_PATCH001_REGRESSION' ]"
+if bash "$SPRINT020_PATCH001_REGRESSION"; then
+  ok "sprint-020-patch-001 copy・DOM・両サービス基礎回帰が全て成功"
+else
+  ng "sprint-020-patch-001回帰に失敗"
+fi
+
+# ---------------------------------------------------------------------------
 section "結果"
 # ---------------------------------------------------------------------------
 printf 'PASS=%d  FAIL=%d\n' "$PASS" "$FAIL"

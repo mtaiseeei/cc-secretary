@@ -137,9 +137,9 @@ if (existsSync(browser)) {
     process.stderr.write(`running DOM確認を実行できませんでした: ${error.code || error.message}\n`);
   }
 }
-const connectionUiRendered = runningDom.includes("ChatworkでAPI Tokenを取得します。") && runningDom.includes("Tokenページを使えない");
+const connectionUiRendered = runningDom.includes("Chatworkの接続情報を用意します。") && runningDom.includes("今すること");
 if (!connectionUiRendered && runningDom) process.stderr.write(`running DOM抜粋: ${runningDom.slice(0, 1000).replace(/\s+/g, " ")}\n`);
-check("running DOMにToken接続UIを描画", connectionUiRendered);
+check("running DOMに接続準備UIを描画", connectionUiRendered);
 check("wizard DOMにTokenが無い", !wizardHtml.includes(tokenMarker));
 const before = readFileSync(join(wizardRoot, "chatwork", "config.json"), "utf8");
 await fetch(`${url}api/bootstrap`);

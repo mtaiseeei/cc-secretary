@@ -56,7 +56,7 @@ const cleanupCopies = [
   cleanupDescription(null, { networkFailure: true }),
   cleanupDescription({ hadConnection: false, secretsDeleted: true, grantRevoked: false, manualCheckRequired: false }),
 ];
-check("cleanup UIは全成功・Secret失敗・grant失敗・両失敗・通信失敗・接続前を区別", cleanupCopies[0].kind === "success" && cleanupCopies[1].text.includes("Secrets and variables") && !cleanupCopies[1].text.includes("アプリ権限ページ") && cleanupCopies[2].text.includes("アプリ権限ページ") && !cleanupCopies[2].text.includes("Secrets and variables") && cleanupCopies[3].text.includes("Secrets and variables") && cleanupCopies[3].text.includes("アプリ権限ページ") && cleanupCopies[4].text.includes("結果を確認できません") && cleanupCopies[5].kind === "none");
+check("cleanup UIは全成功・Secret失敗・grant失敗・両失敗・通信失敗・接続前を区別", cleanupCopies[0].kind === "success" && cleanupCopies[1].technical.includes("Secrets and variables") && !cleanupCopies[1].technical.includes("アプリ権限ページ") && cleanupCopies[2].technical.includes("アプリ権限ページ") && !cleanupCopies[2].technical.includes("Secrets and variables") && cleanupCopies[3].technical.includes("Secrets and variables") && cleanupCopies[3].technical.includes("アプリ権限ページ") && cleanupCopies[4].text.includes("確認できません") && cleanupCopies[5].kind === "none");
 
 function fixtureClient(data = fixture) {
   return {
@@ -153,7 +153,7 @@ const normalClientJson = JSON.stringify({ installed: { client_id: runtimeId, cli
 await api(normalUiServer.base, "api/oauth/client", { clientJson: normalClientJson });
 const normalBootstrap = await api(normalUiServer.base, "api/bootstrap");
 const normalAppSource = await (await fetch(`${normalUiServer.base}app.js`)).text();
-check("通常UIは別タブOAuthと元wizard pollingを使う", normalBootstrap.json.testing === false && normalBootstrap.json.oauth.status === "ready" && normalAppSource.includes('window.open("/api/oauth/authorize"') && normalAppSource.includes("waitForOAuth") && normalAppSource.includes("認証タブをもう一度開く"));
+check("通常UIは別タブOAuthと元wizard pollingを使う", normalBootstrap.json.testing === false && normalBootstrap.json.oauth.status === "ready" && normalAppSource.includes('window.open("/api/oauth/authorize"') && normalAppSource.includes("waitForOAuth") && normalAppSource.includes("Googleの確認画面を") && normalAppSource.includes("もう一度開く"));
 normalUiServer.child.kill("SIGTERM");
 
 async function runGitSync({ name, selectedSpace, data }) {

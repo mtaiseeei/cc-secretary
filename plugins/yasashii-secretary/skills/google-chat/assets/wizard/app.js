@@ -1,4 +1,4 @@
-import { escapeHtml as escape, externalLink, installWizardShell, setProgress as progress, wizardActions as actions } from "/common.js";
+import { escapeHtml as escape, externalLink, installWizardShell, nowCopy, renderWizardScreen, safetyList, setProgress as progress, technicalDetails, wizardActions as actions } from "/common.js";
 import { cleanupDescription } from "/cleanup.js";
 
 const { app } = installWizardShell("google-chat");
@@ -15,7 +15,11 @@ const links = {
 };
 
 function errorMessage(error) {
-  return `<p class="error" role="alert">${escape(error.message || "処理を完了できませんでした。")}</p>`;
+  return `<p class="error" data-copy-role="error" role="alert">処理を完了できませんでした。</p><p class="notice">通信や設定を確認して、もう一度お試しください。</p>${technicalDetails("管理者向け: エラーの詳しい内容", `<p>${escape(error.message || "詳しい原因を確認できませんでした。")}</p>`, "admin")}`;
+}
+
+function show(id, html, stateName = "ready") {
+  renderWizardScreen(app, { id: `google-chat-${id}`, state: stateName, html });
 }
 
 async function json(url, options = {}) {
@@ -27,11 +31,33 @@ async function json(url, options = {}) {
 
 function renderPrepare() {
   progress(0);
-  app.innerHTML = `<p class="eyebrow">接続 1 / 4</p><h1>管理者準備を確認します。</h1>
-    <p class="lead">Google Workspace管理者、またはGoogle Cloudプロジェクトを作成できる方が必要です。会社のGoogle Workspace組織が所有するプロジェクトを使います。</p>
-    <div class="panel"><p class="panel-title">管理者へ渡すチェックリスト</p><ol class="check-list"><li>${externalLink(links.cloud, "Google Cloudでプロジェクトを作る")}</li><li>${externalLink(links.chatApi, "Google Chat APIを有効にする")}</li><li>${externalLink(links.peopleApi, "Google People APIを有効にする")}</li><li>OAuth Audienceを <code>Internal</code> にする</li><li>OAuth Clientを <code>Desktop app</code> で作る</li></ol><p class="hint">読み取り専用でも <code>chat.messages.readonly</code> はRestricted scopeです。管理者のAPI access controlsで許可が必要な場合があります。</p></div>
-    <div class="panel"><label class="search-label" for="client-json">ダウンロードしたOAuth client JSONを選ぶ</label><input id="client-json" type="file" accept="application/json,.json"><p class="hint">内容はこのPCのloopback内だけで読み、外部へuploadしません。client secretやclient IDを画面・ログ・リポジトリへ残しません。</p></div>
-    <div class="actions"><button class="button button-secondary" data-action="cancel">あとで行う</button><button class="button button-primary" data-action="next" disabled>OAuth clientを確認する</button></div>`;
+  show("prepare-cloud", `<p class="eyebrow">管理者準備 1 / 3</p><h1>会社のGoogle Cloudを用意します。</h1>
+    ${nowCopy("管理者に、会社が所有するGoogle Cloudプロジェクトと必要なAPIの準備を依頼します。")}
+    <div class="panel"><p class="panel-title">この画面で管理者へ依頼すること</p><ol class="check-list"><li>${externalLink(links.cloud, "会社用のGoogle Cloudプロジェクトを作る")}</li><li>${externalLink(links.chatApi, "Google Chat APIを有効にする")}</li><li>${externalLink(links.peopleApi, "Google People APIを有効にする")}</li></ol>
+    ${technicalDetails("管理者向け: なぜ会社所有が必要か", "<p>各利用組織が所有するGoogle Cloudプロジェクトを使います。共通の外部向け接続アプリやサービスアカウントは使いません。</p>", "admin")}</div>
+    ${actions("Googleの接続方法を確認する", "Google Chatの設定をあとで行う")}`);
+  app.querySelector('[data-action="next"]').onclick = renderPrepareAccess;
+  app.querySelector('[data-action="back"]').onclick = cancel;
+}
+
+function renderPrepareAccess() {
+  progress(0);
+  show("prepare-access", `<p class="eyebrow">管理者準備 2 / 3</p><h1>社内向けの接続方法を用意します。</h1>
+    ${nowCopy("管理者に、社内の利用者だけが使える接続設定を作ってもらいます。")}
+    <div class="panel"><p class="panel-title">管理者へ依頼すること</p><ul><li>利用者の範囲を社内向けにする</li><li>PCから接続する種類を選ぶ</li></ul>
+    ${technicalDetails("管理者向け: Google Cloudで選ぶ正式名称", "<p>OAuth Audienceは <code>Internal</code>、OAuth Clientは <code>Desktop app</code> を選びます。読み取り専用でも <code>chat.messages.readonly</code> はRestricted scopeです。必要に応じてAPI access controlsで許可します。</p>", "admin")}</div>
+    ${actions("接続用ファイルの準備へ進む")}`);
+  app.querySelector('[data-action="next"]').onclick = renderPrepareFile;
+  app.querySelector('[data-action="back"]').onclick = renderPrepare;
+}
+
+function renderPrepareFile() {
+  progress(0);
+  show("prepare-file", `<p class="eyebrow">管理者準備 3 / 3</p><h1>Google Cloudの接続用ファイルを選びます。</h1>
+    ${nowCopy("管理者から受け取った接続用ファイルを、このPCから選びます。")}
+    <div class="panel"><label class="search-label" for="client-json">Google Cloudから取得した接続用ファイル</label><input id="client-json" type="file" accept="application/json,.json"><p class="hint">ファイルの内容は外部へ送らず、この画面にも表示しません。</p>
+    ${technicalDetails("管理者向け: ファイルの正式名称と安全な扱い", "<p>正式名称は <strong>OAuth client JSON</strong> です。内容はこのPCのloopback内だけで読み、外部へuploadしません。client secretやclient IDを画面、ログ、リポジトリへ残しません。</p>", "admin")}</div>
+    <div class="actions" data-copy-role="actions"><button class="button button-secondary" data-action="back" aria-label="Googleの接続方法へ戻る">戻る</button><button class="button button-primary" data-action="next" aria-label="Google Cloudの接続用ファイルを確認する" disabled>接続用ファイルを確認する</button></div>`);
   const input = app.querySelector("#client-json");
   const next = app.querySelector('[data-action="next"]');
   input.onchange = () => { next.disabled = !input.files?.[0]; };
@@ -44,17 +70,18 @@ function renderPrepare() {
       renderAuthorize();
     } catch (error) { next.disabled = false; app.insertAdjacentHTML("beforeend", errorMessage(error)); }
   };
-  app.querySelector('[data-action="cancel"]').onclick = cancel;
+  app.querySelector('[data-action="back"]').onclick = renderPrepareAccess;
 }
 
 function renderAuthorize() {
   oauthPollGeneration += 1;
   progress(0);
-  app.innerHTML = `<p class="eyebrow">接続 2 / 4</p><h1>Googleで認証します。</h1>
-    <p class="lead">OAuth、つまりGoogleのパスワードを渡さず、許可した範囲だけ読み取る認証を使います。認可コードは受信後すぐtokenへ交換し、記録しません。</p>
-    <div class="panel"><p class="panel-title">許可を求める範囲</p><ul><li>参加中スペースの一覧を読む</li><li>選択した通常スペースのメッセージを読む</li><li>発言者名を連絡先から補完する</li></ul><p class="hint">投稿・編集・削除、管理者権限、membership権限は求めません。</p></div>
-    <div class="actions"><button class="button button-secondary" data-action="back">戻る</button>${state.testing ? '<button class="button button-primary" data-action="synthetic">合成認証で画面確認</button>' : '<button class="button button-primary" data-action="authorize">新しいタブでGoogle認証を開く</button>'}</div>`;
-  app.querySelector('[data-action="back"]').onclick = renderPrepare;
+  show("authorize", `<p class="eyebrow">接続 2 / 4</p><h1>Googleアカウントで接続を許可します。</h1>
+    ${nowCopy("Googleの確認画面を開き、Google Chatを読むことを許可します。")}
+    <div class="panel"><p class="panel-title">許可すること</p><ul><li>参加中の通常スペースを確認する</li><li>選んだ通常スペースのメッセージを読む</li><li>発言者名を確認する</li></ul><p class="hint">メッセージの投稿、編集、削除は行いません。</p>
+    ${technicalDetails("管理者向け: 認証と安全機構", "<p>Googleのパスワードを渡さず、許可した範囲だけ読む仕組み（OAuth）を使います。read-only scope、PKCE、state検証、loopbackを使い、認可コードとtokenは記録しません。membership権限や書き込み権限は求めません。</p>", "admin")}</div>
+    <div class="actions" data-copy-role="actions"><button class="button button-secondary" data-action="back" aria-label="Google Cloudの接続用ファイルへ戻る">戻る</button>${state.testing ? '<button class="button button-primary" data-action="synthetic" aria-label="合成データでGoogle接続後の画面を確認する">合成データで接続を確認する</button>' : '<button class="button button-primary" data-action="authorize" aria-label="Googleの確認画面を新しいタブで開く">Googleの確認画面を開く</button>'}</div>`);
+  app.querySelector('[data-action="back"]').onclick = renderPrepareFile;
   if (state.testing) app.querySelector('[data-action="synthetic"]').onclick = async () => { try { state.oauth = await json("/api/oauth/synthetic", { method: "POST", headers: { "content-type": "application/json" }, body: '{"mode":"success"}' }); await discoverSpaces(); } catch (error) { app.insertAdjacentHTML("beforeend", errorMessage(error)); } };
   else app.querySelector('[data-action="authorize"]').onclick = startOAuth;
 }
@@ -74,10 +101,11 @@ function startOAuth() {
 
 function renderOAuthWaiting({ authWindow = null, generation = ++oauthPollGeneration, popupBlocked = false } = {}) {
   progress(0);
-  app.innerHTML = `<p class="eyebrow">接続 2 / 4</p><h1>${popupBlocked ? "認証タブを開けませんでした。" : "別タブでGoogle認証を確認しています。"}</h1>
-    <p class="lead" data-oauth-status>${popupBlocked ? "ブラウザでポップアップを許可して、もう一度開いてください。元の設定画面はこのまま残ります。" : "認証用の新しいタブで許可を進めてください。完了すると、この設定画面が自動的に通常スペースの選択へ進みます。"}</p>
-    <p class="notice">認証タブを手動で閉じても、この画面は残ります。完了前に閉じた場合は「認証タブをもう一度開く」からやり直せます。</p>
-    <div class="actions"><button class="button button-secondary" data-action="cancel">設定を終了する</button><button class="button button-primary" data-action="reopen">認証タブを${popupBlocked ? "開く" : "もう一度開く"}</button></div>`;
+  show(popupBlocked ? "authorize-popup-failure" : "authorize-waiting", `<p class="eyebrow">接続 2 / 4</p><h1>${popupBlocked ? "Googleの確認画面を開けませんでした。" : "Googleの許可を待っています。"}</h1>
+    <p class="lead ${popupBlocked ? "error" : ""}" data-copy-role="${popupBlocked ? "error" : "status"}" data-oauth-status>${popupBlocked ? "ブラウザで新しい画面を開けませんでした。" : "新しい画面でGoogle Chatへの接続を許可してください。"}</p>
+    <p class="notice">${popupBlocked ? "ブラウザのポップアップを許可して、もう一度開いてください。" : "許可が終わると、通常スペースの選択へ自動で進みます。"}</p>
+    ${technicalDetails("詳しい説明: 新しい画面を閉じた場合", "<p>確認画面を閉じても、この設定画面は残ります。許可の途中で閉じた場合は、もう一度開いてやり直せます。</p>")}
+    <div class="actions" data-copy-role="actions"><button class="button button-secondary" data-action="cancel" aria-label="Google Chatの接続を中止して後始末する">接続を中止する</button><button class="button button-primary" data-action="reopen" aria-label="Googleの確認画面を新しいタブでもう一度開く">Googleの確認画面を${popupBlocked ? "開く" : "もう一度開く"}</button></div>`, popupBlocked ? "error" : "loading");
   app.querySelector('[data-action="cancel"]').onclick = cancel;
   app.querySelector('[data-action="reopen"]').onclick = startOAuth;
   if (!popupBlocked && !authWindow) window.setTimeout(() => waitForOAuth({ authWindow: null, generation }), 300);
@@ -90,7 +118,7 @@ async function waitForOAuth({ authWindow = null, generation = oauthPollGeneratio
     try { state.oauth = await json("/api/oauth/status"); }
     catch (error) {
       const status = app.querySelector("[data-oauth-status]");
-      if (status) status.textContent = `認証状態を確認できませんでした。元の画面は残っています。通信を確認してください。（${error.message}）`;
+          if (status) status.textContent = "Googleの許可状態を確認できませんでした。通信を確認してください。";
       await new Promise((wait) => window.setTimeout(wait, 1000));
       continue;
     }
@@ -102,7 +130,7 @@ async function waitForOAuth({ authWindow = null, generation = oauthPollGeneratio
         if (authWindow.closed) {
           closedReported = true;
           const status = app.querySelector("[data-oauth-status]");
-          if (status) status.textContent = "認証タブが閉じられました。認証済みなら確認を続けます。完了前に閉じた場合は、もう一度開いてください。";
+          if (status) status.textContent = "Googleの確認画面が閉じられました。許可済みか確認を続けています。";
         }
       } catch { /* cross-originのWindowProxyは状態APIで確認する */ }
     }
@@ -113,15 +141,15 @@ async function waitForOAuth({ authWindow = null, generation = oauthPollGeneratio
 
 function renderOAuthFailure(message = state.oauth?.message) {
   progress(0);
-  const checklist = state.oauth?.managerChecklist ? `<div class="panel" data-volatile="manager-checklist"><p class="panel-title">管理者へ一時的に伝える内容</p><p>client ID: <code>${escape(state.oauth.managerChecklist.clientId)}</code></p><ul>${state.oauth.managerChecklist.scopes.map((scope) => `<li><code>${escape(scope)}</code></li>`).join("")}</ul><p class="hint">この表示は再読み込み後に残りません。厳格secretやチャット本文は含みません。スクリーンショットへ残さないでください。</p></div>` : "";
-  app.innerHTML = `<p class="eyebrow">接続を確認できません</p><h1>Google認証を完了できませんでした。</h1><p class="lead error" role="alert">${escape(message)}</p><p class="notice">拒否、Audience不一致、管理者ブロック、API無効、<code>redirect_uri_mismatch</code> は対応が異なります。表示された理由を管理者へ伝えてください。</p>${checklist}${actions("最初から確認する", "変更せず終了")}`;
+  const checklist = state.oauth?.managerChecklist ? `<div data-volatile="manager-checklist"><p>client ID: <code>${escape(state.oauth.managerChecklist.clientId)}</code></p><ul>${state.oauth.managerChecklist.scopes.map((scope) => `<li><code>${escape(scope)}</code></li>`).join("")}</ul><p>この表示は再読み込み後に残りません。秘密の値やチャット本文は含みません。スクリーンショットへ残さないでください。</p></div>` : "";
+  show("authorize-failure", `<p class="eyebrow">接続できませんでした</p><h1>Google Chatとの接続を確認できませんでした。</h1><p class="lead error" data-copy-role="error" role="alert">Googleの許可を完了できませんでした。</p><p class="notice">表示された理由を確認し、必要なら管理者へ伝えてから接続をやり直してください。</p>${technicalDetails("管理者向け: エラーの詳しい内容", `<p>${escape(message || "詳しい原因を確認できませんでした。")}</p><p>拒否、Audience不一致、管理者ブロック、API無効、<code>redirect_uri_mismatch</code> では対応が異なります。</p>${checklist}`, "admin")}${actions("Google Chatの接続を最初から確認する", "Google Chatの設定を変更せず終了する")}`, "error");
   app.querySelector('[data-action="next"]').onclick = renderPrepare;
   app.querySelector('[data-action="back"]').onclick = cancel;
 }
 
 async function discoverSpaces() {
   progress(1);
-  app.innerHTML = '<p class="eyebrow">接続 3 / 4</p><h1>通常スペースを確認しています。</h1><p class="lead">DMとグループDMは候補に出しません。</p>';
+  show("discover-loading", '<p class="eyebrow">接続 3 / 4</p><h1>Google Chatの通常スペースを確認しています。</h1><p class="lead" data-copy-role="status">参加している通常スペースの一覧を取得しています。</p><p class="notice">ダイレクトメッセージとグループDMは読みません。</p>', "loading");
   try {
     const result = await json("/api/spaces", { method: "POST" });
     state.spaces = result.spaces;
@@ -135,7 +163,7 @@ async function discoverSpaces() {
 function renderNoSpaces(cleanup) {
   progress(1);
   const detail = cleanupDescription(cleanup);
-  app.innerHTML = `<p class="eyebrow">接続 3 / 4</p><h1>選べる通常スペースは0件でした。</h1><p class="lead">0件は正常です。参加状況と管理者設定を確認してください。</p><p class="${detail.kind === "manual" ? "error" : "notice"}" role="${detail.kind === "manual" ? "alert" : "status"}">${escape(detail.text)}</p><p>${externalLink(links.permissions, "Googleのアプリ権限を確認する")}</p><div class="actions"><button class="button button-secondary" data-action="back">終了する</button><button class="button button-primary" data-action="retry">最初から確認する</button></div>`;
+  show("discover-empty", `<p class="eyebrow">接続 3 / 4</p><h1>選べるGoogle Chatスペースはまだありません。</h1><p class="lead" data-copy-role="result">通常スペースが0件でも、接続の失敗ではありません。</p><p class="notice">参加状況と管理者の設定を確認してから、もう一度接続できます。</p><p class="${detail.kind === "manual" ? "error" : "notice"}" role="${detail.kind === "manual" ? "alert" : "status"}">${escape(detail.text)}</p>${technicalDetails("管理者向け: 接続の後始末", `<p>${escape(detail.technical || "接続情報の後始末結果を確認してください。")}</p><p>${externalLink(links.permissions, "Googleのアプリ権限を確認する")}</p>`, "admin")}<div class="actions" data-copy-role="actions"><button class="button button-secondary" data-action="back" aria-label="Google Chatの設定を終了する">設定を終了する</button><button class="button button-primary" data-action="retry" aria-label="Google Chatの接続を最初から確認する">接続を最初から確認する</button></div>`, detail.kind === "manual" ? "error" : "empty");
   app.querySelector('[data-action="back"]').onclick = () => renderCancelled(cleanup);
   app.querySelector('[data-action="retry"]').onclick = renderPrepare;
 }
@@ -143,8 +171,8 @@ function renderNoSpaces(cleanup) {
 function renderSpaces() {
   progress(1);
   const shown = state.spaces.filter((space) => `${space.displayName} ${space.name}`.toLocaleLowerCase("ja").includes(state.query.toLocaleLowerCase("ja")));
-  app.innerHTML = `<p class="eyebrow">STEP 1 / 4</p><h1>保存する通常スペースを選びます。</h1><p class="lead">初期状態では1件も選びません。DMとグループDMは一覧にも履歴にも含めません。</p>
-    <div class="panel"><label class="search-label" for="space-search">スペースを検索</label><input class="search" id="space-search" type="search" value="${escape(state.query)}" placeholder="スペース名またはspace ID"><button class="text-button" data-action="clear" type="button">選択をすべて外す</button><ul class="room-list">${shown.map((space) => `<li><label class="choice"><input type="checkbox" value="${escape(space.name)}" ${state.selected.has(space.name) ? "checked" : ""}><span class="choice-copy"><span class="choice-title">${escape(space.displayName)}</span><span class="choice-meta">space ID ${escape(space.name)}</span></span></label></li>`).join("")}</ul><p class="hint">選択中: ${state.selected.size}スペース</p></div>${actions("自動取得の間隔を選ぶ", "キャンセル")}`;
+  show("select-spaces", `<p class="eyebrow">STEP 1 / 4</p><h1>保存するGoogle Chatスペースを選びます。</h1>${nowCopy("保存したい通常スペースにチェックを入れます。")}
+    <div class="panel"><label class="search-label" for="space-search">通常スペースを検索</label><input class="search" id="space-search" type="search" value="${escape(state.query)}" placeholder="スペース名"><button class="text-button" data-action="clear" type="button" aria-label="Google Chatスペースの選択をすべて外す">選択をすべて外す</button><ul class="room-list">${shown.map((space) => `<li><label class="choice"><input type="checkbox" value="${escape(space.name)}" ${state.selected.has(space.name) ? "checked" : ""}><span class="choice-copy"><span class="choice-title">${escape(space.displayName)}</span></span></label></li>`).join("")}</ul><p class="hint" role="status">選択中: ${state.selected.size}スペース</p>${technicalDetails("管理者向け: スペースの識別子", `<ul>${shown.map((space) => `<li>${escape(space.displayName)}: <code>${escape(space.name)}</code></li>`).join("")}</ul>`, "admin")}</div><p class="notice">選んだ通常スペースだけを読みます。ダイレクトメッセージとグループDMは対象外です。</p>${actions("Google Chatの取得間隔を選ぶ", "Google Chatの設定をキャンセル")}`);
   app.querySelector("#space-search").oninput = (event) => { state.query = event.target.value; renderSpaces(); app.querySelector("#space-search").focus(); };
   app.querySelector('[data-action="clear"]').onclick = () => { state.selected.clear(); renderSpaces(); };
   app.querySelectorAll('.room-list input[type="checkbox"]').forEach((input) => input.onchange = () => { input.checked ? state.selected.add(input.value) : state.selected.delete(input.value); renderSpaces(); });
@@ -154,7 +182,8 @@ function renderSpaces() {
 
 function renderFrequency() {
   progress(2);
-  app.innerHTML = `<p class="eyebrow">STEP 2 / 4</p><h1>自動取得の間隔を選びます。</h1><p class="lead">Chatworkと同じく3時間ごとがおすすめ・初期値です。負担と新しさのバランスを取りやすい間隔です。</p><div class="panel"><ul class="frequency-list">${frequencies.map(([value, label]) => `<li><label class="choice"><input type="radio" name="interval" value="${value}" ${state.interval === value ? "checked" : ""}><span class="choice-copy"><span class="choice-title">${label}</span></span></label></li>`).join("")}</ul><p class="hint">Sprint 019の初回取得はこのPCで行います。定期実行は次の運用設定で有効にします。</p></div>${actions("保存内容を確認する")}`;
+  show("select-interval", `<p class="eyebrow">STEP 2 / 4</p><h1>Google Chatの取得間隔を選びます。</h1>${nowCopy("新しいメッセージを自動で確認する間隔を選びます。")}
+    <div class="panel"><ul class="frequency-list">${frequencies.map(([value, label]) => `<li><label class="choice"><input type="radio" name="interval" value="${value}" ${state.interval === value ? "checked" : ""}><span class="choice-copy"><span class="choice-title">${label}</span></span></label></li>`).join("")}</ul>${technicalDetails("詳しい説明: 自動取得の仕組み", "<p>定期取得はGitHub Actionsで動きます。初回の取得だけは、接続情報をこのPCのメモリに保持している間に行います。</p>")}</div><p class="notice">3時間ごとは、負担と新しさのバランスを取りやすいおすすめ設定です。</p>${actions("Google Chatの保存内容を確認する")}`);
   app.querySelectorAll('input[name="interval"]').forEach((input) => input.onchange = () => { state.interval = input.value; });
   app.querySelector('[data-action="next"]').onclick = renderReview;
   app.querySelector('[data-action="back"]').onclick = renderSpaces;
@@ -164,7 +193,18 @@ function renderReview() {
   progress(3);
   const names = state.spaces.filter((space) => state.selected.has(space.name)).map((space) => escape(space.displayName)).join("、");
   const frequency = frequencies.find(([value]) => value === state.interval)?.[1];
-  app.innerHTML = `<p class="eyebrow">STEP 3 / 4</p><h1>初回取得と保存内容を確認してください。</h1><p class="lead">確定するまで設定、履歴、commit、pushは行いません。</p><dl class="summary"><div class="summary-row"><dt>対象スペース</dt><dd>${names}</dd></div><div class="summary-row"><dt>自動取得の間隔</dt><dd>${escape(frequency)}</dd></div><div class="summary-row"><dt>保存内容</dt><dd>本文、スレッド、発言者、添付メタデータ（添付本文は取得しません）</dd></div><div class="summary-row"><dt>保存先</dt><dd>秘書・一般プロジェクト・Chatworkと同じ非公開のGitHubリポジトリ</dd></div></dl><p class="notice">共同編集者は保存された本文を読めます。Google Chat APIと組織の保持設定が返せる範囲だけを取得し、取得できない過去を「存在しない」とは扱いません。</p><label class="consent"><input id="save-consent" type="checkbox"><span>選択した通常スペースの取得結果をこのリポジトリへ保存することに同意します。</span></label><label class="consent"><input id="git-consent" type="checkbox"><span>取得結果をこのリポジトリへ保存します（Gitのcommit・push）。</span></label>${actions("初回取得を開始する")}`;
+  show("review", `<p class="eyebrow">STEP 3 / 4</p><h1>Google Chatの保存内容を確認します。</h1>${nowCopy("読むスペース、保存先、自動取得の設定を確認します。")}
+    <dl class="summary"><div class="summary-row"><dt>選んだスペース</dt><dd>${names}</dd></div><div class="summary-row"><dt>取得間隔</dt><dd>${escape(frequency)}</dd></div><div class="summary-row"><dt>保存内容</dt><dd>本文、スレッド、発言者、添付情報。添付ファイルの中身は保存しません。</dd></div></dl>
+    ${safetyList([
+      { label: "読む対象", text: `選んだGoogle Chat通常スペース（${state.spaces.filter((space) => state.selected.has(space.name)).map((space) => space.displayName).join("、")}）だけです。` },
+      { label: "保存先", text: "現在の非公開GitHubリポジトリです。" },
+      { label: "見える人", text: "リポジトリの共同編集者にも保存内容が見えます。" },
+      { label: "自動取得・保存", text: state.interval === "manual" ? "自動取得は行わず、必要なときだけ取得して保存します。" : `${frequency}に新しいメッセージを取得して保存します。` },
+      { label: "履歴の保持", text: "対象を外したり手動のみに変えたりしても、取得済み履歴を削除しません。" },
+    ])}
+    <p class="notice">Google Chatは読むだけです。投稿、編集、削除は行いません。</p>
+    ${technicalDetails("詳しい説明: 保存処理と取得範囲", "<p>Google Chat APIと組織の保持設定が返せる範囲だけを取得します。取得できない過去を「存在しない」とは扱いません。</p><p>取得結果をこのリポジトリへ保存します（Gitのcommit・push）。</p>")}
+    <label class="consent"><input id="save-consent" type="checkbox"><span>この内容でGoogle Chatのメッセージを読み、保存することに同意します。</span></label><label class="consent"><input id="git-consent" type="checkbox"><span>取得結果を非公開GitHubリポジトリへ保存することに同意します。</span></label>${actions("この設定で最初の取得を始める")}`);
   const confirm = app.querySelector('[data-action="next"]');
   const update = () => { state.saveConsent = app.querySelector("#save-consent").checked; state.commitPushConsent = app.querySelector("#git-consent").checked; confirm.disabled = !(state.saveConsent && state.commitPushConsent); };
   app.querySelector("#save-consent").checked = state.saveConsent; app.querySelector("#git-consent").checked = state.commitPushConsent;
@@ -174,7 +214,7 @@ function renderReview() {
 
 async function initialSync() {
   progress(4);
-  app.innerHTML = '<p class="eyebrow">STEP 4 / 4</p><h1>初回取得を進めています。</h1><p class="lead">同じwizardセッションのメモリ上にあるtokenだけを使い、全pageを確認しています。</p>';
+  show("initial-sync-loading", '<p class="eyebrow">STEP 4 / 4</p><h1>Google Chatの最初の取得を進めています。</h1><p class="lead" data-copy-role="status">選んだ通常スペースのメッセージを確認しています。</p><p class="notice">取得できる範囲を最後まで確認するため、この画面を開いたままお待ちください。</p>', "loading");
   try {
     const result = await json("/api/initial-sync", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ selectedSpaceNames: [...state.selected], interval: state.interval, saveConsent: state.saveConsent, commitPushConsent: state.commitPushConsent }) });
     renderResult(result);
@@ -185,10 +225,10 @@ function renderInitialSyncFailure(error) {
   progress(4);
   const detail = error.details || {};
   const git = detail.git || {};
-  const saved = detail.savedLocally === true ? "取得結果や設定ファイルはこのPCに残っています。" : "このPCへの保存完了も確認できませんでした。";
-  const gitState = git.pushed ? "commit・push済みです。" : git.committed ? "ローカルcommitまでは完了していますが、pushできていません。" : "commit・pushは完了していません。";
-  const token = detail.tokenDiscarded === true ? "認証tokenはメモリから破棄しました。" : "認証tokenの破棄結果を画面から確認できませんでした。";
-  app.innerHTML = `<p class="eyebrow">STEP 4 / 4</p><h1>初回取得の保存を完了できませんでした。</h1><p class="lead error" role="alert">${escape(error.message)}</p><ul class="result-list"><li>${escape(saved)}</li><li>${escape(gitState)}</li><li>${escape(token)}</li></ul><p class="notice">Gitの状態と接続先を確認してください。再実行する場合は、Google認証からやり直します。</p><div class="actions"><button class="button button-secondary" data-action="close">設定を終了する</button><button class="button button-primary" data-action="restart">最初から確認する</button></div>`;
+  const saved = detail.savedLocally === true ? "取得結果や設定はこのPCに残っています。" : "このPCへの保存も確認できませんでした。";
+  const gitState = git.pushed ? "非公開GitHubリポジトリへの保存は完了しています。" : git.committed ? "このPCには保存しましたが、GitHubへ送れていません。" : "GitHubへの保存は完了していません。";
+  const token = detail.tokenDiscarded === true ? "接続に使った秘密の情報は、このPCのメモリから消去しました。" : "接続情報の消去結果を確認できませんでした。";
+  show("initial-sync-failure", `<p class="eyebrow">保存できませんでした</p><h1>Google Chatの最初の取得を完了できませんでした。</h1><p class="lead error" data-copy-role="error" role="alert">取得または保存の途中で問題が起きました。</p><p class="notice">接続先とGitHubの状態を確認してから、最初からやり直してください。</p><ul class="result-list"><li>${escape(saved)}</li><li>${escape(gitState)}</li><li>${escape(token)}</li></ul>${technicalDetails("管理者向け: エラーと保存状態", `<p>${escape(error.message)}</p><p>commit: ${git.committed ? "完了" : "未完了"}、push: ${git.pushed ? "完了" : "未完了"}</p>`, "admin")}<div class="actions" data-copy-role="actions"><button class="button button-secondary" data-action="close" aria-label="Google Chatの設定を終了する">設定を終了する</button><button class="button button-primary" data-action="restart" aria-label="Google Chatの接続を最初から確認する">接続を最初から確認する</button></div>`, "error");
   app.querySelector('[data-action="close"]').onclick = renderComplete;
   app.querySelector('[data-action="restart"]').onclick = renderPrepare;
 }
@@ -199,7 +239,9 @@ function renderResult(result) {
   const zero = result.sync.results.every((item) => item.status !== "success" || item.messages === 0);
   state.config = result.config;
   state.sync = result.sync;
-  app.innerHTML = `<p class="eyebrow">STEP 4 / 4</p><h1>${result.sync.status === "success" ? "初回取得が完了しました。" : result.sync.status === "partial" ? "一部のスペースを取得できませんでした。" : "初回取得を完了できませんでした。"}</h1><p class="lead">認証tokenはセッションのメモリから破棄しました。定期取得の設定はまだ行っていません。</p><ul class="result-list">${rows}</ul>${zero ? '<p class="empty">0件でも正常な取得結果です。組織の保持設定やAPIが返せる範囲により、過去履歴が含まれないことがあります。</p>' : ""}<div class="actions"><button class="button button-secondary" data-action="close">設定を終了</button><button class="button button-primary" data-action="settings">定期取得を設定する</button></div>`;
+  const failed = result.sync.status === "failed";
+  const partial = result.sync.status === "partial";
+  show(failed ? "initial-result-failure" : partial ? "initial-result-partial" : zero ? "initial-result-empty" : "initial-result", `<p class="eyebrow">STEP 4 / 4</p><h1>${failed ? "Google Chatの最初の取得を完了できませんでした。" : partial ? "一部のGoogle Chatスペースを取得できませんでした。" : "Google Chatの最初の取得が完了しました。"}</h1><p class="lead" data-copy-role="result">${failed ? "接続を確認して、最初からやり直してください。" : partial ? "取得できた内容は保存しました。失敗したスペースは接続を確認してください。" : zero ? "まだ保存するメッセージはありません。" : "取得したメッセージを保存しました。"}</p><ul class="result-list">${rows}</ul>${zero ? '<p class="empty">次回以降の取得で、新しい内容を保存します。</p>' : ""}${technicalDetails("詳しい説明: 取得結果と接続情報", "<p>接続に使ったtokenはセッションのメモリから破棄しました。組織の保持設定やAPIが返せる範囲により、過去履歴が含まれないことがあります。</p>")}<div class="actions" data-copy-role="actions"><button class="button button-secondary" data-action="close" aria-label="Google Chatの設定を終了する">設定を終了する</button><button class="button button-primary" data-action="settings" aria-label="Google Chatの自動取得を設定する">自動取得を設定する</button></div>`, failed ? "error" : zero ? "empty" : "success");
   app.querySelector('[data-action="close"]').onclick = renderComplete;
   app.querySelector('[data-action="settings"]').onclick = renderSettingsSpaces;
 }
@@ -208,10 +250,10 @@ function renderSettingsSpaces({ refreshed = false } = {}) {
   progress(1);
   const shown = state.spaces.filter((space) => `${space.displayName} ${space.name}`.toLocaleLowerCase("ja").includes(state.query.toLocaleLowerCase("ja")));
   const noSelection = state.selected.size === 0;
-  app.innerHTML = `<p class="eyebrow">設定変更 1 / 3</p><h1>取得する通常スペースを見直します。</h1><p class="lead">確定するまで設定、workflow、履歴、commit、pushは変更しません。選択を外しても取得済み履歴は削除しません。</p>${refreshed ? '<p class="notice" role="status">再認証後の最新スペース一覧を確認しました。既存の選択と履歴は保持しています。</p>' : ""}
-    <div class="panel"><label class="search-label" for="settings-space-search">スペースを検索</label><input class="search" id="settings-space-search" type="search" value="${escape(state.query)}" placeholder="スペース名またはspace ID"><button class="text-button" data-action="clear" type="button">選択をすべて外す</button><ul class="room-list">${shown.map((space) => `<li><label class="choice"><input type="checkbox" value="${escape(space.name)}" ${state.selected.has(space.name) ? "checked" : ""}><span class="choice-copy"><span class="choice-title">${escape(space.displayName)}</span><span class="choice-meta">space ID ${escape(space.name)}</span></span></label></li>`).join("")}</ul><p class="hint">選択中: ${state.selected.size}スペース。新しいスペースが見えない場合は再認証して一覧を更新します。</p></div>
-    ${noSelection ? '<p class="notice" role="status">0件のまま進み「手動のみ」を選ぶと、Google Chatの今後の取得を停止できます。取得済み履歴は残ります。</p>' : ""}
-    <div class="actions"><button class="button button-secondary" data-action="reauthorize">再認証して一覧を更新</button><button class="button button-primary" data-action="next">${noSelection ? "停止方法を確認する" : "間隔を確認する"}</button></div>`;
+  show("settings-select-spaces", `<p class="eyebrow">設定変更 1 / 3</p><h1>取得するGoogle Chatスペースを見直します。</h1>${nowCopy("今後も取得する通常スペースだけにチェックを入れます。")}${refreshed ? '<p class="notice" role="status">Googleへ接続し直し、最新の通常スペースを確認しました。以前の選択と履歴は残しています。</p>' : ""}
+    <div class="panel"><label class="search-label" for="settings-space-search">通常スペースを検索</label><input class="search" id="settings-space-search" type="search" value="${escape(state.query)}" placeholder="スペース名"><button class="text-button" data-action="clear" type="button" aria-label="Google Chatスペースの選択をすべて外す">選択をすべて外す</button><ul class="room-list">${shown.map((space) => `<li><label class="choice"><input type="checkbox" value="${escape(space.name)}" ${state.selected.has(space.name) ? "checked" : ""}><span class="choice-copy"><span class="choice-title">${escape(space.displayName)}</span></span></label></li>`).join("")}</ul><p class="hint" role="status">選択中: ${state.selected.size}スペース</p>${technicalDetails("管理者向け: スペースの識別子と一覧更新", `<ul>${shown.map((space) => `<li>${escape(space.displayName)}: <code>${escape(space.name)}</code></li>`).join("")}</ul><p>新しいスペースが見えない場合は再認証して一覧を更新します。</p>`, "admin")}</div>
+    ${noSelection ? '<p class="notice" role="status">0件のまま手動のみを選ぶと、今後の取得を止めます。取得済み履歴は削除しません。</p>' : '<p class="notice">選択を外したスペースは今後読みません。取得済み履歴は削除しません。</p>'}
+    <div class="actions" data-copy-role="actions"><button class="button button-secondary" data-action="reauthorize" aria-label="Googleへ接続し直して通常スペース一覧を更新する">Googleへ接続し直す</button><button class="button button-primary" data-action="next" aria-label="${noSelection ? "Google Chatの取得停止方法を確認する" : "Google Chatの取得間隔を確認する"}">${noSelection ? "取得の停止方法を確認する" : "取得間隔を確認する"}</button></div>`);
   app.querySelector("#settings-space-search").oninput = (event) => { state.query = event.target.value; renderSettingsSpaces(); app.querySelector("#settings-space-search").focus(); };
   app.querySelector('[data-action="clear"]').onclick = () => { state.selected.clear(); renderSettingsSpaces(); };
   app.querySelectorAll('.room-list input[type="checkbox"]').forEach((input) => input.onchange = () => { input.checked ? state.selected.add(input.value) : state.selected.delete(input.value); renderSettingsSpaces(); });
@@ -223,7 +265,7 @@ function renderSettingsSpaces({ refreshed = false } = {}) {
 function renderSettingsFrequency() {
   progress(2);
   const noSelection = state.selected.size === 0;
-  app.innerHTML = `<p class="eyebrow">設定変更 2 / 3</p><h1>自動取得の間隔を見直します。</h1><p class="lead">ChatworkとGoogle Chatは、どちらも3時間ごとがおすすめ・初期値です。</p><div class="panel"><ul class="frequency-list">${frequencies.map(([value, label]) => `<li><label class="choice"><input type="radio" name="settings-interval" value="${value}" ${state.interval === value ? "checked" : ""}><span class="choice-copy"><span class="choice-title">${label}</span></span></label></li>`).join("")}</ul><p class="hint">手動のみでは定期scheduleを作りません。自動取得は毎時0分を避けて実行します。</p></div>${noSelection ? '<p class="notice" data-selection-guidance role="status">対象が0件です。Google Chatの取得を停止し、履歴を残すには「手動のみ」を選んでください。</p>' : ""}${actions("変更内容を確認する")}`;
+  show("settings-select-interval", `<p class="eyebrow">設定変更 2 / 3</p><h1>Google Chatの取得間隔を見直します。</h1>${nowCopy("新しいメッセージを確認する間隔を選び直します。")}<div class="panel"><ul class="frequency-list">${frequencies.map(([value, label]) => `<li><label class="choice"><input type="radio" name="settings-interval" value="${value}" ${state.interval === value ? "checked" : ""}><span class="choice-copy"><span class="choice-title">${label}</span></span></label></li>`).join("")}</ul>${technicalDetails("詳しい説明: 自動取得の時刻", "<p>手動のみでは定期scheduleを作りません。自動取得は毎時0分を避けて実行します。</p>")}</div><p class="notice">3時間ごとは、負担と新しさのバランスを取りやすいおすすめ設定です。</p>${noSelection ? '<p class="notice" data-selection-guidance role="status">対象が0件です。手動のみを選ぶと今後の取得を止め、取得済み履歴は残します。</p>' : ""}${actions("Google Chatの変更内容を確認する")}`);
   const next = app.querySelector('[data-action="next"]');
   const update = () => {
     const blocked = state.selected.size === 0 && state.interval !== "manual";
@@ -243,8 +285,17 @@ function renderSettingsReview() {
   const names = selectedNames || "なし（今後の取得を停止）";
   const frequency = frequencies.find(([value]) => value === state.interval)?.[1];
   const automatic = state.interval !== "manual";
-  const rangeNote = "編集・削除は、その取得でAPIが返した範囲だけ反映します。差分範囲より古い変更が反映されないことは正常な仕様です。";
-  app.innerHTML = `<p class="eyebrow">設定変更 3 / 3</p><h1>現在の変更内容を確認してください。</h1><p class="lead">同意して確定するまで、設定、workflow、commit、pushは0件です。</p><dl class="summary"><div class="summary-row"><dt>対象スペース</dt><dd>${names}</dd></div><div class="summary-row"><dt>自動取得の間隔</dt><dd>${escape(frequency)}</dd></div><div class="summary-row"><dt>保存内容</dt><dd>本文、スレッド、発言者、添付メタデータ。添付本文は取得しません</dd></div><div class="summary-row"><dt>保存先</dt><dd>秘書・一般プロジェクト・Chatworkと同じ非公開のGitHubリポジトリ</dd></div><div class="summary-row"><dt>自動保存</dt><dd>${automatic ? "GitHub Actionsが取得結果をGitのcommit・pushで保存" : state.selected.size === 0 ? "停止（今後は取得しません）" : "手動取得時だけ保存"}</dd></div></dl><p class="notice">${state.selected.size === 0 ? "Google Chatの取得を停止します。取得済み履歴は削除しません。" : `共同編集者は保存済み本文を読めます。${escape(rangeNote)}`}</p><label class="consent"><input id="settings-git-consent" type="checkbox"><span>設定ファイルと自動取得処理をこのリポジトリへcommit・pushすることに同意します。</span></label>${automatic ? '<label class="consent"><input id="settings-auto-consent" type="checkbox"><span>選択スペースを3時間等の指定間隔で取得し、結果を自動commit・pushすることに同意します。</span></label>' : ""}${actions("この内容で設定する")}`;
+  const selectedDisplayNames = state.spaces.filter((space) => state.selected.has(space.name)).map((space) => space.displayName).join("、");
+  show("settings-review", `<p class="eyebrow">設定変更 3 / 3</p><h1>Google Chatの変更内容を確認します。</h1>${nowCopy("読むスペース、保存先、自動取得の変更を確認します。")}<dl class="summary"><div class="summary-row"><dt>選んだスペース</dt><dd>${names}</dd></div><div class="summary-row"><dt>取得間隔</dt><dd>${escape(frequency)}</dd></div><div class="summary-row"><dt>保存内容</dt><dd>本文、スレッド、発言者、添付情報。添付ファイルの中身は保存しません。</dd></div></dl>
+    ${safetyList([
+      { label: "読む対象", text: state.selected.size ? `選んだGoogle Chat通常スペース（${selectedDisplayNames}）だけです。` : "今後はGoogle Chatのスペースを読みません。" },
+      { label: "保存先", text: "現在の非公開GitHubリポジトリです。" },
+      { label: "見える人", text: "リポジトリの共同編集者にも保存内容が見えます。" },
+      { label: "自動取得・保存", text: automatic ? `${frequency}に新しいメッセージを取得して保存します。` : state.selected.size === 0 ? "自動取得を止め、今後は取得しません。" : "自動取得を止め、必要なときだけ取得して保存します。" },
+      { label: "履歴の保持", text: "対象を外したり手動のみに変えたりしても、取得済み履歴を削除しません。" },
+    ])}
+    ${technicalDetails("詳しい説明: 保存処理と差分の範囲", `<p>確定するまで設定、workflow、commit、pushは0件です。確定後、GitHub ActionsとGitのcommit・pushで保存します。</p><p>編集・削除は、その取得でAPIが返した範囲だけ反映します。差分範囲より古い変更が反映されないことは正常な仕様です。</p>`)}
+    <label class="consent"><input id="settings-git-consent" type="checkbox"><span>この変更を非公開GitHubリポジトリへ保存することに同意します。</span></label>${automatic ? '<label class="consent"><input id="settings-auto-consent" type="checkbox"><span>選んだ間隔でGoogle Chatを自動取得し、保存することに同意します。</span></label>' : ""}${actions("この変更をGoogle Chatへ反映する")}`);
   const confirm = app.querySelector('[data-action="next"]');
   const update = () => {
     state.commitPushConsent = app.querySelector("#settings-git-consent").checked;
@@ -260,7 +311,7 @@ function renderSettingsReview() {
 
 async function applySettings() {
   progress(3);
-  app.innerHTML = '<p class="eyebrow">設定反映中</p><h1>現在の設定へ反映しています。</h1><p class="lead">設定、取得runtime、GitHub Actions workflowを同じ非公開リポジトリへ保存しています。</p>';
+  show("settings-saving", '<p class="eyebrow">設定反映中</p><h1>Google Chatの変更を保存しています。</h1><p class="lead" data-copy-role="status">選んだスペースと取得間隔を保存しています。</p><p class="notice">保存結果を確認するまで、この画面を開いたままお待ちください。</p>', "loading");
   try {
     const result = await json("/api/settings", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ selectedSpaceNames: [...state.selected], interval: state.interval, commitPushConsent: state.commitPushConsent, automaticPushConsent: state.automaticPushConsent }) });
     state.config = result.current.config;
@@ -268,7 +319,7 @@ async function applySettings() {
     state.spaces = result.current.spaces;
     renderSettingsResult();
   } catch (error) {
-    app.innerHTML = `<p class="eyebrow">設定を変更していません</p><h1>変更前の状態へ戻しました。</h1>${errorMessage(error)}<p class="notice">履歴と以前の設定は保持しています。Gitの競合やGitHub権限を確認してから再実行してください。</p>${actions("設定を確認し直す", "終了する")}`;
+    show("settings-failure", `<p class="eyebrow">保存できませんでした</p><h1>Google Chatの変更を保存できませんでした。</h1><p class="lead error" data-copy-role="error" role="alert">変更前の設定へ戻しました。</p><p class="notice">以前の設定と履歴は残っています。接続先を確認してから、変更内容をもう一度お確かめください。</p>${technicalDetails("管理者向け: エラーの詳しい内容", `<p>${escape(error.message)}</p><p>Gitの競合やGitHub権限を確認してください。</p>`, "admin")}${actions("Google Chatの変更を確認し直す", "Google Chatの設定を終了する")}`, "error");
     app.querySelector('[data-action="next"]').onclick = renderSettingsSpaces;
     app.querySelector('[data-action="back"]').onclick = renderComplete;
   }
@@ -280,7 +331,9 @@ function renderSettingsResult() {
   const names = selectedNames || "なし（取得を停止）";
   const frequency = frequencies.find(([value]) => value === state.config.interval)?.[1];
   const syncStatus = state.sync?.status === "partial" ? "一部失敗" : state.sync?.status === "failed" ? "失敗" : state.sync?.status === "success" ? "成功" : "まだありません";
-  app.innerHTML = `<p class="eyebrow">設定完了</p><h1>現在のGoogle Chat設定を保存しました。</h1><dl class="summary"><div class="summary-row"><dt>現在の対象</dt><dd>${names}</dd></div><div class="summary-row"><dt>現在の間隔</dt><dd>${escape(frequency)}</dd></div><div class="summary-row"><dt>自動実行</dt><dd>${state.config.scheduleEnabled ? "有効" : state.config.selectedSpaceNames.length === 0 ? "無効（取得停止）" : "無効（手動のみ）"}</dd></div><div class="summary-row"><dt>直近の取得</dt><dd>${syncStatus}</dd></div></dl><p class="notice">${state.config.selectedSpaceNames.length === 0 ? "Google Chatの今後の取得を停止しました。選択を外したスペースの既存履歴は削除していません。" : "選択を外したスペースの既存履歴は削除していません。"}</p><div class="actions"><button class="button button-secondary" data-action="close">設定を終了</button></div>`;
+  const stopped = state.config.selectedSpaceNames.length === 0;
+  const manual = !stopped && !state.config.scheduleEnabled;
+  show(stopped ? "settings-result-stopped" : manual ? "settings-result-manual" : "settings-result", `<p class="eyebrow">設定完了</p><h1>${stopped ? "Google Chatの今後の取得を停止しました。" : manual ? "Google Chatを手動で取得する設定にしました。" : "Google Chatの設定を保存しました。"}</h1><p class="lead" data-copy-role="result">${stopped ? "取得済み履歴は削除していません。" : manual ? "必要なときだけ取得でき、これまでの履歴は残ります。" : "次は保存したGoogle Chatメッセージを検索できます。"}</p><dl class="summary"><div class="summary-row"><dt>現在の対象</dt><dd>${names}</dd></div><div class="summary-row"><dt>現在の間隔</dt><dd>${escape(frequency)}</dd></div><div class="summary-row"><dt>自動実行</dt><dd>${state.config.scheduleEnabled ? "有効" : stopped ? "無効（取得停止）" : "無効（手動のみ）"}</dd></div><div class="summary-row"><dt>直近の取得</dt><dd>${syncStatus}</dd></div></dl><p class="notice">選択を外したスペースの取得済み履歴も削除していません。</p><div class="actions" data-copy-role="actions"><button class="button button-primary" data-action="close" aria-label="Google Chatの設定を終了して検索案内を見る">設定を終了する</button></div>`, "success");
   app.querySelector('[data-action="close"]').onclick = renderComplete;
 }
 
@@ -296,10 +349,10 @@ async function cancel() {
 function renderCancelled(cleanup, options = {}) {
   progress(0);
   const detail = cleanupDescription(cleanup, options);
-  app.innerHTML = `<p class="eyebrow">キャンセル</p><h1>Google Chatの設定を終了しました。</h1><p class="lead ${detail.kind === "manual" ? "error" : ""}" role="${detail.kind === "manual" ? "alert" : "status"}">${escape(detail.text)}</p><p>${externalLink(links.permissions, "Googleのアプリ権限を確認する")}</p><div class="actions"><button class="button button-secondary" data-action="restart">設定に戻る</button></div>`;
+  show("cancelled", `<p class="eyebrow">キャンセル</p><h1>Google Chatの設定を終了しました。</h1><p class="lead ${detail.kind === "manual" ? "error" : ""}" data-copy-role="${detail.kind === "manual" ? "error" : "result"}" role="${detail.kind === "manual" ? "alert" : "status"}">${escape(detail.text)}</p>${technicalDetails("管理者向け: 接続情報の後始末", `<p>${escape(detail.technical || "接続情報の後始末はありません。")}</p><p>${externalLink(links.permissions, "Googleのアプリ権限を確認する")}</p>`, "admin")}<div class="actions" data-copy-role="actions"><button class="button button-primary" data-action="restart" aria-label="Google Chatの設定を最初から確認する">Google Chatの設定に戻る</button></div>`, detail.kind === "manual" ? "error" : "cancelled");
   app.querySelector('[data-action="restart"]').onclick = renderPrepare;
 }
-function renderComplete() { app.innerHTML = '<p class="eyebrow">完了</p><h1>設定画面を閉じて大丈夫です。</h1><p class="lead">次は /google-chat search から保存済み履歴を検索できます。</p>'; }
+function renderComplete() { show("complete", '<p class="eyebrow">完了</p><h1>Google Chatの設定は完了です。</h1><p class="lead" data-copy-role="result">次は /google-chat search から保存済みメッセージを検索できます。</p>', "success"); }
 
 json("/api/bootstrap").then((result) => {
   state.oauth = result.oauth;
@@ -318,4 +371,4 @@ json("/api/bootstrap").then((result) => {
   else if (["cancelled", "cleanup-required"].includes(state.oauth.status)) renderCancelled(state.cleanup);
   else if (state.oauth.status === "completed") renderComplete();
   else renderPrepare();
-}).catch((error) => { app.innerHTML = `<p class="eyebrow">接続エラー</p><h1>設定を読み込めませんでした。</h1>${errorMessage(error)}`; });
+}).catch((error) => { show("bootstrap-failure", `<p class="eyebrow">開始できません</p><h1>Google Chatの設定を読み込めませんでした。</h1>${errorMessage(error)}`, "error"); });
