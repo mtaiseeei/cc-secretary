@@ -99,3 +99,53 @@
 
 - 配布版 `0.5.0` でもSprint 018の安全な更新を壊さないため、`0.4.0→0.5.0` の無変更migration境界と複数versionのmigration経路解決を追加した。既存workspace本文の自動変更は0件で、Google Chat設定を更新処理へ混在させていない。
 - それ以外のSprint 020範囲は実装していない。
+
+## Retry 1 — Evaluator指摘3件への対応
+
+**ステータス:** 実装完了 - Evaluatorの独立再評価待ち
+
+### 修正内容
+
+- **通常OAuthを別タブ化**: 「新しいタブでGoogle認証を開く」操作へ変更し、元wizardだけがstatus pollingを続ける。認証タブの手動閉じ、ポップアップ拒否、再オープンを区別して案内し、接続後は元wizardが通常スペース選択へ進む。callback成功／失敗画面も「元の設定タブへ戻る」導線に統一した。
+- **cleanup結果を正直に表示**: `/api/cancel` と0 SPACE応答が `hadConnection`、Secret削除、grant revoke、手動確認要否を返す。全成功、Secret削除失敗、grant revoke失敗、両失敗、通信失敗、接続前を同じ表示判定で分け、失敗時はGitHubの `Settings → Secrets and variables → Actions` とGoogleのアプリ権限ページの必要な方だけを示す。
+- **初回0件のGit保存**: 実在するpathだけを `git add` するため、履歴directoryがない0件でもconfig／stateをcommit・pushできる。Git失敗はcommit済み／push済みを段階別に返し、ローカル生成物の有無と接続状態を表示する。tokenは成功・失敗のどちらでも `finally` で破棄する。
+- **再発防止回帰**: 通常UIの別タブOAuth＋polling、cleanup 6分岐と0 SPACE、`YASASHII_GOOGLE_CHAT_SKIP_GIT` を使わないlocal bare remoteの0件／1件、push失敗時のtoken破棄を専用回帰へ追加した。
+
+### Retry 1 検証結果
+
+- Sprint 019専用挙動: `node scripts/sprint-019-google-chat-test.mjs` → `SPRINT019_PASS=48 SPRINT019_FAIL=0`
+- Sprint 019専用wrapper: `bash scripts/sprint-019-regression.sh` → `SPRINT019_WRAPPER_PASS=12 SPRINT019_WRAPPER_FAIL=0`
+- 全offline回帰: `bash scripts/regression-check.sh --offline` → `PASS=310 FAIL=0`
+- 全online回帰: `bash scripts/regression-check.sh --online` → `PASS=311 FAIL=0`
+- 実ブラウザ: Chrome DevTools Protocolで通常UIの別タブ起動、元タブ保持、手動閉じ、popup拒否、connected後のSPACE選択を確認した。desktop 1440px、mobile 390px、200%相当、Chatwork共通wizardも含めてbrowser error 0件。
+- local bare remote: 初期commitに続くGoogle Chat初回保存が、0件／1件ともremoteの2件目のcommitとしてpushされた。Git push失敗fixtureは `tokenDiscarded=true`、`savedLocally=true`、`committed=true`、`pushed=false` を返した。
+- `git diff --check`、Node構文、strict secret形式の横断検査 → PASS。
+
+### Retry 1 自己評価
+
+| 基準 | スコア | 根拠 |
+|---|---:|---|
+| C1 完成度 | 5/5 | 前回FAILの受入基準5、8、9、12をそれぞれ実装と回帰で修正した |
+| C3 機能の実証 | 5/5 | 通常UI、cleanup分岐、実Git 0件／1件、Git失敗をSKIPなしで実行した |
+| C4 非エンジニア体験 | 5/5 | 成功・失敗・手動確認先・残ったローカル状態を断定しすぎず表示する |
+| C5 安全・規律 | 5/5 | cleanup失敗を成功表示せず、Git失敗時もtokenをメモリから破棄する |
+| C6 無回帰 | 5/5 | offline 310件、online 311件が0 FAIL |
+| C8 wizard体験 | 5/5 | 元タブが残る主要OAuth導線とpopup／手動閉じの復帰をrunning browserで確認した |
+| C11 Google Chat境界 | 5/5 | scope／SPACE限定を維持し、grant revoke失敗時は手動確認へ止める |
+
+### EvaluatorへのRetry 1引き渡し
+
+- 通常表示のbrowser確認では、synthetic backendに `YASASHII_GOOGLE_CHAT_TEST_NORMAL_UI=1` を追加した別portも起動する。
+- Chatwork fixtureは `YASASHII_CHATWORK_SKIP_DISPATCH=1` を付け、実GitHub Actionsへ接続しない。
+- browser再検査例:
+  `node scripts/sprint-019-browser-check.mjs --cdp http://127.0.0.1:9225 --google-url http://127.0.0.1:18766/ --google-normal-url http://127.0.0.1:18769/ --chatwork-url http://127.0.0.1:18765/ --evidence <evaluator-owned-path>`
+
+確認してほしい順序:
+
+1. 通常UIで認証ボタンを押し、元タブのURLとpolling画面が残り、別タブだけが開くこと。
+2. popup拒否、認証タブの手動閉じ、callback成功／失敗で、元wizardの次の操作が矛盾しないこと。
+3. cleanup全成功、Secret削除失敗、grant revoke失敗、両失敗、通信失敗、0 SPACEで、成功断定と手動確認先の取り違えがないこと。
+4. local bare remoteで0件／1件のcommit・pushが成立し、確認前は0 commit／pushであること。
+5. push失敗後もtokenが破棄され、ローカルfile・commit・pushの状態を個別に表示すること。
+
+実Google OAuth／API、実Repository Secret、実remote pushは引き続きSprint 020のexternal live gateであり、Retry 1では実行していない。

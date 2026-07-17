@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { createPkceState, authorizationRequest, GOOGLE_CHAT_SCOPES, parseDesktopClientJson, validateCallback } from "../plugins/yasashii-secretary/skills/google-chat/scripts/oauth-session.mjs";
 import { initialGoogleChatSync } from "../plugins/yasashii-secretary/skills/google-chat/scripts/sync.mjs";
 import { searchGoogleChat } from "../plugins/yasashii-secretary/skills/google-chat/scripts/search.mjs";
+import { cleanupDescription } from "../plugins/yasashii-secretary/skills/google-chat/assets/wizard/cleanup.mjs";
 
 const repo = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const fixturePath = join(repo, "scripts", "fixtures", "google-chat-wizard", "google-chat.json");
@@ -16,6 +17,22 @@ let passed = 0;
 let failed = 0;
 function check(name, condition) { if (condition) { passed += 1; process.stdout.write(`  PASS ${name}\n`); } else { failed += 1; process.stdout.write(`  FAIL ${name}\n`); } }
 function temp(name) { const root = mkdtempSync(join(tmpdir(), `yasashii-s019-${name}-`)); execFileSync("git", ["init", "-q", "-b", "main"], { cwd: root }); writeFileSync(join(root, "README.md"), "fixture\n"); execFileSync("git", ["add", "README.md"], { cwd: root }); execFileSync("git", ["-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "fixture"], { cwd: root }); execFileSync("git", ["remote", "add", "origin", `https://github.com/fixture/${name}.git`], { cwd: root }); return root; }
+function localGitWorkspace(name) {
+  const base = mkdtempSync(join(tmpdir(), `yasashii-s019-git-${name}-`));
+  const remote = join(base, "remote.git");
+  const root = join(base, "workspace");
+  mkdirSync(root);
+  execFileSync("git", ["init", "--bare", "-q", remote]);
+  execFileSync("git", ["init", "-q", "-b", "main"], { cwd: root });
+  execFileSync("git", ["config", "user.name", "fixture"], { cwd: root });
+  execFileSync("git", ["config", "user.email", "fixture@example.invalid"], { cwd: root });
+  writeFileSync(join(root, "README.md"), "fixture\n");
+  execFileSync("git", ["add", "README.md"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "fixture"], { cwd: root });
+  execFileSync("git", ["remote", "add", "origin", remote], { cwd: root });
+  execFileSync("git", ["push", "-qu", "origin", "main"], { cwd: root });
+  return { base, remote, root };
+}
 
 const pkce = createPkceState();
 check("PKCE verifier/challengeとstateを別々に生成", pkce.verifier.length >= 43 && pkce.challenge.length >= 43 && pkce.state.length >= 32 && ![pkce.challenge, pkce.state].includes(pkce.verifier));
@@ -31,6 +48,15 @@ check("callback成功は認可コードだけを即時返す", validateCallback(
 check("state不一致を拒否", (() => { try { validateCallback({ expectedState: "expected", expectedOrigin: "http://127.0.0.1:5000", requestUrl: "http://127.0.0.1:5000/oauth/callback?state=wrong&code=x" }); return false; } catch (error) { return error.code === "state-mismatch"; } })());
 check("callback不一致を拒否", (() => { try { validateCallback({ expectedState: "s", expectedOrigin: "http://127.0.0.1:5000", requestUrl: "http://127.0.0.1:5001/oauth/callback?state=s&code=x" }); return false; } catch (error) { return error.code === "callback-mismatch"; } })());
 check("同意拒否を区別", (() => { try { validateCallback({ expectedState: "s", expectedOrigin: "http://127.0.0.1:5000", requestUrl: "http://127.0.0.1:5000/oauth/callback?error=access_denied&state=s" }); return false; } catch (error) { return error.code === "access-denied"; } })());
+const cleanupCopies = [
+  cleanupDescription({ hadConnection: true, secretsDeleted: true, grantRevoked: true, manualCheckRequired: false }),
+  cleanupDescription({ hadConnection: true, secretsDeleted: false, grantRevoked: true, manualCheckRequired: true }),
+  cleanupDescription({ hadConnection: true, secretsDeleted: true, grantRevoked: false, manualCheckRequired: true }),
+  cleanupDescription({ hadConnection: true, secretsDeleted: false, grantRevoked: false, manualCheckRequired: true }),
+  cleanupDescription(null, { networkFailure: true }),
+  cleanupDescription({ hadConnection: false, secretsDeleted: true, grantRevoked: false, manualCheckRequired: false }),
+];
+check("cleanup UIは全成功・Secret失敗・grant失敗・両失敗・通信失敗・接続前を区別", cleanupCopies[0].kind === "success" && cleanupCopies[1].text.includes("Secrets and variables") && !cleanupCopies[1].text.includes("アプリ権限ページ") && cleanupCopies[2].text.includes("アプリ権限ページ") && !cleanupCopies[2].text.includes("Secrets and variables") && cleanupCopies[3].text.includes("Secrets and variables") && cleanupCopies[3].text.includes("アプリ権限ページ") && cleanupCopies[4].text.includes("結果を確認できません") && cleanupCopies[5].kind === "none");
 
 function fixtureClient(data = fixture) {
   return {
@@ -63,8 +89,8 @@ const missing = searchGoogleChat({ root: storageRoot, query: "存在しない語
 check("基本検索foundはspace・日付・該当箇所", found.status === "found" && found.matches[0].path.includes("営業会議") && found.matches[0].date === "2026-07-16" && found.matches[0].line > 0);
 check("not foundは保存済み範囲に限定", missing.status === "not-found-locally" && !missing.message.includes("Google Chatに存在しません"));
 
-async function startServer(extraEnv = {}) {
-  const root = temp(`wizard-${Date.now()}`);
+async function startServer(extraEnv = {}, options = {}) {
+  const root = options.root || temp(`wizard-${Date.now()}`);
   const child = spawn(process.execPath, [join(repo, "plugins", "yasashii-secretary", "skills", "google-chat", "scripts", "wizard-server.mjs"), "--root", root, "--port", "0"], { env: { ...process.env, YASASHII_GOOGLE_CHAT_SYNTHETIC: "1", YASASHII_GOOGLE_CHAT_TEST_PRIVATE: "1", YASASHII_GOOGLE_CHAT_SKIP_GIT: "1", YASASHII_GOOGLE_CHAT_FIXTURE: fixturePath, ...extraEnv } });
   let output = ""; child.stdout.on("data", (chunk) => { output += chunk; });
   let errors = ""; child.stderr.on("data", (chunk) => { errors += chunk; });
@@ -101,6 +127,68 @@ const secretFailure = await api(failedServer.base, "api/oauth/synthetic", { mode
 check("Secret登録失敗で接続済みにしない", secretFailure.response.status === 400 && secretFailure.json.code === "secret-registration-failed" && secretFailure.json.secretNames.length === 0);
 failedServer.child.kill("SIGTERM");
 
+for (const cleanupCase of [
+  { name: "全成功", env: {}, expected: [true, true, false] },
+  { name: "Secret削除失敗", env: { YASASHII_GOOGLE_CHAT_SECRET_DELETE_FAILURE: "1" }, expected: [false, true, true] },
+  { name: "grant revoke失敗", env: { YASASHII_GOOGLE_CHAT_GRANT_REVOKE_FAILURE: "1" }, expected: [true, false, true] },
+  { name: "両方失敗", env: { YASASHII_GOOGLE_CHAT_SECRET_DELETE_FAILURE: "1", YASASHII_GOOGLE_CHAT_GRANT_REVOKE_FAILURE: "1" }, expected: [false, false, true] },
+]) {
+  const cleanupServer = await startServer(cleanupCase.env);
+  await api(cleanupServer.base, "api/oauth/synthetic", { mode: "success" });
+  const result = await api(cleanupServer.base, "api/cancel", {});
+  check(`cleanup ${cleanupCase.name}を区別`, result.json.cleanup.hadConnection === true && result.json.cleanup.secretsDeleted === cleanupCase.expected[0] && result.json.cleanup.grantRevoked === cleanupCase.expected[1] && result.json.cleanup.manualCheckRequired === cleanupCase.expected[2]);
+  cleanupServer.child.kill("SIGTERM");
+}
+
+const zeroFixturePath = join(mkdtempSync(join(tmpdir(), "yasashii-s019-zero-space-")), "zero.json");
+writeFileSync(zeroFixturePath, `${JSON.stringify({ spaces: fixture.spaces.filter((space) => space.spaceType !== "SPACE"), messagePages: {}, people: {} }, null, 2)}\n`);
+const zeroSpaceServer = await startServer({ YASASHII_GOOGLE_CHAT_FIXTURE: zeroFixturePath, YASASHII_GOOGLE_CHAT_GRANT_REVOKE_FAILURE: "1" });
+await api(zeroSpaceServer.base, "api/oauth/synthetic", { mode: "success" });
+const zeroSpaces = await api(zeroSpaceServer.base, "api/spaces", {});
+check("0 SPACE APIはcleanup失敗結果を返す", zeroSpaces.json.zero === true && zeroSpaces.json.cleanup.hadConnection === true && zeroSpaces.json.cleanup.secretsDeleted === true && zeroSpaces.json.cleanup.grantRevoked === false && zeroSpaces.json.cleanup.manualCheckRequired === true);
+zeroSpaceServer.child.kill("SIGTERM");
+
+const normalUiServer = await startServer({ YASASHII_GOOGLE_CHAT_TEST_NORMAL_UI: "1" });
+const normalClientJson = JSON.stringify({ installed: { client_id: runtimeId, client_secret: runtimeSecret, auth_uri: "https://accounts.google.com/o/oauth2/v2/auth", token_uri: "https://oauth2.googleapis.com/token", redirect_uris: ["http://localhost"] } });
+await api(normalUiServer.base, "api/oauth/client", { clientJson: normalClientJson });
+const normalBootstrap = await api(normalUiServer.base, "api/bootstrap");
+const normalAppSource = await (await fetch(`${normalUiServer.base}app.js`)).text();
+check("通常UIは別タブOAuthと元wizard pollingを使う", normalBootstrap.json.testing === false && normalBootstrap.json.oauth.status === "ready" && normalAppSource.includes('window.open("/api/oauth/authorize"') && normalAppSource.includes("waitForOAuth") && normalAppSource.includes("認証タブをもう一度開く"));
+normalUiServer.child.kill("SIGTERM");
+
+async function runGitSync({ name, selectedSpace, data }) {
+  const workspace = localGitWorkspace(name);
+  const dataRoot = mkdtempSync(join(tmpdir(), `yasashii-s019-fixture-${name}-`));
+  const dataPath = join(dataRoot, "fixture.json");
+  writeFileSync(dataPath, `${JSON.stringify(data, null, 2)}\n`);
+  const testServer = await startServer({ YASASHII_GOOGLE_CHAT_SKIP_GIT: "0", YASASHII_GOOGLE_CHAT_FIXTURE: dataPath }, { root: workspace.root });
+  await api(testServer.base, "api/oauth/synthetic", { mode: "success" });
+  await api(testServer.base, "api/spaces", {});
+  const result = await api(testServer.base, "api/initial-sync", { selectedSpaceNames: [selectedSpace], interval: "3h", saveConsent: true, commitPushConsent: true });
+  testServer.child.kill("SIGTERM");
+  return { workspace, result };
+}
+
+const zeroGit = await runGitSync({ name: "zero", selectedSpace: "spaces/space-empty", data: fixture });
+const zeroRemoteCommits = Number(execFileSync("git", ["--git-dir", zeroGit.workspace.remote, "rev-list", "--count", "main"], { encoding: "utf8" }).trim());
+check("local bare remoteへ0件でもconfig・stateをcommit・push", zeroGit.result.response.ok && zeroGit.result.json.sync.results[0].messages === 0 && zeroGit.result.json.git.pushed === true && zeroRemoteCommits === 2 && !readdirSync(join(zeroGit.workspace.root, "google-chat")).includes("history"));
+
+const oneMessageFixture = structuredClone(fixture);
+oneMessageFixture.messagePages["spaces/space-a"] = [[fixture.messagePages["spaces/space-a"][0][0]]];
+const oneGit = await runGitSync({ name: "one", selectedSpace: "spaces/space-a", data: oneMessageFixture });
+const oneRemoteCommits = Number(execFileSync("git", ["--git-dir", oneGit.workspace.remote, "rev-list", "--count", "main"], { encoding: "utf8" }).trim());
+check("local bare remoteへ1件の履歴をcommit・push", oneGit.result.response.ok && oneGit.result.json.sync.results[0].messages === 1 && oneGit.result.json.git.pushed === true && oneRemoteCommits === 2);
+
+const failedGitWorkspace = localGitWorkspace("push-failure");
+const failedGitServer = await startServer({ YASASHII_GOOGLE_CHAT_SKIP_GIT: "0" }, { root: failedGitWorkspace.root });
+await api(failedGitServer.base, "api/oauth/synthetic", { mode: "success" });
+await api(failedGitServer.base, "api/spaces", {});
+execFileSync("git", ["remote", "set-url", "origin", join(failedGitWorkspace.base, "missing.git")], { cwd: failedGitWorkspace.root });
+const failedGitResult = await api(failedGitServer.base, "api/initial-sync", { selectedSpaceNames: ["spaces/space-a"], interval: "3h", saveConsent: true, commitPushConsent: true });
+const failedGitStatus = await api(failedGitServer.base, "api/oauth/status");
+check("Git push失敗でもtoken破棄とローカル生成物を正直に返す", failedGitResult.response.status === 400 && failedGitResult.json.code === "git-save-failed" && failedGitResult.json.savedLocally === true && failedGitResult.json.tokenDiscarded === true && failedGitResult.json.git.committed === true && failedGitResult.json.git.pushed === false && failedGitStatus.json.status === "save-failed");
+failedGitServer.child.kill("SIGTERM");
+
 const wizardServerSource = readFileSync(join(repo, "plugins", "yasashii-secretary", "skills", "google-chat", "scripts", "wizard-server.mjs"), "utf8");
 check("Repository Secret値はghのstdinへ渡しハイフン文字を登録しない", wizardServerSource.includes('["secret", "set", name]') && wizardServerSource.includes("child.stdin.end(value)") && !wizardServerSource.includes('["secret", "set", name, "--body", "-"]'));
 
@@ -113,6 +201,7 @@ check("指定CTA色・黒前景・旧青0", common.includes("#F03747") && common
 function luminance(hex) { const channels = hex.match(/[0-9a-f]{2}/gi).map((part) => parseInt(part, 16) / 255).map((value) => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4); return .2126 * channels[0] + .7152 * channels[1] + .0722 * channels[2]; }
 check("指定背景と黒前景はcontrast 4.5:1以上", ["F03747", "11BB62"].every((hex) => (luminance(hex) + .05) / .05 >= 4.5));
 check("両サービス3時間推奨・初期値", chatApp.includes('interval: "3h"') && chatApp.includes("3時間ごと（おすすめ・初期値）") && googleApp.includes('interval: "3h"') && googleApp.includes("3時間ごと（おすすめ・初期値）"));
+check("cleanup通信失敗と手動確認先を成功扱いしない", googleApp.includes("cleanupDescription") && cleanupCopies[4].kind === "manual" && cleanupCopies[3].kind === "manual");
 
 const distributed = [readFileSync(join(repo, "README.md"), "utf8"), readFileSync(join(repo, "plugins", "yasashii-secretary", "skills", "google-chat", "SKILL.md"), "utf8")].join("\n");
 check("README高度設定と管理者順序・People API限界", distributed.includes("Google Chatをつなぐ（少し高度な設定）") && distributed.includes("Google Workspace管理者") && distributed.includes("Internal") && distributed.includes("Desktop app") && distributed.includes("連絡先にない同僚名"));

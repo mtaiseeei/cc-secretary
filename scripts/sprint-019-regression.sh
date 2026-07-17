@@ -13,6 +13,7 @@ for source in \
   "$REPO/plugins/yasashii-secretary/skills/google-chat/scripts/sync.mjs" \
   "$REPO/plugins/yasashii-secretary/skills/google-chat/scripts/search.mjs" \
   "$REPO/plugins/yasashii-secretary/skills/google-chat/scripts/wizard-server.mjs" \
+  "$REPO/plugins/yasashii-secretary/skills/google-chat/assets/wizard/cleanup.mjs" \
   "$REPO/plugins/yasashii-secretary/skills/google-chat/assets/wizard/app.js" \
   "$REPO/plugins/yasashii-secretary/skills/chatwork/assets/wizard/common.js"; do
   check node --check "$source"

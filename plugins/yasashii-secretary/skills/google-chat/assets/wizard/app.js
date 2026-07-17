@@ -1,7 +1,9 @@
 import { escapeHtml as escape, externalLink, installWizardShell, setProgress as progress, wizardActions as actions } from "/common.js";
+import { cleanupDescription } from "/cleanup.js";
 
 const { app } = installWizardShell("google-chat");
-const state = { oauth: null, spaces: [], selected: new Set(), interval: "3h", query: "", saveConsent: false, commitPushConsent: false, testing: false };
+const state = { oauth: null, cleanup: null, spaces: [], selected: new Set(), interval: "3h", query: "", saveConsent: false, commitPushConsent: false, testing: false };
+let oauthPollGeneration = 0;
 const frequencies = [["1h", "1時間ごと"], ["3h", "3時間ごと（おすすめ・初期値）"], ["6h", "6時間ごと"], ["12h", "12時間ごと"], ["manual", "手動のみ"]];
 const links = {
   cloud: "https://console.cloud.google.com/projectcreate",
@@ -19,7 +21,7 @@ function errorMessage(error) {
 async function json(url, options = {}) {
   const response = await fetch(url, options);
   const result = await response.json();
-  if (!response.ok) throw Object.assign(new Error(result.error || result.message), { code: result.code });
+  if (!response.ok) throw Object.assign(new Error(result.error || result.message), { code: result.code, details: result });
   return result;
 }
 
@@ -46,21 +48,64 @@ function renderPrepare() {
 }
 
 function renderAuthorize() {
+  oauthPollGeneration += 1;
   progress(0);
   app.innerHTML = `<p class="eyebrow">接続 2 / 4</p><h1>Googleで認証します。</h1>
     <p class="lead">OAuth、つまりGoogleのパスワードを渡さず、許可した範囲だけ読み取る認証を使います。認可コードは受信後すぐtokenへ交換し、記録しません。</p>
     <div class="panel"><p class="panel-title">許可を求める範囲</p><ul><li>参加中スペースの一覧を読む</li><li>選択した通常スペースのメッセージを読む</li><li>発言者名を連絡先から補完する</li></ul><p class="hint">投稿・編集・削除、管理者権限、membership権限は求めません。</p></div>
-    <div class="actions"><button class="button button-secondary" data-action="back">戻る</button>${state.testing ? '<button class="button button-primary" data-action="synthetic">合成認証で画面確認</button>' : '<a class="button button-primary" data-action="authorize" href="/api/oauth/authorize">Googleで認証する</a>'}</div>`;
+    <div class="actions"><button class="button button-secondary" data-action="back">戻る</button>${state.testing ? '<button class="button button-primary" data-action="synthetic">合成認証で画面確認</button>' : '<button class="button button-primary" data-action="authorize">新しいタブでGoogle認証を開く</button>'}</div>`;
   app.querySelector('[data-action="back"]').onclick = renderPrepare;
   if (state.testing) app.querySelector('[data-action="synthetic"]').onclick = async () => { try { state.oauth = await json("/api/oauth/synthetic", { method: "POST", headers: { "content-type": "application/json" }, body: '{"mode":"success"}' }); await discoverSpaces(); } catch (error) { app.insertAdjacentHTML("beforeend", errorMessage(error)); } };
-  else app.querySelector('[data-action="authorize"]').onclick = () => window.setTimeout(waitForOAuth, 500);
+  else app.querySelector('[data-action="authorize"]').onclick = startOAuth;
 }
 
-async function waitForOAuth() {
+function startOAuth() {
+  let authWindow = null;
+  try { authWindow = window.open("/api/oauth/authorize", "yasashii-google-chat-oauth"); } catch { /* popup拒否は下で案内 */ }
+  if (!authWindow) {
+    renderOAuthWaiting({ popupBlocked: true });
+    return;
+  }
+  try { authWindow.opener = null; } catch { /* 別originへ移動済み */ }
+  const generation = ++oauthPollGeneration;
+  renderOAuthWaiting({ authWindow, generation });
+  window.setTimeout(() => waitForOAuth({ authWindow, generation }), 300);
+}
+
+function renderOAuthWaiting({ authWindow = null, generation = ++oauthPollGeneration, popupBlocked = false } = {}) {
+  progress(0);
+  app.innerHTML = `<p class="eyebrow">接続 2 / 4</p><h1>${popupBlocked ? "認証タブを開けませんでした。" : "別タブでGoogle認証を確認しています。"}</h1>
+    <p class="lead" data-oauth-status>${popupBlocked ? "ブラウザでポップアップを許可して、もう一度開いてください。元の設定画面はこのまま残ります。" : "認証用の新しいタブで許可を進めてください。完了すると、この設定画面が自動的に通常スペースの選択へ進みます。"}</p>
+    <p class="notice">認証タブを手動で閉じても、この画面は残ります。完了前に閉じた場合は「認証タブをもう一度開く」からやり直せます。</p>
+    <div class="actions"><button class="button button-secondary" data-action="cancel">設定を終了する</button><button class="button button-primary" data-action="reopen">認証タブを${popupBlocked ? "開く" : "もう一度開く"}</button></div>`;
+  app.querySelector('[data-action="cancel"]').onclick = cancel;
+  app.querySelector('[data-action="reopen"]').onclick = startOAuth;
+  if (!popupBlocked && !authWindow) window.setTimeout(() => waitForOAuth({ authWindow: null, generation }), 300);
+}
+
+async function waitForOAuth({ authWindow = null, generation = oauthPollGeneration } = {}) {
+  let closedReported = false;
   for (let retry = 0; retry < 240; retry += 1) {
-    state.oauth = await json("/api/oauth/status");
+    if (generation !== oauthPollGeneration) return;
+    try { state.oauth = await json("/api/oauth/status"); }
+    catch (error) {
+      const status = app.querySelector("[data-oauth-status]");
+      if (status) status.textContent = `認証状態を確認できませんでした。元の画面は残っています。通信を確認してください。（${error.message}）`;
+      await new Promise((wait) => window.setTimeout(wait, 1000));
+      continue;
+    }
     if (state.oauth.status === "connected") return discoverSpaces();
     if (state.oauth.status === "failed") { renderOAuthFailure(); return; }
+    if (state.oauth.status === "cleanup-required" || state.oauth.status === "cancelled") { renderCancelled(state.oauth.cleanup); return; }
+    if (authWindow && !closedReported) {
+      try {
+        if (authWindow.closed) {
+          closedReported = true;
+          const status = app.querySelector("[data-oauth-status]");
+          if (status) status.textContent = "認証タブが閉じられました。認証済みなら確認を続けます。完了前に閉じた場合は、もう一度開いてください。";
+        }
+      } catch { /* cross-originのWindowProxyは状態APIで確認する */ }
+    }
     await new Promise((wait) => window.setTimeout(wait, 1000));
   }
   renderOAuthFailure("認証結果を確認できませんでした。設定画面を再読み込みしてください。");
@@ -80,15 +125,16 @@ async function discoverSpaces() {
     const result = await json("/api/spaces", { method: "POST" });
     state.spaces = result.spaces;
     state.selected.clear();
-    if (result.zero) return renderNoSpaces();
+    if (result.zero) return renderNoSpaces(result.cleanup);
     renderSpaces();
   } catch (error) { app.insertAdjacentHTML("beforeend", errorMessage(error)); }
 }
 
-function renderNoSpaces() {
+function renderNoSpaces(cleanup) {
   progress(1);
-  app.innerHTML = `<p class="eyebrow">接続 3 / 4</p><h1>選べる通常スペースは0件でした。</h1><p class="lead">0件は正常です。参加状況と管理者設定を確認してください。作成済みRepository SecretとOAuth grant／tokenは取り消しました。</p><p>${externalLink(links.permissions, "Googleのアプリ権限を確認する")}</p><div class="actions"><button class="button button-secondary" data-action="back">終了する</button><button class="button button-primary" data-action="retry">最初から確認する</button></div>`;
-  app.querySelector('[data-action="back"]').onclick = renderCancelled;
+  const detail = cleanupDescription(cleanup);
+  app.innerHTML = `<p class="eyebrow">接続 3 / 4</p><h1>選べる通常スペースは0件でした。</h1><p class="lead">0件は正常です。参加状況と管理者設定を確認してください。</p><p class="${detail.kind === "manual" ? "error" : "notice"}" role="${detail.kind === "manual" ? "alert" : "status"}">${escape(detail.text)}</p><p>${externalLink(links.permissions, "Googleのアプリ権限を確認する")}</p><div class="actions"><button class="button button-secondary" data-action="back">終了する</button><button class="button button-primary" data-action="retry">最初から確認する</button></div>`;
+  app.querySelector('[data-action="back"]').onclick = () => renderCancelled(cleanup);
   app.querySelector('[data-action="retry"]').onclick = renderPrepare;
 }
 
@@ -130,7 +176,19 @@ async function initialSync() {
   try {
     const result = await json("/api/initial-sync", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ selectedSpaceNames: [...state.selected], interval: state.interval, saveConsent: state.saveConsent, commitPushConsent: state.commitPushConsent }) });
     renderResult(result);
-  } catch (error) { app.insertAdjacentHTML("beforeend", errorMessage(error)); }
+  } catch (error) { renderInitialSyncFailure(error); }
+}
+
+function renderInitialSyncFailure(error) {
+  progress(4);
+  const detail = error.details || {};
+  const git = detail.git || {};
+  const saved = detail.savedLocally === true ? "取得結果や設定ファイルはこのPCに残っています。" : "このPCへの保存完了も確認できませんでした。";
+  const gitState = git.pushed ? "commit・push済みです。" : git.committed ? "ローカルcommitまでは完了していますが、pushできていません。" : "commit・pushは完了していません。";
+  const token = detail.tokenDiscarded === true ? "認証tokenはメモリから破棄しました。" : "認証tokenの破棄結果を画面から確認できませんでした。";
+  app.innerHTML = `<p class="eyebrow">STEP 4 / 4</p><h1>初回取得の保存を完了できませんでした。</h1><p class="lead error" role="alert">${escape(error.message)}</p><ul class="result-list"><li>${escape(saved)}</li><li>${escape(gitState)}</li><li>${escape(token)}</li></ul><p class="notice">Gitの状態と接続先を確認してください。再実行する場合は、Google認証からやり直します。</p><div class="actions"><button class="button button-secondary" data-action="close">設定を終了する</button><button class="button button-primary" data-action="restart">最初から確認する</button></div>`;
+  app.querySelector('[data-action="close"]').onclick = renderComplete;
+  app.querySelector('[data-action="restart"]').onclick = renderPrepare;
 }
 
 function renderResult(result) {
@@ -141,14 +199,33 @@ function renderResult(result) {
   app.querySelector('[data-action="close"]').onclick = renderComplete;
 }
 
-async function cancel() { try { await json("/api/cancel", { method: "POST" }); } catch { /* 表示は安全側へ固定 */ } renderCancelled(); }
-function renderCancelled() { progress(0); app.innerHTML = `<p class="eyebrow">キャンセル</p><h1>Google Chatの設定を終了しました。</h1><p class="lead">OAuth後の場合はRepository SecretとOAuth grant／tokenを取り消しました。${externalLink(links.permissions, "Googleのアプリ権限を確認する")}</p><div class="actions"><button class="button button-secondary" data-action="restart">設定に戻る</button></div>`; app.querySelector('[data-action="restart"]').onclick = renderPrepare; }
+async function cancel() {
+  oauthPollGeneration += 1;
+  try {
+    const result = await json("/api/cancel", { method: "POST" });
+    renderCancelled(result.cleanup);
+  } catch {
+    renderCancelled(null, { networkFailure: true });
+  }
+}
+function renderCancelled(cleanup, options = {}) {
+  progress(0);
+  const detail = cleanupDescription(cleanup, options);
+  app.innerHTML = `<p class="eyebrow">キャンセル</p><h1>Google Chatの設定を終了しました。</h1><p class="lead ${detail.kind === "manual" ? "error" : ""}" role="${detail.kind === "manual" ? "alert" : "status"}">${escape(detail.text)}</p><p>${externalLink(links.permissions, "Googleのアプリ権限を確認する")}</p><div class="actions"><button class="button button-secondary" data-action="restart">設定に戻る</button></div>`;
+  app.querySelector('[data-action="restart"]').onclick = renderPrepare;
+}
 function renderComplete() { app.innerHTML = '<p class="eyebrow">完了</p><h1>設定画面を閉じて大丈夫です。</h1><p class="lead">次は /google-chat search から保存済み履歴を検索できます。</p>'; }
 
 json("/api/bootstrap").then((result) => {
   state.oauth = result.oauth;
+  state.cleanup = result.cleanup;
   state.interval = result.defaultInterval;
   state.testing = result.testing === true;
   if (state.oauth.status === "connected") discoverSpaces();
+  else if (state.oauth.status === "ready") renderAuthorize();
+  else if (state.oauth.status === "authorizing") renderOAuthWaiting();
+  else if (state.oauth.status === "failed") renderOAuthFailure();
+  else if (["cancelled", "cleanup-required"].includes(state.oauth.status)) renderCancelled(state.cleanup);
+  else if (state.oauth.status === "completed") renderComplete();
   else renderPrepare();
 }).catch((error) => { app.innerHTML = `<p class="eyebrow">接続エラー</p><h1>設定を読み込めませんでした。</h1>${errorMessage(error)}`; });

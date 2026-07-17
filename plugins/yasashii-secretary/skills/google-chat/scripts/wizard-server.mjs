@@ -19,7 +19,9 @@ const port = Number(args.get("--port") || 8766);
 const host = "127.0.0.1";
 const assets = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "chatwork", "assets", "wizard");
 const googleApp = resolve(dirname(fileURLToPath(import.meta.url)), "..", "assets", "wizard", "app.js");
+const googleCleanup = resolve(dirname(fileURLToPath(import.meta.url)), "..", "assets", "wizard", "cleanup.mjs");
 const synthetic = process.env.YASASHII_GOOGLE_CHAT_SYNTHETIC === "1";
+const normalUiTest = synthetic && process.env.YASASHII_GOOGLE_CHAT_TEST_NORMAL_UI === "1";
 let session = { status: "unconfigured", message: "OAuth client JSONを選んでください。", credentials: null, pkce: null, accessToken: null, refreshToken: null, secretNames: [], cleanup: null };
 let spaces = [];
 let sync = null;
@@ -56,7 +58,7 @@ function runSecret(name, value) {
 }
 
 function deleteRepositorySecrets(names = GOOGLE_CHAT_SECRET_NAMES) {
-  if (synthetic) return true;
+  if (synthetic) return process.env.YASASHII_GOOGLE_CHAT_SECRET_DELETE_FAILURE !== "1";
   let deleted = true;
   for (const name of names) {
     try { execFileSync(process.env.YASASHII_GH_BIN || "gh", ["secret", "delete", name], { cwd: root, stdio: "ignore" }); }
@@ -66,7 +68,8 @@ function deleteRepositorySecrets(names = GOOGLE_CHAT_SECRET_NAMES) {
 }
 
 async function registerSecrets() {
-  if (!repository()) throw Object.assign(new Error("現在のGitHubリポジトリを確認できません。"), { code: "repository-unknown" });
+  const localPrivateTest = synthetic && process.env.YASASHII_GOOGLE_CHAT_TEST_PRIVATE === "1";
+  if (!repository() && !localPrivateTest) throw Object.assign(new Error("現在のGitHubリポジトリを確認できません。"), { code: "repository-unknown" });
   if (synthetic) {
     if (process.env.YASASHII_GOOGLE_CHAT_SECRET_FAILURE === "1") throw Object.assign(new Error("Repository Secretへ登録できませんでした。GitHubの権限を確認してください。"), { code: "secret-registration-failed" });
   } else {
@@ -85,7 +88,7 @@ async function registerSecrets() {
 
 async function revokeAndDelete() {
   const hadConnection = Boolean(session.accessToken || session.refreshToken || session.secretNames.length);
-  let grantRevoked = synthetic && hadConnection;
+  let grantRevoked = synthetic && hadConnection && process.env.YASASHII_GOOGLE_CHAT_GRANT_REVOKE_FAILURE !== "1";
   if (!synthetic) {
     const token = session.accessToken || session.refreshToken;
     if (token) {
@@ -98,7 +101,7 @@ async function revokeAndDelete() {
   const message = !hadConnection ? "変更せずに終了しました。"
     : cleaned ? "Repository Secretを削除し、Google OAuth grant／tokenを取り消しました。アプリ権限ページでも取消を確認してください。"
       : "自動取消を完了できない項目があります。GitHubのRepository SecretsとGoogleのアプリ権限ページを確認してください。";
-  session = { status: cleaned ? "cancelled" : "cleanup-required", message, credentials: null, pkce: null, accessToken: null, refreshToken: null, secretNames: [], cleanup: { secretsDeleted, grantRevoked, manualCheckRequired: !cleaned } };
+  session = { status: cleaned ? "cancelled" : "cleanup-required", message, credentials: null, pkce: null, accessToken: null, refreshToken: null, secretNames: [], cleanup: { hadConnection, secretsDeleted, grantRevoked, manualCheckRequired: !cleaned } };
   spaces = [];
 }
 
@@ -149,16 +152,27 @@ function currentClient() {
 async function commitAndPush(paths) {
   if (process.env.YASASHII_GOOGLE_CHAT_SKIP_GIT === "1") return { status: "fixture" };
   const git = process.env.YASASHII_GIT_BIN || "git";
-  execFileSync(git, ["add", "--", ...paths], { cwd: root, stdio: "ignore" });
-  execFileSync(git, ["commit", "-m", "Google Chatの選択スペース履歴を初回保存"], { cwd: root, stdio: "ignore" });
-  execFileSync(git, ["push"], { cwd: root, stdio: "ignore" });
-  return { status: "pushed" };
+  const existingPaths = paths.filter((path) => existsSync(join(root, path)));
+  const result = { status: "running", paths: existingPaths, committed: false, pushed: false };
+  try {
+    if (existingPaths.length === 0) throw new Error("保存対象がありません。");
+    execFileSync(git, ["add", "--", ...existingPaths], { cwd: root, stdio: "ignore" });
+    execFileSync(git, ["commit", "-m", "Google Chatの選択スペース履歴を初回保存"], { cwd: root, stdio: "ignore" });
+    result.committed = true;
+    execFileSync(git, ["push"], { cwd: root, stdio: "ignore" });
+    result.pushed = true;
+    result.status = "pushed";
+    return result;
+  } catch {
+    result.status = "failed";
+    throw Object.assign(new Error("初回取得のファイルはこのPCへ保存しましたが、Gitのcommit・pushを完了できませんでした。Gitの状態と接続先を確認してください。"), { code: "git-save-failed", git: result });
+  }
 }
 
 const server = createServer(async (request, response) => {
   const url = new URL(request.url || "/", origin());
   try {
-    if (request.method === "GET" && url.pathname === "/api/bootstrap") return send(response, 200, { service: "google-chat", oauth: publicOAuthState(session), intervals: ["1h", "3h", "6h", "12h", "manual"], defaultInterval: "3h", testing: synthetic });
+    if (request.method === "GET" && url.pathname === "/api/bootstrap") return send(response, 200, { service: "google-chat", oauth: publicOAuthState(session), cleanup: session.cleanup, intervals: ["1h", "3h", "6h", "12h", "manual"], defaultInterval: "3h", testing: synthetic && !normalUiTest });
     if (request.method === "POST" && url.pathname === "/api/oauth/client") {
       const input = await bodyJson(request);
       const credentials = parseDesktopClientJson(input.clientJson);
@@ -184,7 +198,8 @@ const server = createServer(async (request, response) => {
       return send(response, 200, publicOAuthState(session));
     }
     if (request.method === "GET" && url.pathname === "/api/oauth/authorize") {
-      if (session.status !== "ready" || !session.credentials || !session.pkce) return send(response, 409, { error: "OAuth client JSONを先に選んでください。" });
+      if (!["ready", "authorizing"].includes(session.status) || !session.credentials) return send(response, 409, { error: "OAuth client JSONを先に選んでください。" });
+      session.pkce = createPkceState();
       const target = authorizationRequest({ ...session.credentials, redirectUri: redirectUri(), ...session.pkce });
       session.status = "authorizing";
       return send(response, 302, "", "text/plain; charset=utf-8", { location: target.toString() });
@@ -196,12 +211,12 @@ const server = createServer(async (request, response) => {
         session.accessToken = tokens.accessToken; session.refreshToken = tokens.refreshToken;
         await registerSecrets();
         session.status = "connected"; session.message = "Google認証とRepository Secret登録が完了しました。"; session.credentials = null; session.refreshToken = null;
-        return send(response, 200, "<!doctype html><html lang=\"ja\"><meta charset=\"utf-8\"><title>認証完了</title><p>Google認証が完了しました。このタブを閉じて設定画面へ戻ってください。</p>", "text/html; charset=utf-8");
+        return send(response, 200, "<!doctype html><html lang=\"ja\"><meta charset=\"utf-8\"><title>認証完了</title><h1>Google認証が完了しました。</h1><p>元のGoogle Chat設定画面が自動的に次へ進みます。この認証タブは閉じて大丈夫です。</p><p>元の画面が進まない場合は、設定タブへ戻って接続状態を確認してください。</p>", "text/html; charset=utf-8");
       } catch (error) {
         if (!synthetic && session.accessToken) await fetch(`https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(session.accessToken)}`, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" } }).catch(() => null);
         deleteRepositorySecrets(session.secretNames);
         session.status = "failed"; session.errorCode = error.code || "oauth-failed"; session.message = error.message; session.credentials = null; session.pkce = null; session.accessToken = null; session.refreshToken = null;
-        return send(response, 400, "<!doctype html><html lang=\"ja\"><meta charset=\"utf-8\"><title>認証失敗</title><p>Google認証を完了できませんでした。設定画面へ戻って対応を確認してください。</p>", "text/html; charset=utf-8");
+        return send(response, 400, "<!doctype html><html lang=\"ja\"><meta charset=\"utf-8\"><title>認証失敗</title><h1>Google認証を完了できませんでした。</h1><p>元のGoogle Chat設定画面に理由と次の操作を表示しています。この認証タブを閉じて設定タブへ戻ってください。</p>", "text/html; charset=utf-8");
       }
     }
     if (request.method === "GET" && url.pathname === "/api/oauth/status") return send(response, 200, publicOAuthState(session));
@@ -210,7 +225,7 @@ const server = createServer(async (request, response) => {
       const discovered = await currentClient().listSpaces();
       spaces = discovered.filter((space) => space.spaceType === "SPACE").map((space) => ({ name: space.name, displayName: space.displayName || `名称未取得 ${space.name.split("/").pop()}`, spaceType: "SPACE" }));
       if (spaces.length === 0) await revokeAndDelete();
-      return send(response, 200, { spaces, excluded: discovered.length - spaces.length, zero: spaces.length === 0 });
+      return send(response, 200, { spaces, excluded: discovered.length - spaces.length, zero: spaces.length === 0, cleanup: session.cleanup, oauth: publicOAuthState(session) });
     }
     if (request.method === "POST" && url.pathname === "/api/initial-sync") {
       if (session.status !== "connected") return send(response, 409, { error: "Google認証を完了してください。", code: "oauth-required" });
@@ -218,18 +233,33 @@ const server = createServer(async (request, response) => {
       if (input.saveConsent !== true || input.commitPushConsent !== true) return send(response, 400, { error: "保存とGitのcommit・pushへの明示同意が必要です。", code: "consent-required" });
       if (!["1h", "3h", "6h", "12h", "manual"].includes(input.interval)) return send(response, 400, { error: "自動取得の間隔を選び直してください。" });
       const selected = [...new Set((input.selectedSpaceNames || []).map(String))];
-      sync = await initialGoogleChatSync({ root, selectedSpaceNames: selected, spaces, client: currentClient() });
-      const configPath = join(root, "google-chat", "config.json");
-      mkdirSync(dirname(configPath), { recursive: true });
-      writeFileSync(configPath, `${JSON.stringify({ version: 1, selectedSpaceNames: selected, interval: input.interval, scheduleEnabled: false, automaticPushConsent: false }, null, 2)}\n`, { mode: 0o600 });
-      const relativePaths = ["google-chat/config.json", "google-chat/state", "google-chat/history"];
-      await commitAndPush(relativePaths);
-      session.accessToken = null; session.credentials = null; session.pkce = null;
-      return send(response, 200, { sync, tokenDiscarded: true, workflowDispatches: 0 });
+      let resultStatus = 200;
+      let resultBody;
+      try {
+        sync = await initialGoogleChatSync({ root, selectedSpaceNames: selected, spaces, client: currentClient() });
+        const configPath = join(root, "google-chat", "config.json");
+        mkdirSync(dirname(configPath), { recursive: true });
+        writeFileSync(configPath, `${JSON.stringify({ version: 1, selectedSpaceNames: selected, interval: input.interval, scheduleEnabled: false, automaticPushConsent: false }, null, 2)}\n`, { mode: 0o600 });
+        const git = await commitAndPush(["google-chat/config.json", "google-chat/state", "google-chat/history"]);
+        session.status = "completed";
+        session.message = "初回取得とGitのcommit・pushが完了しました。";
+        resultBody = { sync, git, savedLocally: true, tokenDiscarded: true, connectionState: "completed", workflowDispatches: 0 };
+      } catch (error) {
+        session.status = "save-failed";
+        session.message = error.message || "初回取得の保存を完了できませんでした。";
+        resultStatus = 400;
+        resultBody = { error: session.message, code: error.code || "initial-sync-failed", sync, git: error.git || { status: "not-started", committed: false, pushed: false }, savedLocally: existsSync(join(root, "google-chat")), tokenDiscarded: true, connectionState: "save-failed", workflowDispatches: 0 };
+      } finally {
+        session.accessToken = null;
+        session.refreshToken = null;
+        session.credentials = null;
+        session.pkce = null;
+      }
+      return send(response, resultStatus, resultBody);
     }
     if (request.method === "POST" && url.pathname === "/api/cancel") { await revokeAndDelete(); return send(response, 200, { oauth: publicOAuthState(session), cleanup: session.cleanup }); }
     if (request.method !== "GET") return send(response, 405, { error: "Method not allowed" });
-    const names = new Map([["/", [join(assets, "index.html"), "text/html; charset=utf-8"]], ["/app.js", [googleApp, "text/javascript; charset=utf-8"]], ["/common.js", [join(assets, "common.js"), "text/javascript; charset=utf-8"]], ["/style.css", [join(assets, "style.css"), "text/css; charset=utf-8"]]]);
+    const names = new Map([["/", [join(assets, "index.html"), "text/html; charset=utf-8"]], ["/app.js", [googleApp, "text/javascript; charset=utf-8"]], ["/cleanup.js", [googleCleanup, "text/javascript; charset=utf-8"]], ["/common.js", [join(assets, "common.js"), "text/javascript; charset=utf-8"]], ["/style.css", [join(assets, "style.css"), "text/css; charset=utf-8"]]]);
     const resource = names.get(url.pathname);
     if (!resource || !existsSync(resource[0])) return send(response, 404, "Not found", "text/plain; charset=utf-8");
     return send(response, 200, readFileSync(resource[0]), resource[1]);

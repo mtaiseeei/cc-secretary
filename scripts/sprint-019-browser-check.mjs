@@ -7,6 +7,7 @@ const args = new Map();
 for (let index = 2; index < process.argv.length; index += 2) args.set(process.argv[index], process.argv[index + 1]);
 const cdp = args.get("--cdp") || "http://127.0.0.1:9225";
 const googleUrl = args.get("--google-url") || "http://127.0.0.1:18766/";
+const googleNormalUrl = args.get("--google-normal-url") || null;
 const chatworkUrl = args.get("--chatwork-url") || "http://127.0.0.1:18765/";
 const evidence = resolve(args.get("--evidence") || "docs/evidence/sprint-019");
 const delay = (ms) => new Promise((resolveWait) => setTimeout(resolveWait, ms));
@@ -90,6 +91,31 @@ await send("Emulation.setPageScaleFactor", { pageScaleFactor: 2 });
 const googleZoom = await evaluate(`({overflow:document.documentElement.scrollWidth>innerWidth,buttons:[...document.querySelectorAll('button')].every((item)=>item.getBoundingClientRect().height>=44),service:document.querySelector('.service-context')?.textContent})`);
 await screenshot("google-chat-zoom200.png");
 
+let googleNormal = { skipped: true };
+if (googleNormalUrl) {
+  await open(googleNormalUrl, 1440, 900);
+  await evaluate(`fetch('/api/oauth/client',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({clientJson:JSON.stringify({installed:{client_id:['browser',Date.now()].join('-'),client_secret:['runtime',Date.now(),Math.random()].join('-'),auth_uri:'https://accounts.google.com/o/oauth2/v2/auth',token_uri:'https://oauth2.googleapis.com/token',redirect_uris:['http://localhost']}})})}).then(r=>r.json())`);
+  await send("Page.reload", { ignoreCache: true });
+  await waitFor(`document.querySelector('[data-action="authorize"]') !== null`);
+  const originalUrl = await evaluate(`location.href`);
+  await evaluate(`window.__oauthPopup={closed:false,opener:null};window.__oauthOpen={count:0,name:null};window.open=(url,name)=>{window.__oauthOpen={count:window.__oauthOpen.count+1,name};return window.__oauthPopup};document.querySelector('[data-action="authorize"]').click();true`);
+  await waitFor(`document.querySelector('[data-action="reopen"]') !== null`);
+  const launched = await evaluate(`({sameTab:location.href===${JSON.stringify(originalUrl)},openCount:window.__oauthOpen.count,targetName:window.__oauthOpen.name,heading:document.querySelector('#app h1').textContent,reopen:document.querySelector('[data-action="reopen"]').textContent})`);
+  await evaluate(`window.__oauthPopup.closed=true;true`);
+  await waitFor(`document.querySelector('[data-oauth-status]')?.textContent.includes('認証タブが閉じられました')`, 3000);
+  const closed = await evaluate(`document.querySelector('[data-oauth-status]').textContent`);
+  await evaluate(`fetch('/api/oauth/synthetic',{method:'POST',headers:{'content-type':'application/json'},body:'{"mode":"success"}'}).then(r=>r.json())`);
+  await waitFor(`document.querySelectorAll('.room-list input').length === 3`, 4000);
+  await evaluate(`fetch('/api/oauth/client',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({clientJson:JSON.stringify({installed:{client_id:['browser',Date.now()].join('-'),client_secret:['runtime',Date.now(),Math.random()].join('-'),auth_uri:'https://accounts.google.com/o/oauth2/v2/auth',token_uri:'https://oauth2.googleapis.com/token',redirect_uris:['http://localhost']}})})}).then(r=>r.json())`);
+  await send("Page.reload", { ignoreCache: true });
+  await waitFor(`document.querySelector('[data-action="authorize"]') !== null`);
+  await evaluate(`window.open=()=>null;document.querySelector('[data-action="authorize"]').click();true`);
+  await waitFor(`document.querySelector('#app h1')?.textContent.includes('認証タブを開けませんでした')`);
+  const blocked = await evaluate(`({heading:document.querySelector('#app h1').textContent,text:document.querySelector('#app').innerText,reopen:Boolean(document.querySelector('[data-action="reopen"]'))})`);
+  googleNormal = { skipped: false, launched, closedReported: closed.includes("認証タブが閉じられました"), connectedToSpaces: true, blocked };
+  await screenshot("google-chat-normal-oauth-popup-blocked.png");
+}
+
 await open(chatworkUrl, 1440, 900);
 await waitFor(`document.querySelector('#app h1') && document.querySelector('.service-context')?.textContent==='Chatworkの設定'`);
 const chatwork = await evaluate(`({
@@ -113,13 +139,14 @@ await waitFor(`document.querySelectorAll('input[name="interval"]').length === 6`
 const chatworkFrequency = await evaluate(`({selected:document.querySelector('input[name="interval"]:checked')?.value,text:document.querySelector('#app').innerText})`);
 await screenshot("chatwork-desktop-3h.png");
 
-const report = { googleDesktop, googleFrequency, googleReview, googleMobile, googleZoom, chatwork, chatworkFrequency, browserErrors };
+const report = { googleDesktop, googleFrequency, googleReview, googleMobile, googleZoom, googleNormal, chatwork, chatworkFrequency, browserErrors };
 const passed = googleDesktop.service === "Google Chatの設定" && googleDesktop.context === "Google Chatの設定" && googleDesktop.spaces === 3 && googleDesktop.selected === 0
   && googleDesktop.cta.every((item) => item.bg === "rgb(17, 187, 98)" && item.fg === "rgb(0, 0, 0)") && googleDesktop.blue === 0 && googleDesktop.secretInputs === 0 && !googleDesktop.clientLeak
   && googleFrequency.selected === "3h" && googleFrequency.text.includes("3時間ごと（おすすめ・初期値）")
   && googleReview.text.includes("取得結果をこのリポジトリへ保存します（Gitのcommit・push）") && !googleReview.saveChecked && !googleReview.gitChecked && googleReview.disabled && googleReview.ctaCount === 2
   && googleMobile.service === "Google Chatの設定" && googleMobile.actions === "column-reverse" && !googleMobile.overflow && googleMobile.buttonHeights.every((height) => height >= 44) && googleMobile.labels
   && !googleZoom.overflow && googleZoom.buttons && googleZoom.service === "Google Chatの設定"
+  && (googleNormal.skipped || (googleNormal.launched.sameTab && googleNormal.launched.openCount === 1 && googleNormal.launched.targetName === "yasashii-google-chat-oauth" && googleNormal.launched.heading.includes("別タブ") && googleNormal.launched.reopen.includes("もう一度") && googleNormal.closedReported && googleNormal.connectedToSpaces && googleNormal.blocked.heading.includes("開けませんでした") && googleNormal.blocked.text.includes("ポップアップを許可") && googleNormal.blocked.reopen))
   && chatwork.service === "Chatworkの設定" && chatwork.context === "Chatworkの設定" && chatwork.cta.every((item) => item.bg === "rgb(240, 55, 71)" && item.fg === "rgb(0, 0, 0)") && chatwork.blue === 0 && chatwork.secretInputs === 0 && !chatwork.clientLeak
   && chatworkFrequency.selected === "3h" && chatworkFrequency.text.includes("3時間ごと（おすすめ・初期値）") && browserErrors.length === 0;
 writeFileSync(resolve(evidence, "browser-evidence.json"), `${JSON.stringify(report, null, 2)}\n`);
