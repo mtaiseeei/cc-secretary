@@ -25,6 +25,12 @@ else
   FAIL=$((FAIL+1)); printf '  FAIL Google Chat定期運用の専用実動作回帰\n'
 fi
 
+if node "$REPO/scripts/sprint-020-adversarial-test.mjs"; then
+  PASS=$((PASS+1)); printf '  PASS Google Chat独立評価3件の敵対的回帰\n'
+else
+  FAIL=$((FAIL+1)); printf '  FAIL Google Chat独立評価3件の敵対的回帰\n'
+fi
+
 if find "$REPO" -path '*/.github/workflows/google-chat-sync.yml' -o -path '*/google-chat/config.json' -o -path '*/google-chat/state/sync.json' -o -path '*/google-chat/history/*.md' | grep -q .; then
   FAIL=$((FAIL+1)); printf '  FAIL public配布repoの利用者用Google Chat資産0\n'
 else

@@ -170,8 +170,20 @@ try {
   const fakeGh = join(flowRoot, "bin", "gh");
   writeFileSync(fakeGit, "#!/bin/sh\nexit 0\n");
   writeFileSync(fakeGh, `#!/bin/sh
-if [ "$1 $2" = "workflow run" ]; then exit 0; fi
-if [ "$1 $2" = "run list" ]; then echo '[{"databaseId":42,"status":"queued","conclusion":null}]'; exit 0; fi
+if [ "$1 $2" = "workflow run" ]; then
+  count_file="$FAKE_GH_ROOT/dispatch-count"
+  count=0
+  [ -f "$count_file" ] && count=$(cat "$count_file")
+  count=$((count + 1))
+  printf '%s' "$count" > "$count_file"
+  exit 0
+fi
+if [ "$1 $2" = "run list" ]; then
+  count=0
+  [ -f "$FAKE_GH_ROOT/dispatch-count" ] && count=$(cat "$FAKE_GH_ROOT/dispatch-count")
+  if [ "$count" -eq 0 ]; then echo '[]'; else printf '[{"databaseId":%s,"status":"queued","conclusion":null}]\n' "$((40 + count))"; fi
+  exit 0
+fi
 if [ "$1 $2" = "run watch" ]; then
   if [ "$FAKE_GH_MODE" = "success" ]; then
     mkdir -p "$FAKE_GH_ROOT/google-chat/history/営業--AAA"
@@ -188,6 +200,7 @@ if [ "$1 $2" = "run view" ]; then
     scope) echo 'GOOGLE_CHAT_ERROR=scope-insufficient' ;;
     audience) echo 'GOOGLE_CHAT_ERROR=audience-mismatch' ;;
     api) echo 'GOOGLE_CHAT_ERROR=api-disabled' ;;
+    permission) echo 'GOOGLE_CHAT_ERROR=permission-denied' ;;
     rate) echo 'GOOGLE_CHAT_ERROR=rate-limit' ;;
     network) echo 'GOOGLE_CHAT_ERROR=network' ;;
   esac
@@ -204,7 +217,7 @@ exit 0
   check(approved.status === "found" && approved.events.join(",") === "pull-before-search,search-local,structured-choice,dispatch,wait,success-confirmed,pull-after-sync,retry-same-query", "承認時だけdispatch→wait→success→pull→同条件再検索");
   const timeoutResult = JSON.parse(flow("sync", "timeout", "別の語", "20").stdout);
   check(timeoutResult.status === "sync-failed" && timeoutResult.error === "timeout" && !timeoutResult.events.includes("pull-after-sync"), "timeoutを黙殺せず成功前pullを行わない");
-  for (const [mode, status, error] of [["reauth", "reauthorization-needed", "token-invalid"], ["admin", "admin-action-needed", "admin-blocked"], ["scope", "reauthorization-needed", "scope-insufficient"], ["audience", "admin-action-needed", "audience-mismatch"], ["api", "admin-action-needed", "api-disabled"], ["rate", "sync-failed", "rate-limit"], ["network", "sync-failed", "network"]]) {
+  for (const [mode, status, error] of [["reauth", "reauthorization-needed", "token-invalid"], ["admin", "admin-action-needed", "admin-blocked"], ["scope", "reauthorization-needed", "scope-insufficient"], ["audience", "admin-action-needed", "audience-mismatch"], ["api", "admin-action-needed", "api-disabled"], ["permission", "sync-failed", "permission-denied"], ["rate", "sync-failed", "rate-limit"], ["network", "sync-failed", "network"]]) {
     const result = JSON.parse(flow("sync", mode, `分類-${mode}`).stdout);
     check(result.status === status && result.error === error && !result.events.includes("pull-after-sync"), `${mode}を区別し無限再試行しない`);
   }

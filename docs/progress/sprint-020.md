@@ -96,3 +96,36 @@
 
 - 配布版 `0.6.0` でもSprint 018の安全な更新を壊さないため、`0.5.0→0.6.0` の無変更migration境界を追加した。既存workspace本文の自動変更は0件。
 - 利用者の追加要望を受け、ChatworkとGoogle Chatのおすすめ・初期値がどちらも3時間であることを専用回帰と全回帰で固定した。
+
+## Retry 1 — 独立評価3件の修正
+
+**ステータス:** 実装修正完了 - Evaluatorの独立再評価待ち
+
+### 修正内容
+
+- **同意pathだけのcommit**: Google Chat設定transactionは、管理対象pathだけを `git commit --only` でcommitする。commit直後にも対象pathを再検査し、範囲外が1件でもあればpush前にrollbackする。利用者が以前からstageしていたfile、対象外のunstaged変更、untracked fileは変更せず、既存index状態を保持する。
+- **今回dispatchしたrunだけを追跡**: dispatch前に対象workflowのrun ID集合を取得し、dispatch時刻を秒境界で記録する。dispatch後は、基準集合にない新規runだけをpollして待機対象にする。GitHub側のlist反映が遅い場合はpollを続け、過去の成功runだけならtimeoutとしてpull／再検索を行わない。
+- **Google API 403の根拠別分類**: Google APIのerror bodyと `google.rpc.ErrorInfo.reason` を読み、`SERVICE_DISABLED`、scope不足、管理者policyを区別する。未知の403は `permission-denied` とし、scope不足や管理者blockと断定しない。
+- **敵対的回帰を専用suiteへ統合**: `scripts/sprint-020-adversarial-test.mjs` を追加し、既存staged／unstaged／untracked混在、過去runだけ、run list反映遅延、403の4分岐を実行する。`scripts/sprint-020-regression.sh` から必ず呼び、旧testだけでは合格しない構成にした。
+
+### Retry 1 検証結果
+
+- 独立Evaluatorの敵対的検査: `node docs/evidence/sprint-020/evaluator/adversarial-check.mjs` → `ADVERSARIAL_FAIL=0`
+- Generator敵対的回帰: `node scripts/sprint-020-adversarial-test.mjs` → `SPRINT020_ADVERSARIAL_PASS=10 SPRINT020_ADVERSARIAL_FAIL=0`
+- Sprint 020本体: `node scripts/sprint-020-google-chat-test.mjs` → `SPRINT020_PASS=45 SPRINT020_FAIL=0`
+- Sprint 020専用wrapper: `bash scripts/sprint-020-regression.sh` → `SPRINT020_WRAPPER_PASS=16 SPRINT020_WRAPPER_FAIL=0`
+- 全offline回帰: `bash scripts/regression-check.sh --offline` → `PASS=314 FAIL=0`（localhost許可環境）
+- 全online回帰: `bash scripts/regression-check.sh --online` → `PASS=315 FAIL=0`（localhost・通信許可環境）
+- `git diff --check`、Node構文、strict secret形式、public repoの利用者用Google Chat資産0件 → PASS
+- Retry 1はUI assetを変更していない。前回のbrowser証跡を維持し、loopback wizardを含む既存回帰をoffline／onlineの両方で再実行した。
+
+### 独立再評価で重点確認してほしいこと
+
+1. 対象外の既存staged fileがcommit／remoteへ入らず、commit後もstage済みのまま残ること。unstaged／untrackedも不変であること。
+2. dispatch前から存在する成功runを採用せず、dispatch後の新規runがlistへ遅れて現れた場合だけwatchへ進むこと。新規run不在ではpull／再検索0件であること。
+3. 403のAPI無効、scope不足、管理者block、未知理由が別codeとなり、未知理由を断定しないこと。
+4. UIは前回と同じGoogle Chatサービス名、`#11BB62`、黒前景、3時間推奨を維持していること。
+
+### 残課題
+
+- 受入基準10〜13の実API live gateは引き続き未実施。synthetic／localの実装不具合を独立再評価で解消確認した後に限り、ユーザーの個別明示許可とtest資源を確認して進める。
