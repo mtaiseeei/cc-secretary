@@ -1,0 +1,48 @@
+{
+  "evaluatedAt": "2026-07-17",
+  "url": "http://127.0.0.1:18770/",
+  "surface": "Chrome browser control",
+  "externalLiveGateUsed": false,
+  "desktop": {
+    "viewport": "1440x900",
+    "accessibleRegion": "Google Chatの設定",
+    "serviceText": "Google Chatの設定",
+    "primaryBackground": "rgb(17, 187, 98)",
+    "primaryForeground": "rgb(0, 0, 0)",
+    "legacyBluePrimaryCount": 0,
+    "horizontalOverflow": false,
+    "buttonHeights": [44, 48, 48],
+    "initialInterval": "3h"
+  },
+  "interaction": {
+    "selectedInterval": "manual",
+    "automaticConsentCount": 0,
+    "commitConsentRequired": true,
+    "confirmDisabledBeforeConsent": true,
+    "resultInterval": "手動のみ",
+    "resultSchedule": "無効（手動のみ）",
+    "resultLatestSync": "一部失敗"
+  },
+  "mobile": {
+    "viewport": "390x844",
+    "horizontalOverflow": false,
+    "actionsDirection": "column-reverse",
+    "inputLabelsPresent": true,
+    "buttonHeights": [44, 48, 48]
+  },
+  "zoom200Equivalent": {
+    "viewport": "720x450",
+    "horizontalOverflow": false,
+    "primaryBackground": "rgb(17, 187, 98)",
+    "primaryForeground": "rgb(0, 0, 0)",
+    "ctaCount": 2
+  },
+  "consoleErrorsOrWarnings": 0,
+  "screenshots": [
+    "settings-desktop.png",
+    "interval-3h-desktop.png",
+    "settings-result-manual.png",
+    "settings-mobile.png",
+    "settings-zoom200-equivalent.png"
+  ]
+}
