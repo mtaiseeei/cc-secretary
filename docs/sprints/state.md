@@ -2,9 +2,9 @@
 
 <!-- オーケストレーターだけが書く進行状態の正本 -->
 
-- Current ID: sprint-019
-- Retry Count: 1
-- Next Planned: sprint-020
+- Current ID: sprint-020
+- Retry Count: 0
+- Next Planned: TBD
 
 <!-- 2026-07-08: sprint-001 は再評価で合格（初回はクレジット方針の spec/実装不一致で不合格 →
      ユーザー確認で単段クレジットに正本改訂、回帰assert強化のうえ合格）。
@@ -37,8 +37,8 @@
 | sprint-016 | done | [contract](sprint-016.md) | [progress](../progress/sprint-016.md) | [feedback](../feedback/sprint-016.md) |
 | sprint-017 | done | [contract](sprint-017.md) | [progress](../progress/sprint-017.md) | [feedback](../feedback/sprint-017.md) |
 | sprint-018 | done | [contract](sprint-018.md) | [progress](../progress/sprint-018.md) | [feedback](../feedback/sprint-018.md) |
-| sprint-019 | active | [contract](sprint-019.md) | [progress](../progress/sprint-019.md) | [feedback](../feedback/sprint-019.md) |
-| sprint-020 | planned | [contract](sprint-020.md) | - | - |
+| sprint-019 | done | [contract](sprint-019.md) | [progress](../progress/sprint-019.md) | [feedback](../feedback/sprint-019.md) |
+| sprint-020 | active | [contract](sprint-020.md) | - | - |
 
 ## Deferred / Superseded
 - sprint-007: superseded — 2026-07-15 製品方針転換により白紙化、`backup/sprint-007-010-plan` に退避
@@ -73,3 +73,5 @@
 - 2026-07-17: ユーザーがGoogle Chat方針 `1A`（各社所有Cloud project）、`2A`（選択した通常スペースだけ）、`3A`（同じprivate workspace＋GitHub Actions）を承認。`my-vault` のユーザーOAuth、日付別Markdown、初回全pageを基準に、DM、未使用scope、サービスアカウント、資格情報表示を除外したsprint-019／020をPlannerが契約化。Fableレビューを反映し、OAuth秘密境界、初回ローカル取得、PKCE＋state、SPACE再検証、grant revokeを明確化。Chatwork／Google Chatの共通wizard、サービス名表示、指定色CTA、3時間推奨・初期値への統一を追加し、sprint-019を開始。
 - 2026-07-17: sprint-019 GeneratorがGoogle ChatのPKCE＋state付きDesktop OAuth、通常スペース限定選択、同一wizard session内の初回全page取得、日付別Markdown保存、基本検索、Chatworkとの共通wizardを実装。両サービスの3時間推奨・初期値と指定CTA色も反映し、専用37件・wrapper 11件・全offline 310件・全online 311件が0 FAIL。実Google Cloud／OAuth／API／Repository Secret／pushは行わず、独立Evaluatorへ引き渡した。
 - 2026-07-17: sprint-019初回評価は受入基準11/15で不合格（implementation-issue）。OAuth認証が同一タブ遷移で元wizardのpollingを失う、cleanup-required／revoke失敗を成功断定する、初回0件時に存在しないhistory pathのgit addがexit 128になる3件をGeneratorへ差し戻し（Retry 1）。専用37件・wrapper 11件・全offline 310件・全online 311件は0 FAIL。
+- 2026-07-17: sprint-019 Retry 1でOAuth別タブ＋元wizard polling、cleanup成功／失敗の正直な分岐表示、初回0件のlocal Git保存を修正。local bare remoteの0件／1件／push失敗を含む専用48件・wrapper 12件・全offline 310件・全online 311件が0 FAILのため、独立Evaluatorへ再引き渡した。
+- 2026-07-17: sprint-019 Retry 1は独立Evaluatorで合格。受入基準15/15、C1〜C11全閾値、専用48/48、wrapper 12/12、全offline 310/310、全online 311/311、browser error 0。通常OAuth別タブ、cleanup全分岐、0件／1件local Git保存、push失敗時token破棄を独立確認し、sprint-020を開始。

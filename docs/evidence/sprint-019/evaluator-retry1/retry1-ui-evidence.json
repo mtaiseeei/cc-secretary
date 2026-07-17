@@ -1,0 +1,82 @@
+{
+  "cleanupCases": [
+    {
+      "name": "all-success",
+      "screen": {
+        "heading": "Google Chatの設定を終了しました。",
+        "text": "Google Chatの設定\n\nキャンセル\n\nGoogle Chatの設定を終了しました。\n\nRepository Secretを削除し、Google OAuth grant／tokenを取り消しました。\n\nGoogleのアプリ権限を確認する\n\n設定に戻る",
+        "role": "status",
+        "links": [
+          "Googleのアプリ権限を確認する"
+        ]
+      },
+      "status": "cancelled"
+    },
+    {
+      "name": "secret-delete-failure",
+      "screen": {
+        "heading": "Google Chatの設定を終了しました。",
+        "text": "Google Chatの設定\n\nキャンセル\n\nGoogle Chatの設定を終了しました。\n\n自動取消を完了できませんでした。GitHubリポジトリの Settings → Secrets and variables → Actionsを手動で確認してください。\n\nGoogleのアプリ権限を確認する\n\n設定に戻る",
+        "role": "alert",
+        "links": [
+          "Googleのアプリ権限を確認する"
+        ]
+      },
+      "status": "cleanup-required"
+    },
+    {
+      "name": "grant-revoke-failure",
+      "screen": {
+        "heading": "Google Chatの設定を終了しました。",
+        "text": "Google Chatの設定\n\nキャンセル\n\nGoogle Chatの設定を終了しました。\n\n自動取消を完了できませんでした。Googleのアプリ権限ページを手動で確認してください。\n\nGoogleのアプリ権限を確認する\n\n設定に戻る",
+        "role": "alert",
+        "links": [
+          "Googleのアプリ権限を確認する"
+        ]
+      },
+      "status": "cleanup-required"
+    },
+    {
+      "name": "both-failure",
+      "screen": {
+        "heading": "Google Chatの設定を終了しました。",
+        "text": "Google Chatの設定\n\nキャンセル\n\nGoogle Chatの設定を終了しました。\n\n自動取消を完了できませんでした。GitHubリポジトリの Settings → Secrets and variables → Actions と Googleのアプリ権限ページを手動で確認してください。\n\nGoogleのアプリ権限を確認する\n\n設定に戻る",
+        "role": "alert",
+        "links": [
+          "Googleのアプリ権限を確認する"
+        ]
+      },
+      "status": "cleanup-required"
+    }
+  ],
+  "beforeConnectionScreen": {
+    "heading": "Google Chatの設定を終了しました。",
+    "text": "Google Chatの設定\n\nキャンセル\n\nGoogle Chatの設定を終了しました。\n\n接続前だったため、設定や認証情報は変更していません。\n\nGoogleのアプリ権限を確認する\n\n設定に戻る",
+    "role": "status",
+    "links": [
+      "Googleのアプリ権限を確認する"
+    ]
+  },
+  "networkScreen": {
+    "heading": "Google Chatの設定を終了しました。",
+    "text": "Google Chatの設定\n\nキャンセル\n\nGoogle Chatの設定を終了しました。\n\n自動取消の結果を確認できませんでした。GitHubのRepository SecretsとGoogleのアプリ権限を手動で確認してください。\n\nGoogleのアプリ権限を確認する\n\n設定に戻る",
+    "role": "alert",
+    "links": [
+      "Googleのアプリ権限を確認する"
+    ]
+  },
+  "zeroScreen": {
+    "heading": "選べる通常スペースは0件でした。",
+    "text": "Google Chatの設定\n\n接続 3 / 4\n\n選べる通常スペースは0件でした。\n\n0件は正常です。参加状況と管理者設定を確認してください。\n\n自動取消を完了できませんでした。Googleのアプリ権限ページを手動で確認してください。\n\nGoogleのアプリ権限を確認する\n\n終了する\n最初から確認する",
+    "role": "alert",
+    "links": [
+      "Googleのアプリ権限を確認する"
+    ]
+  },
+  "callbackFailureScreen": {
+    "heading": "Google認証を完了できませんでした。",
+    "text": "Google Chatの設定\n\n接続を確認できません\n\nGoogle認証を完了できませんでした。\n\nGoogle認証が拒否されました。許可しない場合は変更されません。\n\n拒否、Audience不一致、管理者ブロック、API無効、redirect_uri_mismatch は対応が異なります。表示された理由を管理者へ伝えてください。\n\n変更せず終了\n最初から確認する",
+    "role": "alert",
+    "links": []
+  }
+}

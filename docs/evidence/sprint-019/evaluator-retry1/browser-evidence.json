@@ -1,0 +1,80 @@
+{
+  "googleDesktop": {
+    "service": "Google Chatの設定",
+    "context": "Google Chatの設定",
+    "spaces": 3,
+    "selected": 0,
+    "cta": [
+      {
+        "bg": "rgb(17, 187, 98)",
+        "fg": "rgb(0, 0, 0)"
+      }
+    ],
+    "blue": 0,
+    "secretInputs": 0,
+    "clientLeak": false
+  },
+  "googleFrequency": {
+    "selected": "3h",
+    "text": "Google Chatの設定\n\nSTEP 2 / 4\n\n自動取得の間隔を選びます。\n\nChatworkと同じく3時間ごとがおすすめ・初期値です。負担と新しさのバランスを取りやすい間隔です。\n\n1時間ごと\n3時間ごと（おすすめ・初期値）\n6時間ごと\n12時間ごと\n手動のみ\n\nSprint 019の初回取得はこのPCで行います。定期実行は次の運用設定で有効にします。\n\n戻る\n保存内容を確認する"
+  },
+  "googleReview": {
+    "text": "Google Chatの設定\n\nSTEP 3 / 4\n\n初回取得と保存内容を確認してください。\n\n確定するまで設定、履歴、commit、pushは行いません。\n\n対象スペース\n営業会議\n自動取得の間隔\n3時間ごと（おすすめ・初期値）\n保存内容\n本文、スレッド、発言者、添付メタデータ（添付本文は取得しません）\n保存先\n秘書・一般プロジェクト・Chatworkと同じ非公開のGitHubリポジトリ\n\n共同編集者は保存された本文を読めます。Google Chat APIと組織の保持設定が返せる範囲だけを取得し、取得できない過去を「存在しない」とは扱いません。\n\n選択した通常スペースの取得結果をこのリポジトリへ保存することに同意します。\n取得結果をこのリポジトリへ保存します（Gitのcommit・push）。\n戻る\n初回取得を開始する",
+    "saveChecked": false,
+    "gitChecked": false,
+    "disabled": true,
+    "ctaCount": 2
+  },
+  "googleMobile": {
+    "service": "Google Chatの設定",
+    "columns": "310px",
+    "actions": "column-reverse",
+    "overflow": false,
+    "buttonHeights": [
+      44,
+      48,
+      48
+    ],
+    "labels": true
+  },
+  "googleZoom": {
+    "overflow": false,
+    "buttons": true,
+    "service": "Google Chatの設定"
+  },
+  "googleNormal": {
+    "skipped": false,
+    "launched": {
+      "sameTab": true,
+      "openCount": 1,
+      "targetName": "yasashii-google-chat-oauth",
+      "heading": "別タブでGoogle認証を確認しています。",
+      "reopen": "認証タブをもう一度開く"
+    },
+    "closedReported": true,
+    "connectedToSpaces": true,
+    "blocked": {
+      "heading": "認証タブを開けませんでした。",
+      "text": "Google Chatの設定\n\n接続 2 / 4\n\n認証タブを開けませんでした。\n\nブラウザでポップアップを許可して、もう一度開いてください。元の設定画面はこのまま残ります。\n\n認証タブを手動で閉じても、この画面は残ります。完了前に閉じた場合は「認証タブをもう一度開く」からやり直せます。\n\n設定を終了する\n認証タブを開く",
+      "reopen": true
+    }
+  },
+  "chatwork": {
+    "service": "Chatworkの設定",
+    "context": "Chatworkの設定",
+    "cta": [
+      {
+        "bg": "rgb(240, 55, 71)",
+        "fg": "rgb(0, 0, 0)"
+      }
+    ],
+    "blue": 0,
+    "secretInputs": 0,
+    "clientLeak": false
+  },
+  "chatworkFrequency": {
+    "selected": "3h",
+    "text": "Chatworkの設定\n\nSTEP 2 / 4\n\n自動取得の間隔を選びます。\n\n3時間ごとがおすすめ・初期値です。負担と新しさのバランスを取りやすい間隔です。表示する実行回数は30日換算の概算です。\n\n30分ごと\n約1,440回 / 30日\n1時間ごと\n約720回 / 30日\n3時間ごと（おすすめ・初期値）\n約240回 / 30日\n6時間ごと\n約120回 / 30日\n12時間ごと\n約60回 / 30日\n手動のみ\n約0回 / 30日\n料金と実行時間について\n\nこの画面ではまだ自動実行を有効にしません。\n\n戻る\n内容を確認する"
+  },
+  "browserErrors": []
+}
