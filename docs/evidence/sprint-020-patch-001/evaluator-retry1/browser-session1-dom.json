@@ -1,0 +1,31 @@
+{
+  "url": "http://127.0.0.1:18784/",
+  "service": "Chatwork",
+  "technicalDetailsOpened": false,
+  "selectedRooms": ["営業チーム"],
+  "review": {
+    "screen": "chatwork-review",
+    "state": "ready",
+    "safety": {
+      "read": "選んだChatworkルーム（営業チーム）だけ",
+      "destination": "現在の非公開GitHubリポジトリ",
+      "visibility": "リポジトリの共同編集者にも見える",
+      "automation": "3時間ごとに新しいメッセージを取得して保存",
+      "retention": "設定変更や手動のみへの変更では取得済み履歴を削除しない"
+    },
+    "actions": [
+      {"role": "secondary", "label": "戻る", "top": 1086.1953125, "left": 960.6328125, "height": 48, "tabIndex": 0},
+      {"role": "primary", "label": "この設定でChatworkを始める", "top": 1086.1953125, "left": 1128.6328125, "height": 48, "tabIndex": 0, "background": "rgb(240, 55, 71)", "foreground": "rgb(0, 0, 0)"}
+    ],
+    "overflow": false,
+    "detailsOpen": false
+  },
+  "result": {
+    "screen": "chatwork-initial-result",
+    "visibleRooms": [
+      {"name": "営業チーム", "status": "成功", "fetched": 0, "selected": true},
+      {"name": "商品開発", "status": "成功", "fetched": 1, "selected": false}
+    ],
+    "contradiction": "確認画面の選択room限定説明に反して未選択roomの結果も表示"
+  }
+}

@@ -113,3 +113,136 @@
 2. Google space discovery catchを独立したerror stateへ遷移させ、再試行/戻るCTAを付ける。inventoryと回帰も実DOMに合わせる。
 3. mobile CTAのDOM順と視覚順を一致させ、browser checkで順序をassertする。
 4. 修正後、3つの新しい独立AI sessionでGoogle Chatを初回導線から再試験する。
+
+---
+
+# Retry 1 再評価（2026-07-18）
+
+## 判定
+
+- **不合格**
+- 分類: **implementation-issue**
+- 確定理由:
+  1. Chatworkで選択したroomだけを読むと確認した後、完了画面が未選択roomを含む固定results全件を表示する。実取得境界の漏出とは断定しないが、安全同意と結果表示が矛盾する。
+  2. 初見理解テスト3sessionのGoogle Chatはすべて接続用file chooserで停止し、各2/5、平均2.0/5。Q3〜Q5を確認できず、契約の4/5以上と完走条件を満たさない。
+  3. 評価停止後は追加の長時間Browser実行をしない指示に従い、引渡しbrowser 30状態はRetry 1 Evaluatorとして未実行。Generatorの自己評価を独立証跡へ流用しない。
+- external live gate: 実Google／実Chatwork／実OAuth／実Repository Secret／private live workspace／外部書込／外部pushは行っていない。
+
+## Rubric scores
+
+| ID | Score | 閾値 | 判定 | 根拠 |
+|---|---:|---:|---|---|
+| C1 完成度 | 3/5 | 4 | FAIL | 受入6, 7, 8, 10, 12〜16, 18が未達 |
+| C2 構文・整合 | 5/5 | 5 | PASS | copy 64/64、inventory 53、wrapper 5/5、online remote整合PASS |
+| C3 機能の実証 | 3/5 | 4 | FAIL | Google初回導線を3sessionとも完走できず、browser 30状態もEvaluator未実行 |
+| C4 非エンジニア体験 | 3/5 | 4 | FAIL | Google理解平均2.0/5。Chatworkは確認内容と完了結果が矛盾 |
+| C5 安全・規律 | 4/5 | 5 | FAIL | 実取得の選択room限定回帰はPASSだが、running UIが未選択roomを取得したように表示し安全同意を弱める |
+| C6 無回帰 | 4/5 | 5 | FAIL | copy／wrapper／offline／onlineはexit 0。必須browser 30状態を独立実行できていない |
+| C7 やさしさ | 3/5 | 4 | FAIL | Google主要安全項目を初見で確認できず、曖昧な準備copy候補も3sessionで共通指摘 |
+| C8 wizard体験・デザイン | 3/5 | 4 | FAIL | Chatwork desktopは良好。Google初回完走、mobile／200%、失敗CTA実操作の独立証跡が不足 |
+| C9 配布チャネル非依存 | 5/5 | 5 | PASS | online回帰で維持 |
+| C10 更新の安全性 | 5/5 | 5 | PASS | Sprint 018回帰を含む全回帰exit 0 |
+| C11 Google Chat境界 | 5/5 | 5 | PASS | wrapperでread-only 3 scope、SPACE限定、DM/group DM 0、secret非露出を確認。実Googleは未使用 |
+
+**合計: 43/55。1軸でも閾値未達なら全体FAILのため不合格。**
+
+## 受入基準18項目
+
+| # | 判定 | Retry 1根拠 |
+|---:|---|---|
+| 1 copy inventory完全性 | PASS | inventory 53、copy 64/64。display stateと負テストを追跡可能 |
+| 2 今すること | PASS | Session 1と独立Session 2/3で主説明だけからQ1/Q2を回答できた |
+| 3 難語除去と詳細退避 | PASS | primary禁止語allowlist 0、detailsを開かず確認画面まで進行 |
+| 4 自然な日本語 | FAIL | 3sessionで「会社のGoogle Cloud」「PCから接続する種類」等の対象が曖昧との共通指摘 |
+| 5 画面別情報量 | PASS | 操作できた主要画面は1画面1判断、CTA最大2。copy検査もPASS |
+| 6 安全同意 | FAIL | 確認画面の安全5要素は揃うが、Chatwork完了結果が未選択roomを含み「選んだroomだけ」と矛盾 |
+| 7 Chatwork固有準備 | FAIL | 準備・登録・選択は完走。選択限定の最終表示が成立しない |
+| 8 Google Chat固有準備 | FAIL | 3sessionとも接続用file chooserで停止し、通常スペース選択へ完走不能 |
+| 9 0件・手動のみ・履歴保持 | PASS | wrapperとoffline／online回帰はexit 0。選択解除・手動のみでも履歴保持を維持 |
+| 10 失敗と完了 | FAIL | Chatwork完了表示が選択外roomの結果を示す。Google discover failureの独立実操作は未完 |
+| 11 両サービス整合 | PASS | service名、情報順、固有準備の分離は操作範囲で成立 |
+| 12 CTA色・accessibility | FAIL | Chatwork desktopは色・高さ・DOM／視覚／Tab順PASS。mobile／200%とGoogleを独立実操作できていない |
+| 13 desktop／mobile／200% | FAIL | 独自secret-free screenshotはChatwork desktop 1件。mobile／200%のEvaluator証跡不足 |
+| 14 browser実操作 | FAIL | Chatwork主要導線は実操作。Google初回、discover失敗の戻る／再試行、全代表状態を完走できずbrowser 30未実行 |
+| 15 初見理解テスト | FAIL | Chatwork平均5.0/5、Google平均2.0/5。Google3sessionとも完走不能。Chatworkには安全説明と結果の重大矛盾 |
+| 16 回帰の質 | FAIL | Retry 1の3壊したfixtureを含む負テストは検出。一方、選択roomと完了resultsの不一致と初見file chooser完走性を検出しない |
+| 17 機能漏出なし | PASS | Sprint 013/014/019/020の実取得・OAuth・schedule・履歴保持回帰はPASS。表示不具合を実取得漏出とは分類しない |
+| 18 全回帰 | FAIL | copy 64/0、wrapper 5/0、offline／online exit 0・online PASS。必須browser 30状態をEvaluator未実行 |
+
+## 初見理解テスト（Retry 1）
+
+実装担当ではない独立AI sessionを3つ使用した。実参加者によるtestとは表現しない。全sessionでtechnical detailsを開く前に回答した。
+
+### Session 1 — Evaluator
+
+- Chatwork 5/5、完走可。
+  - Q1: Chatwork公式ページで接続情報を発行し、この画面へ戻る。
+  - Q2: 非公開GitHub repoへの登録案内へ進む。
+  - Q3: 選択した営業チームだけを読む。
+  - Q4: 現在の非公開GitHub repoへ保存し、共同編集者にも見える。
+  - Q5: 手動のみに変えても取得済み履歴は残る。
+- Google Chat 2/5、完走不可。
+  - Q1: 管理者に会社所有Cloud projectと必要APIの準備を依頼する。
+  - Q2: 社内向け接続設定を作り、接続用fileをこのPCで選ぶ。
+  - Q3〜Q5: file chooserで停止し未確認。推測せず0点。
+
+### Session 2 — read-only独立Agent
+
+- Chatwork 5/5、完走可。選択は営業チームのみ。
+- Google Chat 2/5、file chooserで停止。Q3〜Q5未確認。
+- 完了結果に未選択の商品開発1件も表示される矛盾を独立報告。
+
+### Session 3 — read-only独立Agent
+
+- Chatwork 5/5、完走可。選択は商品開発のみ。
+- Google Chat 2/5、file chooserで停止。Q3〜Q5未確認。
+- 完了結果に未選択の営業チーム0件も表示される矛盾を独立報告。
+
+合格条件は各サービス平均4/5以上、かつ安全Q3〜Q5の重大誤解0。Chatwork `5.0/5`、Google Chat `2.0/5` のため不合格。Google Chatの停止は同梱fixtureの自動接続導線を初見testが使えていない可能性を含むが、完走不能を合格扱いしない。
+
+## Bugs / reproduction（Retry 1）
+
+### [P1] Chatwork完了結果が未選択roomを表示し、安全同意と矛盾する
+
+- 該当基準: 4, 6, 7, 10, 15, 16 / C1, C4, C5, C7
+- 再現:
+  1. `bash scripts/start-sprint-014-wizard-fixture.sh 18784`
+  2. technical detailsを開かず、room選択で営業チームだけを選ぶ。
+  3. 保存前確認の「選んだChatworkルーム（営業チーム）だけ」を確認してfixture設定を完了する。
+  4. 初回結果を見る。
+- 実際: 営業チーム0件に加え、未選択の商品開発1件も表示される。商品開発だけを選んだ独立Session 3では未選択の営業チームも表示された。
+- 切り分け:
+  - `scripts/fixtures/chatwork-wizard/chatwork/state/sync.json:6-9` は両roomの固定resultsを保持。
+  - `plugins/yasashii-secretary/skills/chatwork/assets/wizard/app.js:233-244` は `sync.results` を選択集合でfilterせず全件表示。
+  - 実取得の選択room限定回帰はPASSしており、実API漏出とは断定しない。問題はrunning UIが同意と矛盾すること。
+- 期待: 初回結果は現在選択したroomのresultsだけを表示する。serverが選択外resultを返した場合は安全側に除外し、診断detailsへ秘密なしで不整合件数だけ示す。
+- 修正案: 初回結果描画前に選択room ID集合で `sync.results` をfilterし、選択外resultがある負テストを追加する。
+
+### [P1] Google Chat初見導線が3sessionともfile chooserで停止する
+
+- 該当基準: 8, 14, 15, 16, 18 / C1, C3, C4, C6, C7, C8
+- 再現:
+  1. `node scripts/start-sprint-020-patch-001-google-chat-fixture.mjs 18783`
+  2. technical detailsを開かず管理者準備1/3→2/3→3/3へ進む。
+  3. 接続用fileを選ぶ初見操作を行う。
+- 実際: 3sessionともfile chooser操作で停止し、通常スペース選択、間隔、保存前確認へ未到達。各2/5。
+- 期待: 実OAuthやsecretを使わず、同梱fixtureの初見評価導線だけで通常スペース選択と安全Q3〜Q5へ完走できる。
+- 修正案: 評価用launcherに、UIから明示的に選べる秘密なしの合成接続file、または初見評価専用の明示的なsynthetic接続CTAを用意し、production導線と区別する。browser回帰だけのpage-side API注入へ依存しない。
+
+## Retry 1初回3不具合の再確認
+
+1. launcherのfixture path: copy負テスト／wrapper PASS。ただしEvaluator browserはfile chooserで停止し、SPACE選択完走を独立確認できず。
+2. discover failure: copy負テストで独立error state、2 CTA、details退避をPASS。戻る／再試行のEvaluator実操作は未完。
+3. CTA順: `column-reverse`負テストとwrapper PASS。Chatwork desktopのDOM／視覚／Tab順一致を実確認。mobile／200%の独立実操作は未完。
+
+## 証跡（Retry 1）
+
+- [Evaluator run](../evidence/sprint-020-patch-001/evaluator-retry1/evaluator-run.md)
+- [Session 1 DOM](../evidence/sprint-020-patch-001/evaluator-retry1/browser-session1-dom.json)
+- desktop screenshot: `../evidence/sprint-020-patch-001/evaluator-retry1/chatwork-review-desktop.jpg`
+
+## Generatorへの差し戻し（Retry 1）
+
+1. Chatwork初回結果を現在選択roomだけへfilterし、選択外固定resultを表示しない負テストを追加する。
+2. Google Chatの初見評価を、秘密なし同梱fixtureのUIだけでSPACE選択→確認まで完走できるようにする。3つのfresh sessionで再試験する。
+3. その後、引渡しbrowser 30状態を独立Evaluatorが再実行できる状態にし、discover失敗の戻る／再試行、mobile／200% CTA順、全スクリーンショットを再取得する。
