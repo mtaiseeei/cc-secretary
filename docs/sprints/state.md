@@ -2,8 +2,8 @@
 
 <!-- オーケストレーターだけが書く進行状態の正本 -->
 
-- Current ID: sprint-020
-- Retry Count: 3
+- Current ID: sprint-020-patch-001
+- Retry Count: 0
 - Next Planned: TBD
 
 <!-- 2026-07-08: sprint-001 は再評価で合格（初回はクレジット方針の spec/実装不一致で不合格 →
@@ -38,7 +38,8 @@
 | sprint-017 | done | [contract](sprint-017.md) | [progress](../progress/sprint-017.md) | [feedback](../feedback/sprint-017.md) |
 | sprint-018 | done | [contract](sprint-018.md) | [progress](../progress/sprint-018.md) | [feedback](../feedback/sprint-018.md) |
 | sprint-019 | done | [contract](sprint-019.md) | [progress](../progress/sprint-019.md) | [feedback](../feedback/sprint-019.md) |
-| sprint-020 | active | [contract](sprint-020.md) | [progress](../progress/sprint-020.md) | [feedback](../feedback/sprint-020.md) |
+| sprint-020 | done | [contract](sprint-020.md) | [progress](../progress/sprint-020.md) | [feedback](../feedback/sprint-020.md) |
+| sprint-020-patch-001 | active | [contract](sprint-020-patch-001.md) | - | - |
 
 ## Deferred / Superseded
 - sprint-007: superseded — 2026-07-15 製品方針転換により白紙化、`backup/sprint-007-010-plan` に退避
@@ -81,3 +82,4 @@
 - 2026-07-17: sprint-020 Retry 1再評価は、管理path限定commitと403分類は合格したが、`createdAt` 欠落の新規run IDを今回runとして採用するimplementation-issueで不合格。時刻欠落／不正／dispatch前runをfail-closedで除外する修正をRetry 2へ差し戻した。専用45件・敵対的10件・wrapper 16件・全offline 314件・全online 315件・browserは0 FAIL。
 - 2026-07-17: sprint-020 Retry 2で `createdAt` 欠落／不正／dispatch前runを候補外にし、dispatch後の有効時刻runだけを追跡するfail-closed判定へ修正。Evaluator時刻境界検査、専用45件・敵対的13件・wrapper 16件・全offline 314件・全online 315件が0 FAILのため、独立Evaluatorへ再引き渡した。
 - 2026-07-17: sprint-020 Retry 2再評価はsynthetic／localのimplementation-issue 0件。受入1〜9・14は合格し、実OAuth／Google Chat API／Repository Secret／Actions／remote操作を伴う受入10〜13だけがユーザー明示許可と非機密test資源未準備のため `external-live-gate-unavailable`。Retry Count 3としてユーザーへlive gate許可を依頼する。
+- 2026-07-18: sprint-020は専用private test workspaceで実Google Chat API、OAuth、Repository Secret、GitHub Actions、remote push、検索、同条件再実行を検証し、後始末まで完了。全スペース選択解除で今後の取得を停止し、Repository Secret 0件、workflow schedule 0件、OAuth連携削除、取得済み履歴保持を確認。専用50件・敵対的16件・wrapper 16件・全offline 314件・全online 315件が0 FAILで独立Evaluator合格。Chatwork／Google Chat共通の非エンジニア向け文章改善 `sprint-020-patch-001` を開始する。
