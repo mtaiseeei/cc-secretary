@@ -3,7 +3,7 @@
 <!-- オーケストレーターだけが書く進行状態の正本 -->
 
 - Current ID: sprint-019
-- Retry Count: 0
+- Retry Count: 1
 - Next Planned: sprint-020
 
 <!-- 2026-07-08: sprint-001 は再評価で合格（初回はクレジット方針の spec/実装不一致で不合格 →
@@ -37,7 +37,7 @@
 | sprint-016 | done | [contract](sprint-016.md) | [progress](../progress/sprint-016.md) | [feedback](../feedback/sprint-016.md) |
 | sprint-017 | done | [contract](sprint-017.md) | [progress](../progress/sprint-017.md) | [feedback](../feedback/sprint-017.md) |
 | sprint-018 | done | [contract](sprint-018.md) | [progress](../progress/sprint-018.md) | [feedback](../feedback/sprint-018.md) |
-| sprint-019 | active | [contract](sprint-019.md) | - | - |
+| sprint-019 | active | [contract](sprint-019.md) | [progress](../progress/sprint-019.md) | [feedback](../feedback/sprint-019.md) |
 | sprint-020 | planned | [contract](sprint-020.md) | - | - |
 
 ## Deferred / Superseded
@@ -71,3 +71,5 @@
 - 2026-07-17: ユーザーの明示指示でsprint-018を開始。説明と明示確認後だけ、pushなし保護commit、カスタマイズ保護、plugin更新、冪等migration、検証、rollbackを行う実装へ進む。Google Chatと自動pushは対象外。
 - 2026-07-17: sprint-018は独立Evaluatorで合格。受入基準14/14、専用41/41、Sprint 017回帰32/32、Sprint 016回帰2/2、全offline 308/308、全online 309/309が成功。確認前0変更、pushなし保護commit、固定された公式plugin更新経路、reload後再開、dry-run一致、冪等migration、0.2.0台帳なしbootstrap、検証失敗時のworkspace rollback、push・remote変更0件、secret・私的本文露出0件を一時Git repoで確認。公開versionは0.4.0で、sprint-017〜018の更新計画を完了。
 - 2026-07-17: ユーザーがGoogle Chat方針 `1A`（各社所有Cloud project）、`2A`（選択した通常スペースだけ）、`3A`（同じprivate workspace＋GitHub Actions）を承認。`my-vault` のユーザーOAuth、日付別Markdown、初回全pageを基準に、DM、未使用scope、サービスアカウント、資格情報表示を除外したsprint-019／020をPlannerが契約化。Fableレビューを反映し、OAuth秘密境界、初回ローカル取得、PKCE＋state、SPACE再検証、grant revokeを明確化。Chatwork／Google Chatの共通wizard、サービス名表示、指定色CTA、3時間推奨・初期値への統一を追加し、sprint-019を開始。
+- 2026-07-17: sprint-019 GeneratorがGoogle ChatのPKCE＋state付きDesktop OAuth、通常スペース限定選択、同一wizard session内の初回全page取得、日付別Markdown保存、基本検索、Chatworkとの共通wizardを実装。両サービスの3時間推奨・初期値と指定CTA色も反映し、専用37件・wrapper 11件・全offline 310件・全online 311件が0 FAIL。実Google Cloud／OAuth／API／Repository Secret／pushは行わず、独立Evaluatorへ引き渡した。
+- 2026-07-17: sprint-019初回評価は受入基準11/15で不合格（implementation-issue）。OAuth認証が同一タブ遷移で元wizardのpollingを失う、cleanup-required／revoke失敗を成功断定する、初回0件時に存在しないhistory pathのgit addがexit 128になる3件をGeneratorへ差し戻し（Retry 1）。専用37件・wrapper 11件・全offline 310件・全online 311件は0 FAIL。
