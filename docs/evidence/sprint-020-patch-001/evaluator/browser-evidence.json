@@ -1,0 +1,858 @@
+{
+  "chatwork": [
+    {
+      "screen": "chatwork-prepare-connection",
+      "state": "ready",
+      "service": "Chatworkの設定",
+      "heading": "Chatworkの接続情報を用意します。",
+      "primary": "Chatworkの接続情報を用意します。 今すること: Chatworkの公式ページで、接続に使う情報を発行します。 管理者への申請を確認する 接続情報の登録へ進む",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "詳しい説明: 接続情報の正式名称と安全な扱い"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "管理者への申請を確認する",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "接続情報の登録へ進む",
+          "bg": "rgb(240, 55, 71)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "chatwork-admin-approval",
+      "state": "ready",
+      "service": "Chatworkの設定",
+      "heading": "Chatworkの管理者へ利用を申請します。",
+      "primary": "Chatworkの管理者へ利用を申請します。 今すること: 組織でChatworkを使っている場合は、管理者の承認を確認します。 申請せず終了する 承認後に接続情報を用意する",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "管理者向け: API利用の条件"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "申請せず終了する",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "承認後に接続情報を用意する",
+          "bg": "rgb(240, 55, 71)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "chatwork-discover-empty",
+      "state": "empty",
+      "service": "Chatworkの設定",
+      "heading": "選べるChatworkルームはまだありません。",
+      "primary": "選べるChatworkルームはまだありません。 ルームが0件でも、接続の失敗ではありません。 接続準備へ戻る 参加ルームをもう一度取得する",
+      "forbidden": false,
+      "details": [],
+      "safety": [],
+      "cta": [
+        {
+          "name": "Chatworkの接続準備へ戻る",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "Chatworkの参加ルームをもう一度取得する",
+          "bg": "rgb(240, 55, 71)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "chatwork-discover-failure",
+      "state": "error",
+      "service": "Chatworkの設定",
+      "heading": "Chatworkのルームを取得できませんでした。",
+      "primary": "Chatworkのルームを取得できませんでした。 接続情報または通信状態を確認できませんでした。 接続準備へ戻る Chatworkの接続を確認し直す",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "管理者向け: エラーの詳しい内容"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "接続準備へ戻る",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "Chatworkの接続を確認し直す",
+          "bg": "rgb(240, 55, 71)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "chatwork-select-rooms",
+      "state": "ready",
+      "service": "Chatworkの設定",
+      "heading": "保存するChatworkルームを選びます。",
+      "primary": "保存するChatworkルームを選びます。 今すること: 保存したいChatworkルームにチェックを入れます。 Chatworkの設定をキャンセル Chatworkの取得間隔を選ぶ",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "管理者向け: ルームを識別する番号"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "Chatworkの設定をキャンセル",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "Chatworkの取得間隔を選ぶ",
+          "bg": "rgb(240, 55, 71)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "chatwork-select-interval",
+      "state": "ready",
+      "service": "Chatworkの設定",
+      "heading": "Chatworkの取得間隔を選びます。",
+      "primary": "Chatworkの取得間隔を選びます。 今すること: 新しいメッセージを自動で確認する間隔を選びます。 戻る Chatworkの保存内容を確認する",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "詳しい説明: 料金と実行時間について"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "戻る",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "Chatworkの保存内容を確認する",
+          "bg": "rgb(240, 55, 71)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "chatwork-review",
+      "state": "ready",
+      "service": "Chatworkの設定",
+      "heading": "Chatworkの保存内容を確認します。",
+      "primary": "Chatworkの保存内容を確認します。 今すること: 読むルーム、保存先、自動取得の設定を確認します。 戻る この設定でChatworkを始める",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "詳しい説明: 保存処理と取得範囲"
+        }
+      ],
+      "safety": [
+        "読む対象",
+        "保存先",
+        "見える人",
+        "自動取得・保存",
+        "履歴の保持"
+      ],
+      "cta": [
+        {
+          "name": "戻る",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "この設定でChatworkを始める",
+          "bg": "rgb(240, 55, 71)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "chatwork-initial-result",
+      "state": "success",
+      "service": "Chatworkの設定",
+      "heading": "Chatworkの最初の取得が完了しました。",
+      "primary": "Chatworkの最初の取得が完了しました。 取得したメッセージを保存しました。 設定を終了する",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "詳しい説明: 取得結果"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "Chatworkの設定を終了して検索案内を見る",
+          "bg": "rgb(240, 55, 71)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "chatwork-complete",
+      "state": "success",
+      "service": "Chatworkの設定",
+      "heading": "Chatworkの設定は完了です。",
+      "primary": "Chatworkの設定は完了です。 次は /chatwork から保存済みメッセージを検索できます。",
+      "forbidden": false,
+      "details": [],
+      "safety": [],
+      "cta": [],
+      "overflow": false,
+      "width": 1440,
+      "actions": null
+    },
+    {
+      "screen": "chatwork-cancelled",
+      "state": "cancelled",
+      "service": "Chatworkの設定",
+      "heading": "Chatworkの設定を変更せず終了しました。",
+      "primary": "Chatworkの設定を変更せず終了しました。 ルーム、取得間隔、保存済み履歴は変更していません。 Chatworkの設定に戻る",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "詳しい説明: 変更していない内容"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "Chatworkの設定を最初から確認する",
+          "bg": "rgb(240, 55, 71)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    }
+  ],
+  "google": [
+    {
+      "screen": "google-chat-prepare-cloud",
+      "state": "ready",
+      "service": "Google Chatの設定",
+      "heading": "会社のGoogle Cloudを用意します。",
+      "primary": "会社のGoogle Cloudを用意します。 今すること: 管理者に、会社が所有するGoogle Cloudプロジェクトと必要なAPIの準備を依頼します。 Google Chatの設定をあとで行う Googleの接続方法を確認する",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "管理者向け: なぜ会社所有が必要か"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "Google Chatの設定をあとで行う",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "Googleの接続方法を確認する",
+          "bg": "rgb(17, 187, 98)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "google-chat-cancelled",
+      "state": "cancelled",
+      "service": "Google Chatの設定",
+      "heading": "Google Chatの設定を終了しました。",
+      "primary": "Google Chatの設定を終了しました。 接続前だったため、設定や接続情報は変更していません。 Google Chatの設定に戻る",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "管理者向け: 接続情報の後始末"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "Google Chatの設定を最初から確認する",
+          "bg": "rgb(17, 187, 98)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "google-chat-prepare-access",
+      "state": "ready",
+      "service": "Google Chatの設定",
+      "heading": "社内向けの接続方法を用意します。",
+      "primary": "社内向けの接続方法を用意します。 今すること: 管理者に、社内の利用者だけが使える接続設定を作ってもらいます。 戻る 接続用ファイルの準備へ進む",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "管理者向け: Google Cloudで選ぶ正式名称"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "戻る",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "接続用ファイルの準備へ進む",
+          "bg": "rgb(17, 187, 98)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "google-chat-prepare-file",
+      "state": "ready",
+      "service": "Google Chatの設定",
+      "heading": "Google Cloudの接続用ファイルを選びます。",
+      "primary": "Google Cloudの接続用ファイルを選びます。 今すること: 管理者から受け取った接続用ファイルを、このPCから選びます。 戻る 接続用ファイルを確認する",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "管理者向け: ファイルの正式名称と安全な扱い"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "Googleの接続方法へ戻る",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "Google Cloudの接続用ファイルを確認する",
+          "bg": "rgb(17, 187, 98)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "google-chat-authorize",
+      "state": "ready",
+      "service": "Google Chatの設定",
+      "heading": "Googleアカウントで接続を許可します。",
+      "primary": "Googleアカウントで接続を許可します。 今すること: Googleの確認画面を開き、Google Chatを読むことを許可します。 戻る 合成データで接続を確認する",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "管理者向け: 認証と安全機構"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "Google Cloudの接続用ファイルへ戻る",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "合成データでGoogle接続後の画面を確認する",
+          "bg": "rgb(17, 187, 98)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "google-chat-authorize-failure",
+      "state": "error",
+      "service": "Google Chatの設定",
+      "heading": "Google Chatとの接続を確認できませんでした。",
+      "primary": "Google Chatとの接続を確認できませんでした。 Googleの許可を完了できませんでした。 Google Chatの設定を変更せず終了する Google Chatの接続を最初から確認する",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "管理者向け: エラーの詳しい内容"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "Google Chatの設定を変更せず終了する",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "Google Chatの接続を最初から確認する",
+          "bg": "rgb(17, 187, 98)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "google-chat-select-spaces",
+      "state": "ready",
+      "service": "Google Chatの設定",
+      "heading": "保存するGoogle Chatスペースを選びます。",
+      "primary": "保存するGoogle Chatスペースを選びます。 今すること: 保存したい通常スペースにチェックを入れます。 Google Chatの設定をキャンセル Google Chatの取得間隔を選ぶ",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "管理者向け: スペースの識別子"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "Google Chatの設定をキャンセル",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "Google Chatの取得間隔を選ぶ",
+          "bg": "rgb(17, 187, 98)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "google-chat-select-interval",
+      "state": "ready",
+      "service": "Google Chatの設定",
+      "heading": "Google Chatの取得間隔を選びます。",
+      "primary": "Google Chatの取得間隔を選びます。 今すること: 新しいメッセージを自動で確認する間隔を選びます。 戻る Google Chatの保存内容を確認する",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "詳しい説明: 自動取得の仕組み"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "戻る",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "Google Chatの保存内容を確認する",
+          "bg": "rgb(17, 187, 98)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "google-chat-review",
+      "state": "ready",
+      "service": "Google Chatの設定",
+      "heading": "Google Chatの保存内容を確認します。",
+      "primary": "Google Chatの保存内容を確認します。 今すること: 読むスペース、保存先、自動取得の設定を確認します。 戻る この設定で最初の取得を始める",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "詳しい説明: 保存処理と取得範囲"
+        }
+      ],
+      "safety": [
+        "読む対象",
+        "保存先",
+        "見える人",
+        "自動取得・保存",
+        "履歴の保持"
+      ],
+      "cta": [
+        {
+          "name": "戻る",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "この設定で最初の取得を始める",
+          "bg": "rgb(17, 187, 98)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "google-chat-initial-result-empty",
+      "state": "empty",
+      "service": "Google Chatの設定",
+      "heading": "Google Chatの最初の取得が完了しました。",
+      "primary": "Google Chatの最初の取得が完了しました。 まだ保存するメッセージはありません。 設定を終了する 自動取得を設定する",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "詳しい説明: 取得結果と接続情報"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "Google Chatの設定を終了する",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "Google Chatの自動取得を設定する",
+          "bg": "rgb(17, 187, 98)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "google-chat-complete",
+      "state": "success",
+      "service": "Google Chatの設定",
+      "heading": "Google Chatの設定は完了です。",
+      "primary": "Google Chatの設定は完了です。 次は /google-chat search から保存済みメッセージを検索できます。",
+      "forbidden": false,
+      "details": [],
+      "safety": [],
+      "cta": [],
+      "overflow": false,
+      "width": 1440,
+      "actions": null
+    },
+    {
+      "screen": "google-chat-settings-select-spaces",
+      "state": "ready",
+      "service": "Google Chatの設定",
+      "heading": "取得するGoogle Chatスペースを見直します。",
+      "primary": "取得するGoogle Chatスペースを見直します。 今すること: 今後も取得する通常スペースだけにチェックを入れます。 Googleへ接続し直す 取得の停止方法を確認する",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "管理者向け: スペースの識別子と一覧更新"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "Googleへ接続し直して通常スペース一覧を更新する",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "Google Chatの取得停止方法を確認する",
+          "bg": "rgb(17, 187, 98)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "google-chat-settings-review",
+      "state": "ready",
+      "service": "Google Chatの設定",
+      "heading": "Google Chatの変更内容を確認します。",
+      "primary": "Google Chatの変更内容を確認します。 今すること: 読むスペース、保存先、自動取得の変更を確認します。 戻る この変更をGoogle Chatへ反映する",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "詳しい説明: 保存処理と差分の範囲"
+        }
+      ],
+      "safety": [
+        "読む対象",
+        "保存先",
+        "見える人",
+        "自動取得・保存",
+        "履歴の保持"
+      ],
+      "cta": [
+        {
+          "name": "戻る",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "この変更をGoogle Chatへ反映する",
+          "bg": "rgb(17, 187, 98)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    },
+    {
+      "screen": "google-chat-settings-result-stopped",
+      "state": "success",
+      "service": "Google Chatの設定",
+      "heading": "Google Chatの今後の取得を停止しました。",
+      "primary": "Google Chatの今後の取得を停止しました。 取得済み履歴は削除していません。 設定を終了する",
+      "forbidden": false,
+      "details": [],
+      "safety": [],
+      "cta": [
+        {
+          "name": "Google Chatの設定を終了して検索案内を見る",
+          "bg": "rgb(17, 187, 98)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 1440,
+      "actions": "row"
+    }
+  ],
+  "responsive": [
+    {
+      "service": "Chatworkの設定",
+      "mode": "mobile",
+      "screen": "chatwork-select-rooms",
+      "state": "ready",
+      "heading": "保存するChatworkルームを選びます。",
+      "primary": "保存するChatworkルームを選びます。 今すること: 保存したいChatworkルームにチェックを入れます。 Chatworkの設定をキャンセル Chatworkの取得間隔を選ぶ",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "管理者向け: ルームを識別する番号"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "Chatworkの設定をキャンセル",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "Chatworkの取得間隔を選ぶ",
+          "bg": "rgb(240, 55, 71)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 390,
+      "actions": "column-reverse"
+    },
+    {
+      "service": "Chatworkの設定",
+      "mode": "200%",
+      "screen": "chatwork-select-rooms",
+      "state": "ready",
+      "heading": "保存するChatworkルームを選びます。",
+      "primary": "保存するChatworkルームを選びます。 今すること: 保存したいChatworkルームにチェックを入れます。 Chatworkの設定をキャンセル Chatworkの取得間隔を選ぶ",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "管理者向け: ルームを識別する番号"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "Chatworkの設定をキャンセル",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "Chatworkの取得間隔を選ぶ",
+          "bg": "rgb(240, 55, 71)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 720,
+      "actions": "column-reverse"
+    },
+    {
+      "service": "Google Chatの設定",
+      "mode": "mobile",
+      "screen": "google-chat-settings-select-spaces",
+      "state": "ready",
+      "heading": "取得するGoogle Chatスペースを見直します。",
+      "primary": "取得するGoogle Chatスペースを見直します。 今すること: 今後も取得する通常スペースだけにチェックを入れます。 Googleへ接続し直す 取得の停止方法を確認する",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "管理者向け: スペースの識別子と一覧更新"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "Googleへ接続し直して通常スペース一覧を更新する",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "Google Chatの取得停止方法を確認する",
+          "bg": "rgb(17, 187, 98)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 390,
+      "actions": "column-reverse"
+    },
+    {
+      "service": "Google Chatの設定",
+      "mode": "200%",
+      "screen": "google-chat-settings-select-spaces",
+      "state": "ready",
+      "heading": "取得するGoogle Chatスペースを見直します。",
+      "primary": "取得するGoogle Chatスペースを見直します。 今すること: 今後も取得する通常スペースだけにチェックを入れます。 Googleへ接続し直す 取得の停止方法を確認する",
+      "forbidden": false,
+      "details": [
+        {
+          "open": false,
+          "summary": "管理者向け: スペースの識別子と一覧更新"
+        }
+      ],
+      "safety": [],
+      "cta": [
+        {
+          "name": "Googleへ接続し直して通常スペース一覧を更新する",
+          "bg": "rgba(0, 0, 0, 0)",
+          "fg": "rgb(23, 26, 32)",
+          "height": 48
+        },
+        {
+          "name": "Google Chatの取得停止方法を確認する",
+          "bg": "rgb(17, 187, 98)",
+          "fg": "rgb(0, 0, 0)",
+          "height": 48
+        }
+      ],
+      "overflow": false,
+      "width": 720,
+      "actions": "column-reverse"
+    }
+  ],
+  "browserErrors": [],
+  "passed": true
+}
