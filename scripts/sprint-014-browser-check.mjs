@@ -154,7 +154,7 @@ const passed = onboarding.heading.includes("API Tokenを取得") && onboarding.c
   && !changedResult.text.includes("初回設定の結果") && !changedResult.text.includes("商品開発") && !changedResult.text.includes("成功・1件")
   && errorState.message.includes("GitHubの書込権限") && errorState.buttonEnabled
   && keyboard.checkbox && keyboard.focusVisible
-  && mobile.actionDirection === "column-reverse" && !mobile.horizontalOverflow
+  && mobile.actionDirection === "column" && !mobile.horizontalOverflow
   && mobile.buttonHeights.every((height) => height >= 44) && mobile.labels
   && !zoom200.horizontalOverflow && zoom200.visibleButtons && errors.length === 0;
 process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);

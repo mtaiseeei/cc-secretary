@@ -82,7 +82,7 @@ details p { margin: 12px 0 0; }
   .lead { font-size: 14px; }
   .panel { margin-top: 32px; padding: 20px; }
   .room-list, .frequency-list { grid-template-columns: 1fr; }
-  .actions { flex-direction: column-reverse; }
+  .actions { flex-direction: column; }
   .button { width: 100%; min-height: 48px; }
   .summary-row { grid-template-columns: 1fr; gap: 8px; }
   .safety-list li { grid-template-columns: 1fr; gap: 8px; }

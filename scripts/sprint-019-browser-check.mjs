@@ -144,7 +144,7 @@ const passed = googleDesktop.service === "Google Chatの設定" && googleDesktop
   && googleDesktop.cta.every((item) => item.bg === "rgb(17, 187, 98)" && item.fg === "rgb(0, 0, 0)") && googleDesktop.blue === 0 && googleDesktop.secretInputs === 0 && !googleDesktop.clientLeak
   && googleFrequency.selected === "3h" && googleFrequency.text.includes("3時間ごと（おすすめ・初期値）")
   && googleReview.text.includes("取得結果をこのリポジトリへ保存します（Gitのcommit・push）") && !googleReview.saveChecked && !googleReview.gitChecked && googleReview.disabled && googleReview.ctaCount === 2
-  && googleMobile.service === "Google Chatの設定" && googleMobile.actions === "column-reverse" && !googleMobile.overflow && googleMobile.buttonHeights.every((height) => height >= 44) && googleMobile.labels
+  && googleMobile.service === "Google Chatの設定" && googleMobile.actions === "column" && !googleMobile.overflow && googleMobile.buttonHeights.every((height) => height >= 44) && googleMobile.labels
   && !googleZoom.overflow && googleZoom.buttons && googleZoom.service === "Google Chatの設定"
   && (googleNormal.skipped || (googleNormal.launched.sameTab && googleNormal.launched.openCount === 1 && googleNormal.launched.targetName === "yasashii-google-chat-oauth" && googleNormal.launched.heading.includes("別タブ") && googleNormal.launched.reopen.includes("もう一度") && googleNormal.closedReported && googleNormal.connectedToSpaces && googleNormal.blocked.heading.includes("開けませんでした") && googleNormal.blocked.text.includes("ポップアップを許可") && googleNormal.blocked.reopen))
   && chatwork.service === "Chatworkの設定" && chatwork.context === "Chatworkの設定" && chatwork.cta.every((item) => item.bg === "rgb(240, 55, 71)" && item.fg === "rgb(0, 0, 0)") && chatwork.blue === 0 && chatwork.secretInputs === 0 && !chatwork.clientLeak

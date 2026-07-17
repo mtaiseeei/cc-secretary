@@ -3,10 +3,13 @@
 import { spawn } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const root = mkdtempSync(join(tmpdir(), "yasashii-google-chat-new-"));
-const server = resolve(process.cwd(), "plugins/yasashii-secretary/skills/google-chat/scripts/wizard-server.mjs");
+const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const server = resolve(repo, "plugins/yasashii-secretary/skills/google-chat/scripts/wizard-server.mjs");
+const fixture = resolve(repo, "scripts/fixtures/google-chat-wizard/google-chat.json");
 const port = process.argv[2] || "18783";
 const child = spawn(process.execPath, [server, "--root", root, "--port", port], {
   stdio: "inherit",
@@ -16,6 +19,7 @@ const child = spawn(process.execPath, [server, "--root", root, "--port", port], 
     YASASHII_GOOGLE_CHAT_TEST_PRIVATE: "1",
     YASASHII_GOOGLE_CHAT_TEST_SECRETS: "1",
     YASASHII_GOOGLE_CHAT_SKIP_GIT: "1",
+    YASASHII_GOOGLE_CHAT_FIXTURE: fixture,
   },
 });
 

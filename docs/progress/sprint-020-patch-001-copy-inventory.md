@@ -3,11 +3,11 @@
 ## 数え方
 
 - 1行を、利用者が見分けられる1画面または1状態として数える。
-- 共通shellのサービス名、進行表示、外部リンクの「新しいタブで開く」は各行に重複計上せず、全52状態へ共通適用する。
+- 共通shellのサービス名、進行表示、外部リンクの「新しいタブで開く」は各行に重複計上せず、全53状態へ共通適用する。
 - `primary` は見出し・最初の本文・CTA、`technical` は既定で閉じた「詳しい説明／管理者向け」である。
 - accessible nameは、画面領域の `Chatworkの設定`／`Google Chatの設定` と、結果が分かるbutton／linkの `aria-label` を指す。
 
-## 全件inventory（52状態）
+## 全件inventory（53状態）
 
 | サービス | 画面／状態 | copyの役割 | 修正後のprimary copy | 区分 | 必ず残す意味 | technical detail／修正方針 |
 |---|---|---|---|---|---|---|
@@ -42,6 +42,7 @@
 | Google Chat | authorize-popup-failure | 画面起動失敗 | ポップアップを許可して再度開く | primary | 元画面を保持 | 技術詳細なし |
 | Google Chat | authorize-failure | 接続失敗 | 許可失敗→理由を確認し再接続 | primary | 推測断定しない、管理者依頼 | 原文、Audience、API、redirect_uri_mismatch、client ID/scope |
 | Google Chat | discover-loading | 対象読込 | 通常スペースを確認中 | primary | DM／グループDMを読まない | 技術詳細なし |
+| Google Chat | discover-failure | 対象読込失敗 | 通常スペース一覧を取得できなかった→通信と設定を確認 | primary | 推測断定しない、再試行または安全に終了 | 生エラーとエラー種別 |
 | Google Chat | discover-empty | 0件 | 0件は接続失敗ではない | primary | 参加／管理者設定確認、再接続 | Secret／OAuthの後始末 |
 | Google Chat | select-spaces | 対象選択 | 保存したい通常スペースだけ選ぶ | primary | SPACE限定、DM／グループDM除外 | space ID一覧 |
 | Google Chat | select-interval | 間隔 | 新しいメッセージの確認間隔を選ぶ | primary | 3時間推奨、全5選択肢 | GitHub Actions、初回はPC内メモリ |

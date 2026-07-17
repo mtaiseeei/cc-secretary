@@ -98,7 +98,7 @@ const passed = desktop.service === "Google Chatの設定" && desktop.context ===
   && !zeroManualFrequency.nextDisabled && zeroManualFrequency.text.includes("取得済み履歴は削除しません")
   && zeroManualReview.disabled && !zeroManualReview.autoConsent && zeroManualReview.text.includes("なし（今後の取得を停止）") && zeroManualReview.text.includes("取得済み履歴は削除しません")
   && zeroManualResult.service === "Google Chatの設定" && zeroManualResult.text.includes("なし（取得を停止）") && zeroManualResult.text.includes("無効（取得停止）") && zeroManualResult.text.includes("既存履歴は削除していません")
-  && !mobile.overflow && mobile.actions === "column-reverse" && mobile.buttons.every((height) => height >= 44) && mobile.labels
+  && !mobile.overflow && mobile.actions === "column" && mobile.buttons.every((height) => height >= 44) && mobile.labels
   && !zoom.overflow && zoom.buttons && zoom.service === "Google Chatの設定" && browserErrors.length === 0;
 writeFileSync(resolve(evidence, "browser-evidence.json"), `${JSON.stringify(report, null, 2)}\n`);
 process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);

@@ -8,6 +8,9 @@ const files = {
   chatwork: join(repo, "plugins/yasashii-secretary/skills/chatwork/assets/wizard/app.js"),
   google: join(repo, "plugins/yasashii-secretary/skills/google-chat/assets/wizard/app.js"),
   common: join(repo, "plugins/yasashii-secretary/skills/chatwork/assets/wizard/common.js"),
+  style: join(repo, "plugins/yasashii-secretary/skills/chatwork/assets/wizard/style.css"),
+  launcher: join(repo, "scripts/start-sprint-020-patch-001-google-chat-fixture.mjs"),
+  googleFixture: join(repo, "scripts/fixtures/google-chat-wizard/google-chat.json"),
   inventory: join(repo, "docs/progress/sprint-020-patch-001-copy-inventory.md"),
 };
 
@@ -20,7 +23,7 @@ const expectedScreens = {
   ],
   google: [
     "prepare-cloud", "prepare-access", "prepare-file", "authorize", "authorize-waiting", "authorize-popup-failure",
-    "authorize-failure", "discover-loading", "discover-empty", "select-spaces", "select-interval", "review",
+    "authorize-failure", "discover-loading", "discover-failure", "discover-empty", "select-spaces", "select-interval", "review",
     "initial-sync-loading", "initial-sync-failure", "initial-result", "initial-result-empty", "initial-result-partial",
     "initial-result-failure", "settings-select-spaces", "settings-select-interval", "settings-review", "settings-saving",
     "settings-failure", "settings-result", "settings-result-manual", "settings-result-stopped", "cancelled", "complete",
@@ -40,7 +43,7 @@ function plain(value) {
   return value.replace(/<[^>]*>|\$\{[^}]*\}/g, " ").replace(/\s+/g, " ").trim();
 }
 
-export function validateCopyFixture({ chatwork, google, common, inventory }) {
+export function validateCopyFixture({ chatwork, google, common, style, launcher, googleFixture, inventory }) {
   const errors = [];
   const sources = { chatwork, google };
   for (const [service, screens] of Object.entries(expectedScreens)) {
@@ -77,6 +80,14 @@ export function validateCopyFixture({ chatwork, google, common, inventory }) {
   if (!common.includes('app.setAttribute("aria-label", detail.context)') || !common.includes("app.dataset.screen") || !common.includes("app.dataset.state")) errors.push("service accessible nameまたはDOM状態がありません");
   if (!combined.includes('data-copy-role="technical"') && !common.includes('data-copy-role="technical"')) errors.push("technical detailsがありません");
   if (!combined.includes("API Token") || !combined.includes("Repository Secret") || !google.includes("OAuth client JSON") || !google.includes("PKCE")) errors.push("管理者向け正式名称が不足しています");
+  if (!google.includes('function renderDiscoverFailure(error)') || !google.includes('show("discover-failure"') || !google.includes('data-action="retry"') || !google.includes("catch (error) { renderDiscoverFailure(error); }")) errors.push("Google Chatのspace取得失敗が独立error stateへ遷移しません");
+  if (!google.includes("app.querySelector('[data-action=\"back\"]').onclick = cancel") || !google.includes("app.querySelector('[data-action=\"retry\"]').onclick = discoverSpaces")) errors.push("Google Chatのspace取得失敗に戻る／再試行の操作がありません");
+  if (/\.actions\s*\{\s*flex-direction:\s*column-reverse\s*;\s*\}/.test(style) || !/\.actions\s*\{\s*flex-direction:\s*column\s*;\s*\}/.test(style)) errors.push("mobileのCTA視覚順がDOM順と一致しません");
+  if (!launcher.includes("YASASHII_GOOGLE_CHAT_FIXTURE: fixture") || !launcher.includes('scripts/fixtures/google-chat-wizard/google-chat.json')) errors.push("Google Chat初回fixture launcherが同梱fixture pathを渡していません");
+  if (!launcher.includes('YASASHII_GOOGLE_CHAT_SYNTHETIC: "1"') || !launcher.includes('YASASHII_GOOGLE_CHAT_TEST_PRIVATE: "1"') || !launcher.includes('YASASHII_GOOGLE_CHAT_SKIP_GIT: "1"')) errors.push("Google Chat初回fixture launcherの外部接続防止条件が不足しています");
+  const fixtureData = JSON.parse(googleFixture);
+  const fixtureTypes = new Set((fixtureData.spaces || []).map((space) => space.spaceType));
+  if (!["SPACE", "DIRECT_MESSAGE", "GROUP_CHAT"].every((type) => fixtureTypes.has(type))) errors.push("Google Chat同梱fixtureにSPACE／DM／グループDMが揃っていません");
 
   const inventoryRows = inventory.split("\n").filter((line) => /^\| (?:Chatwork|Google Chat) \|/.test(line));
   const expectedCount = expectedScreens.chatwork.length + expectedScreens.google.length;
@@ -100,6 +111,14 @@ if (fakeApp.dataset.screen !== "chatwork-saving" || fakeApp.dataset.state !== "l
 const brokenMeaning = { ...fixture, chatwork: fixture.chatwork.replace("共同編集者にも保存内容が見えます", "保存内容が見えます") };
 const brokenScreen = { ...fixture, google: fixture.google.replace('"settings-result-manual"', '"settings-result-removed"') };
 const brokenForbidden = { ...fixture, chatwork: fixture.chatwork.replace("Chatworkの公式ページで、接続に使う情報を発行します。", "wizardでtokenを発行します。") };
-if (!validateCopyFixture(brokenMeaning).length || !validateCopyFixture(brokenScreen).length || !validateCopyFixture(brokenForbidden).length) throw new Error("壊したfixtureを検出できません");
+const brokenGoogleLauncher = { ...fixture, launcher: fixture.launcher.replace("YASASHII_GOOGLE_CHAT_FIXTURE: fixture,", "") };
+const brokenDiscoverFailure = { ...fixture, google: fixture.google.replace("renderDiscoverFailure(error);", 'app.insertAdjacentHTML("beforeend", errorMessage(error));') };
+const brokenMobileOrder = { ...fixture, style: fixture.style.replace("flex-direction: column;", "flex-direction: column-reverse;") };
+const brokenFixtures = [
+  ["安全意味", brokenMeaning], ["画面state", brokenScreen], ["primary禁止語", brokenForbidden],
+  ["Google fixture path", brokenGoogleLauncher], ["Google discovery failure", brokenDiscoverFailure], ["mobile CTA order", brokenMobileOrder],
+];
+const missed = brokenFixtures.filter(([, value]) => validateCopyFixture(value).length === 0).map(([name]) => name);
+if (missed.length) throw new Error(`壊したfixtureを検出できません: ${missed.join("、")}`);
 
-process.stdout.write(`SPRINT020_PATCH001_COPY_PASS=${expectedScreens.chatwork.length + expectedScreens.google.length + 8} SPRINT020_PATCH001_COPY_FAIL=0 INVENTORY=${expectedScreens.chatwork.length + expectedScreens.google.length}\n`);
+process.stdout.write(`SPRINT020_PATCH001_COPY_PASS=${expectedScreens.chatwork.length + expectedScreens.google.length + 11} SPRINT020_PATCH001_COPY_FAIL=0 INVENTORY=${expectedScreens.chatwork.length + expectedScreens.google.length}\n`);

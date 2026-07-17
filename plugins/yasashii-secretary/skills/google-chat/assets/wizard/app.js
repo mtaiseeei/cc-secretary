@@ -157,7 +157,15 @@ async function discoverSpaces() {
     if (result.zero) return renderNoSpaces(result.cleanup);
     if (state.config) return renderSettingsSpaces({ refreshed: true });
     renderSpaces();
-  } catch (error) { app.insertAdjacentHTML("beforeend", errorMessage(error)); }
+  } catch (error) { renderDiscoverFailure(error); }
+}
+
+function renderDiscoverFailure(error) {
+  progress(1);
+  const code = error.code ? `<p>エラー種別: <code>${escape(error.code)}</code></p>` : "";
+  show("discover-failure", `<p class="eyebrow">接続を確認できません</p><h1>Google Chatの通常スペースを確認できませんでした。</h1><p class="lead error" data-copy-role="error" role="alert">参加している通常スペースの一覧を取得できませんでした。</p><p class="notice">通信やGoogle Chatの設定を確認して、もう一度お試しください。</p>${technicalDetails("管理者向け: エラーの詳しい内容", `<p>${escape(error.message || "詳しい原因を確認できませんでした。")}</p>${code}`, "admin")}<div class="actions" data-copy-role="actions"><button class="button button-secondary" data-action="back" aria-label="Google Chatの接続を後始末して設定を終了する">設定を終了する</button><button class="button button-primary" data-action="retry" aria-label="Google Chatの通常スペースをもう一度確認する">通常スペースをもう一度確認する</button></div>`, "error");
+  app.querySelector('[data-action="back"]').onclick = cancel;
+  app.querySelector('[data-action="retry"]').onclick = discoverSpaces;
 }
 
 function renderNoSpaces(cleanup) {
