@@ -1,6 +1,6 @@
 ---
 createdAt: 2026-07-08 00:30
-updatedAt: 2026-07-16
+updatedAt: 2026-07-17
 tags:
   - Claude
   - AI
@@ -11,7 +11,7 @@ status: approved
 
 # やさしい秘書プラグイン設計方針（yasashii-secretary）
 
-ゆるAIコーディング塾 第2期以降の目玉コンテンツとして配布する、非エンジニア向けAI秘書プラグインの設計方針。
+Claude Codeを使う非エンジニア一般へ配布する、AI秘書プラグインの設計方針。
 
 > **2026-07-15 方針転換の扱い**
 > `docs/proposal-2026-07-15-realignment.md` が本作業の唯一の引き継ぎ正本である。
@@ -23,7 +23,7 @@ status: approved
 
 ## 確定した意思決定
 
-- 配布対象は、技術に多少関心がある非エンジニア（ゆるAIコーディング塾の30〜60代受講者）。標準環境は Claude デスクトップアプリ／Claude Code。
+- 配布対象はClaude Codeを使う非エンジニア一般。年齢、特定の講座・教材の経験、Git / GitHubの習熟を前提にしない。標準環境は Claude デスクトップアプリ／Claude Code。
 - 製品名・local repo・remote repo・プラグイン名は **`yasashii-secretary`**。名前とREADMEの両方で非エンジニア向けであることを強調する。
 - 秘書の記憶・成果物、通常のプロジェクト開発、選択したChatwork room履歴は、1つのprivate GitHub repoでGit管理する。Chatwork専用repoへ分離しない。
 - ChatworkだけはRepository SecretとGitHub Actionsによる同期を許可する。Google / Microsoft 等は公式リモートコネクタで都度参照し、同期層を持たない。

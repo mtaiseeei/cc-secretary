@@ -1,6 +1,6 @@
 # yasashii-secretary
 
-ゆるAIコーディング塾 第2期以降で配布する、非エンジニア向けAI秘書プラグイン
+Claude Codeを使う一般の非エンジニア向けAI秘書プラグイン
 （Claude Code plugin / public / MIT）。一般的な技術用語は保ち、何が起きているかと次の行動を先に伝える。
 
 ## 正本

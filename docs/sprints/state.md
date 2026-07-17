@@ -2,9 +2,9 @@
 
 <!-- オーケストレーターだけが書く進行状態の正本 -->
 
-- Current ID: sprint-015
+- Current ID: sprint-016
 - Retry Count: 0
-- Next Planned: TBD
+- Next Planned: sprint-017
 
 <!-- 2026-07-08: sprint-001 は再評価で合格（初回はクレジット方針の spec/実装不一致で不合格 →
      ユーザー確認で単段クレジットに正本改訂、回帰assert強化のうえ合格）。
@@ -34,6 +34,7 @@
 | sprint-014 | done | [contract](sprint-014.md) | [progress](../progress/sprint-014.md) | [feedback](../feedback/sprint-014.md) |
 | sprint-014-patch-001 | done | [contract](sprint-014-patch-001.md) | [progress](../progress/sprint-014-patch-001.md) | [feedback](../feedback/sprint-014-patch-001.md) |
 | sprint-015 | done | [contract](sprint-015.md) | [progress](../progress/sprint-015.md) | [feedback](../feedback/sprint-015.md) |
+| sprint-016 | done | [contract](sprint-016.md) | [progress](../progress/sprint-016.md) | [feedback](../feedback/sprint-016.md) |
 
 ## Deferred / Superseded
 - sprint-007: superseded — 2026-07-15 製品方針転換により白紙化、`backup/sprint-007-010-plan` に退避
@@ -58,3 +59,6 @@
 - 2026-07-17: sprint-015 初回評価はimplementation-issueで不合格。GitHub PAT形式の資格情報拒否、completed PJの同一案件候補除外、候補外JSONの `eligible: false` の3点をGeneratorへ差し戻し（Retry 1）。
 - 2026-07-17: sprint-015 Retry 1で資格情報の共通拒否、既存PJ照合route、`eligible`のboolean固定を修正。専用回帰68件・全offline回帰298件が0 FAILのため独立Evaluatorへ再引き渡し。
 - 2026-07-17: sprint-015 Retry 1は独立Evaluatorで合格。受入基準16/16、独立候補6件・資格情報31件、専用68件・全offline 298件が0 FAIL。Chatwork画像のREADME掲載も別枠で表示・秘密非露出を確認し、Google Chatは対象外のまま完了。
+- 2026-07-17: 主対象をClaude Codeを使う非エンジニア一般へ広げ、現行正本・公開面・配布物から特定の教育サービス前提を外すsprint-016を開始。MIT、Shin-sibainu/cc-companyの単段クレジット、forkedFrom、既存実装、過去監査記録、Git履歴は維持する。sprint-017は更新体験を扱う候補として予約するが、sprint-016完了後に停止し、Fableレビュー前には着手しない。
+- 2026-07-17: sprint-016 Generatorが一般の非エンジニア向け公開面、決定的な対象分類、監査記録の除外理由、再混入を検知する負テストを実装。専用2件、sprint-015回帰68件、全offline回帰300件が0 FAILのため独立Evaluatorへ引き渡し。
+- 2026-07-17: sprint-016は独立Evaluatorで合格。受入基準10/10、専用2件、sprint-015回帰68件、全offline回帰300件が0 FAIL。現行対象78件で旧配布チャネル固有表現0件、README画像も固有表現・秘密情報0件を確認した。MIT、Shin-sibainu/cc-companyの単段クレジット、forkedFrom、version 0.2.0、過去監査記録、Git履歴を維持。ユーザー指示によりここで停止し、sprint-017はFableレビュー後まで着手しない。

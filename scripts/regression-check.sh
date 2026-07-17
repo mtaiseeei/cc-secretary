@@ -859,7 +859,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-section "13. 公開整備（README / guide / クレジット・sprint-006）"
+section "13. 公開整備（README / guide / クレジット）"
 # ---------------------------------------------------------------------------
 README="$REPO/README.md"
 GUIDE="$REPO/docs/guide"
@@ -897,14 +897,15 @@ check "README に MIT の明記" "grep -q 'MIT' '$README'"
 check "README/guide に中間フォークの必須クレジットが無い（単段）" \
   "! grep -rqiE 'bootcamp-company|inoshinichi' '$README' '$GUIDE'"
 
-# --- 5: カリキュラム導線の線引き（機微情報を書かない）---
+# --- 5: 一般公開面の安全性と対象者 ---
 check "README/guide にメールアドレス等の機微情報が無い" \
   "! grep -rqE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}|murayama\\.in' '$README' '$GUIDE'"
-check "README に第2期カリキュラムの一般導線がある" "grep -q '第2期' '$README' || grep -q 'ゆるAIコーディング塾' '$README'"
+check "README が一般の非エンジニアを主対象としている" \
+  "grep -q '一般の非エンジニア向け' '$README'"
 
 # --- 6: 語彙方針・二層構成 ---
 check "README/guide に家系メタファーが無い" "! grep -rqE '秘書の家|この家|お家|おうち' '$README' '$GUIDE'"
-NE_LINE="$(grep -n '受講者・非エンジニア向け' "$README" | head -1 | cut -d: -f1)"
+NE_LINE="$(grep -n '一般の非エンジニア向け' "$README" | head -1 | cut -d: -f1)"
 TECH_LINE="$(grep -n '技術者向け' "$README" | head -1 | cut -d: -f1)"
 check "README が二層構成（非エンジニア前半→技術者後半の順）" \
   "[ -n '$NE_LINE' ] && [ -n '$TECH_LINE' ] && [ '$NE_LINE' -lt '$TECH_LINE' ]"
@@ -984,6 +985,17 @@ if bash "$SPRINT014_REGRESSION"; then
   ok "sprint-014実動作回帰が全て成功"
 else
   ng "sprint-014実動作回帰に失敗"
+fi
+
+# ---------------------------------------------------------------------------
+section "21. 配布チャネルに依存しない公開面（sprint-016）"
+# ---------------------------------------------------------------------------
+SPRINT016_REGRESSION="$REPO/scripts/sprint-016-regression.sh"
+check "sprint-016回帰が存在し実行可能" "[ -x '$SPRINT016_REGRESSION' ]"
+if bash "$SPRINT016_REGRESSION"; then
+  ok "sprint-016公開面・維持項目・負テストが全て成功"
+else
+  ng "sprint-016回帰に失敗"
 fi
 
 # ---------------------------------------------------------------------------

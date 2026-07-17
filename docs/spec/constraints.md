@@ -131,3 +131,13 @@
 11. 一般PJを外部repoへ黙って分離せず、別repo開発PJの正本を `secretary/projects/` へ黙って複製しない。正本がどこかを各PJの `PROJECT.md` で一意に示す。
 12. 一般PJの完了・再開はユーザー確認後だけ行う。完了は `status: completed`、再開は `status: active` とし、確認前・拒否・失敗ではPROJECT、journal、commitを変更しない。status欠落をcompletedと推定しない。
 13. 完了時は完了日・結果・残件を `PROJECT.md` に残し、進行中一覧から外すが、検索・timeline・明示参照から除外せず、ディレクトリを自動移動・削除しない。再開時も過去の完了記録を削除・上書きしない。
+
+## 10. 配布チャネルからの独立
+
+1. 主対象はClaude Codeを使う非エンジニア一般とし、特定の講座・期・教材への参加経験、年齢層、そこでGit / GitHubを学んだことを利用前提にしない。
+2. README、公開ガイド、配布物、project guidance、現行spec、現行Sprint契約を対象に、旧配布チャネル固有の名称、英字表記、期数、学習段階、教材導線、その参加者向けとする見出し・説明を残さない。
+3. 過去の `docs/progress/`、`docs/feedback/`、対応する評価証跡、Git commitは監査記録として改変しない。これらは現在の製品説明の検査対象から除外し、新しく作るprogress／feedbackには旧配布チャネル固有表現を書かない。
+4. 一般化は文章の意味を薄めず、一般の非エンジニアがREADMEと配布物だけで導入・利用を始められる状態を保つ。
+5. MIT表記、Shin-sibainu/cc-companyの単段クレジット、`forkedFrom`、配布識別子は削除・変更しない。元リポジトリからの独立実装化やGit履歴書換えも行わない。
+6. 文言整理を理由に機能、既存の安全境界、Chatwork、プロジェクト管理、ハーネス参照導線、回帰assertを弱めない。
+7. 正本の書き手を越境しない。Plannerはspec・Sprint契約とPlanner文書、Generatorは実装・公開文書・Generator文書、EvaluatorはEvaluator文書、オーケストレーターはstateをそれぞれ扱う。
