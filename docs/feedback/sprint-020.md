@@ -546,3 +546,60 @@ Generatorの2段階修正により、全選択解除の保存と、Repository Se
 3. 受入基準13、C5、C11をPASSへ更新し、最終判定を記録する。
 
 履歴とprivate test workspaceの削除は受入条件に含めず、実施しない。
+
+---
+
+## Retry 3 最終評価
+
+**判定:** 合格
+
+**評価対象commit:** `21f5168`
+
+ユーザーの明示承認後、指定済みtest用Googleアカウントでtestアプリの接続を削除した。Googleアカウント画面の完了通知を確認し、接続一覧を再読み込みしてtestアプリ名で検索した結果が0件であることを、orchestratorの実UI操作で確認した。
+
+Evaluatorは、OAuth解除後もlive private workspaceへ追加変更がないことを再確認した。local HEADとupstreamは同一、worktreeはclean、選択0件、manual、schedule無効、自動push同意false、Repository Secret 0件である。履歴Markdown 1件とmessage marker 1件は保持されている。
+
+これにより、受入基準10〜13を含む全14項目と、rubric C1〜C11の全閾値を満たした。Retry 3で発見した全選択解除とSecret削除後停止の2件は修正・回帰・live適用まで完了しており、未解決のimplementation issueは0件である。
+
+### 最終スコア
+
+| ID | 基準 | スコア | 閾値 | 判定 | 根拠 |
+|---|---|---:|---:|---|---|
+| C1 | 完成度 | 5/5 | 4 | PASS | 実接続、定期取得、検索、設定変更、停止、OAuth解除まで完了 |
+| C2 | 構文・整合 | 5/5 | 5 | PASS | 設定、workflow、runtime、remote、停止状態が一致 |
+| C3 | 機能の実証 | 5/5 | 4 | PASS | 実OAuth、初回取得、2回のActions、検索、冪等性、停止を実証 |
+| C4 | 非エンジニア体験 | 5/5 | 4 | PASS | 実wizardで対象0件＋manualへの停止を完了できる |
+| C5 | 安全・規律 | 5/5 | 5 | PASS | schedule停止、Secret削除、OAuth解除、履歴保持、秘密非露出を確認 |
+| C6 | 無回帰 | 5/5 | 5 | PASS | 専用50、敵対的16、wrapper16、offline 314、online 315が0 FAIL |
+| C7 | やさしさ | 5/5 | 4 | PASS | 対象なし、停止、履歴保持を平易に表示 |
+| C8 | wizard体験・デザイン | 5/5 | 4 | PASS | desktop／mobile／200%、指定色、同意、0件停止が成立 |
+| C9 | 配布チャネル非依存 | 5/5 | 5 | PASS | 公開repoのlive資産0件、online回帰PASS |
+| C10 | 更新の安全性 | 5/5 | 5 | PASS | Sprint 017／018の診断、更新、rollback回帰を維持 |
+| C11 | Google Chat境界 | 5/5 | 5 | PASS | read-only、SPACE限定、秘密境界、live後始末、OAuth解除を完了 |
+
+### 受入基準14項目の最終判定
+
+| 範囲 | 判定 | 根拠 |
+|---|---|---|
+| 1〜9 | PASS | interval、transaction、履歴統合、部分失敗、設定変更、再検索、run境界、403分類、wizard UXを回帰・browserで確認 |
+| 10 | PASS | 実OAuth、SPACE候補、初回取得、履歴保存を確認 |
+| 11 | PASS | 実Actions 2回、commit／push／pull、検索found、同条件再実行の重複0件を確認 |
+| 12 | PASS | Actionsログ、public repo、feedback／evidenceのlive値・OAuth値hit 0 |
+| 13 | PASS | 対象0件、manual、schedule停止、Secret 0件、OAuth接続削除、履歴／workspace保持を確認 |
+| 14 | PASS | offline `314/314`、online `315/315`、専用・敵対的・wrapperすべて0 FAIL |
+
+### 最終後始末証跡
+
+- Googleアカウントのtestアプリ接続削除: 完了通知を確認。
+- 接続一覧の再読み込み後、testアプリ名検索: 0件。
+- live private workspace: OAuth解除前と同じHEAD、upstream一致、worktree clean。
+- Repository Secret: 名前一覧0件。値は取得していない。
+- Google Chat設定: 選択0件、manual、schedule無効、自動push同意false。
+- 履歴: Markdown 1件、message marker 1件を保持。
+- private test workspaceと履歴は削除していない。
+
+集計証跡 `docs/evidence/sprint-020/evaluator-live-gate/fix2-live-cleanup-summary.json` は、OAuth値、認可URL／callback、actual space名、actual本文、actual発言者、actual添付名を含まない。
+
+### 最終バグ一覧
+
+未解決0件。
