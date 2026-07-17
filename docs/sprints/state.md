@@ -3,7 +3,7 @@
 <!-- オーケストレーターだけが書く進行状態の正本 -->
 
 - Current ID: sprint-020
-- Retry Count: 2
+- Retry Count: 3
 - Next Planned: TBD
 
 <!-- 2026-07-08: sprint-001 は再評価で合格（初回はクレジット方針の spec/実装不一致で不合格 →
@@ -79,3 +79,5 @@
 - 2026-07-17: sprint-020初回評価はlive gate前のimplementation-issueで不合格。既存staged fileが設定commitへ混入する、dispatch直後に過去runを今回の成功と誤認する、API無効403をadmin／scope blockへ誤分類する3件をGeneratorへ差し戻し（Retry 1）。専用44件・wrapper 15件・全offline 314件・全online 315件・browser評価は0 FAIL。
 - 2026-07-17: sprint-020 Retry 1で管理path限定commitと既存Git状態保持、今回dispatch後の新規runだけの追跡、403 ErrorInfo reason別分類を修正。Evaluator敵対的検査0 FAIL、新規敵対的10件・本体45件・wrapper 16件・全offline 314件・全online 315件が0 FAILのため独立Evaluatorへ再引き渡した。
 - 2026-07-17: sprint-020 Retry 1再評価は、管理path限定commitと403分類は合格したが、`createdAt` 欠落の新規run IDを今回runとして採用するimplementation-issueで不合格。時刻欠落／不正／dispatch前runをfail-closedで除外する修正をRetry 2へ差し戻した。専用45件・敵対的10件・wrapper 16件・全offline 314件・全online 315件・browserは0 FAIL。
+- 2026-07-17: sprint-020 Retry 2で `createdAt` 欠落／不正／dispatch前runを候補外にし、dispatch後の有効時刻runだけを追跡するfail-closed判定へ修正。Evaluator時刻境界検査、専用45件・敵対的13件・wrapper 16件・全offline 314件・全online 315件が0 FAILのため、独立Evaluatorへ再引き渡した。
+- 2026-07-17: sprint-020 Retry 2再評価はsynthetic／localのimplementation-issue 0件。受入1〜9・14は合格し、実OAuth／Google Chat API／Repository Secret／Actions／remote操作を伴う受入10〜13だけがユーザー明示許可と非機密test資源未準備のため `external-live-gate-unavailable`。Retry Count 3としてユーザーへlive gate許可を依頼する。
