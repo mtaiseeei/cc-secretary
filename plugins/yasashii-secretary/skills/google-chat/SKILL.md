@@ -44,7 +44,10 @@ Gmail等の公式Googleコネクタとは別の機能であり、各利用組織
 - `gcloud`が無い場合は、Google公式の管理ツールで、インストール自体は無料、非公式ソフトではないと伝える。
 - 同時にGoogle Cloudの設定を変更できること、予定している導入方法とコマンドを先に示す。利用者が明示承認するまでインストールしない。
 - 会社PCの制限、安全な導入方法を判断できない、または利用者が導入しない場合は、Google公式の直接リンクによる手動支援へ切り替える。行き止まりにしない。
-- CLIを使う前に、ログイン中のGoogle Workspaceアカウント、利用できる組織、Project作成権限、同名Projectを確認する。未ログインなら本人のログイン完了を待ち、複数組織なら対象を選んでもらう。
+- CLIを使う前に、ログイン中のGoogle Workspaceアカウント、利用できる組織、最終Project IDの使用状況、対象組織でのProject作成権限を、この順で読み取り確認する。未ログインなら本人のログイン完了を待ち、複数組織なら対象を選んでもらう。
+- Project IDは `gcloud projects describe` が明確に `NOT_FOUND` を返した場合だけ未使用と扱う。403、通信失敗、結果を読み取れない場合は、Projectが存在するかを推測せず確認不能として止める。
+- Project IDが使用済みなら理由つきの候補を作り、その候補も未使用か読み取り確認する。調整前ID、理由、最終IDをもう一度示し、利用者が最終IDを承認するまでProject作成・API変更を行わない。
+- Project作成権限はGoogle公式のPolicy Troubleshooterで `resourcemanager.projects.create` を確認する。Policy Troubleshooter APIは無断で有効にしない。API未有効、403、`UNKNOWN_INFO`、`UNKNOWN_CONDITIONAL`、結果field欠落では権限ありと推測せず、管理者確認または手動リンク支援へ切り替える。
 
 ### 3. 作成前の一回確認
 
@@ -57,7 +60,7 @@ Gmail等の公式Googleコネクタとは別の機能であり、各利用組織
 - Billing Accountを自動接続しないこと
 - `gcloud config set project` 等の全体設定を変更しないこと
 
-了承後だけ `gcloud projects create` と `gcloud services enable ... --project <Project ID>` を実行する。
+既存Project、作成権限、最終Project IDを確認し、上の最終内容を了承した後だけ `gcloud projects create` と `gcloud services enable ... --project <Project ID>` を実行する。
 Google Chat APIとPeople API以外を有効にせず、Billing Accountを接続しない。Project ID衝突、権限不足、Project作成失敗、API片方だけの失敗を区別し、完了済みと未完了を分ける。
 
 ### 4. Google画面は一度に一操作

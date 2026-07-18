@@ -1,5 +1,36 @@
 # Sprint 020 Patch 002 — Generator handoff
 
+## Retry 1（2026-07-18）
+
+Evaluatorが指摘したGoogle Cloudの事前確認不足を修正した。Cloudを変更する前に、次の4点を読み取り専用で確認し、すべて確認できた場合だけ最終確認へ進む。
+
+1. `gcloud`でログイン中のアカウント
+2. 選択したGoogle Workspace組織
+3. 最終的に使うProject IDが未使用であること
+4. その組織で`resourcemanager.projects.create`権限があること
+
+Project IDの確認では、明確な`404 / NOT_FOUND`だけを未使用と判断する。`403`、通信失敗、壊れた応答は未使用とみなさず停止する。同名Projectがある場合は、理由つきの調整後IDを作り、そのIDも再確認する。調整前ID、変更理由、最終IDを利用者へ示し直し、再承認されるまでProject作成とAPI有効化は実行しない。
+
+Project作成権限はPolicy Troubleshooterで確認する。確認用APIが未有効、`403`、`UNKNOWN_INFO`、`UNKNOWN_CONDITIONAL`、結果項目の欠落は、権限ありと推測せず手動支援へ切り替える。確認のためにPolicy Troubleshooter APIを無断で有効化しない。実行直前にも承認内容と事前確認結果を照合するため、手作りの実行計画で承認を迂回できない。
+
+### Retry 1の検査結果
+
+| コマンド／確認 | 結果 |
+|---|---|
+| `node scripts/sprint-020-patch-002-cloud-setup-test.mjs` | `PASS=55 FAIL=0`。認証、組織、Project ID、作成権限の失敗系と、衝突後の再確認・再承認を追加 |
+| `bash scripts/sprint-020-patch-002-regression.sh` | 8項目中7項目PASS。旧Sprint 019のloopback server起動だけ、このGenerator環境の`EPERM`で停止 |
+| `bash scripts/regression-check.sh --offline` | Sprint 019のloopback起動地点まで表示上PASS。同じ`EPERM`で停止したため全件PASSとは扱わない |
+| `bash scripts/regression-check.sh --online` | Sprint 019のloopback起動地点まで表示上PASS。同じ`EPERM`で停止したため全件PASSとは扱わない |
+| `bash scripts/sprint-016-regression.sh` | `PASS=1 FAIL=1`。このSprintで更新が必須の本handoffを、旧Sprint 016検査が保護記録の変更として検出。公開面の漏えい検査はPASS |
+| `node --check`（Cloud準備module／専用テスト） | PASS |
+| `git diff --check` | PASS |
+
+Cloud操作はdependency-injected runner、つまりテスト用応答を返す差し替え可能な実行部分で検証した。実Google Cloud Project作成、API有効化、Policy Troubleshooter API有効化、OAuth、Billing変更は行っていない。
+
+起動済みfixtureを実ブラウザで確認し、Google Chatは`google-chat-prepare-file`から始まり、PC幅と390px幅のどちらも横overflowなし、主ボタンは`#11BB62`、技術詳細は初期状態で閉じていることを確認した。Chatworkも390px幅で横overflowなし、主ボタンは`#F03747`、技術詳細は初期状態で閉じていることを確認した。Chatworkとwizardの実装ファイルは変更していない。ブラウザconsoleには既知の`favicon.ico` 404以外のエラーはなかった。
+
+Evaluatorはloopback待受が許可された独立環境で、ラッパー、offline、onlineの3回帰を完走させ、UIのスクリーンショットを評価証拠へ保存すること。
+
 ## 実装した内容
 
 - Google Chatの正式サポートをGoogle Workspace版に限定した。利用者向けのREADME、Google Chat skill、wizardには、個人向けGoogleアカウント、`External`、Test users、公開審査の案内を出さない。

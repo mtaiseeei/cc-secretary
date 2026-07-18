@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  REQUIRED_APIS, acknowledgeManualStep, discoverRepository, executeApprovedPlan, gcloudPlan,
+  REQUIRED_APIS, acknowledgeManualStep, approveProjectConfirmation, discoverRepository, executeApprovedPlan, gcloudPlan,
   inspectGcloud, manualStep, officialLinks, projectConfirmation, projectProposal, resumeState,
 } from "../plugins/yasashii-secretary/skills/google-chat/scripts/cloud-setup.mjs";
 
@@ -46,30 +46,116 @@ const missing = inspectGcloud({ runner: fixtureRunner({}, missingCalls) });
 check("gcloud未導入は公式・無料・変更能力・承認待ちを示す", missing.status === "cli-install-confirmation-needed" && missing.changed === false && missing.official && missing.installationCost.includes("無料") && missing.caution.includes("設定を変更") && missing.caution.includes("承認後"));
 check("gcloud確認はversionだけで外部変更0件", missingCalls.length === 1 && missingCalls[0].args[0] === "version");
 
+const proposal = projectProposal("hogehoge");
+const adjustedCollision = projectProposal("hogehoge", { collision: true });
+function readyRoutes(overrides = {}) {
+  return {
+    "gcloud version": { status: 0, stdout: "{}" },
+    "gcloud auth list": { status: 0, stdout: '[{"account":"staff@example.invalid"}]' },
+    "gcloud organizations list": { status: 0, stdout: '[{"name":"organizations/123","displayName":"Example Workspace"}]' },
+    [`gcloud projects describe ${proposal.projectId} --format=json`]: { status: 1, stderr: "NOT_FOUND 404" },
+    "gcloud policy-intelligence troubleshoot-policy iam": { status: 0, stdout: '{"overallAccessState":"CAN_ACCESS"}' },
+    ...overrides,
+  };
+}
+
 const cliCalls = [];
-const cliReady = inspectGcloud({ runner: fixtureRunner({
-  "gcloud version": { status: 0, stdout: "{}" },
-  "gcloud auth list": { status: 0, stdout: '[{"account":"staff@example.invalid"}]' },
-  "gcloud organizations list": { status: 0, stdout: '[{"name":"organizations/123","displayName":"Example Workspace"}]' },
-}, cliCalls) });
-check("ログイン中アカウントとWorkspace組織を変更なしで確認", cliReady.status === "cli-ready" && cliReady.activeAccounts.length === 1 && cliReady.organizations[0].id === "123" && cliCalls.length === 3);
+const cliReady = inspectGcloud({ projectId: proposal.projectId, repoName: "hogehoge", runner: fixtureRunner(readyRoutes(), cliCalls) });
+check("auth・組織・Project未使用・作成権限を変更なしで確認", cliReady.status === "preflight-ready" && cliReady.activeAccounts.length === 1 && cliReady.organizations[0].id === "123" && cliReady.project.available && cliReady.permission.canCreate && cliCalls.length === 5);
+check("権限確認は対象組織・active account・create permissionを明示", cliCalls[4].args.includes("//cloudresourcemanager.googleapis.com/organizations/123") && cliCalls[4].args.includes("--principal-email=staff@example.invalid") && cliCalls[4].args.includes("--permission=resourcemanager.projects.create"));
+
+const authFailure = inspectGcloud({ projectId: proposal.projectId, runner: fixtureRunner({ "gcloud version": { status: 0, stdout: "{}" }, "gcloud auth list": { status: 1, stderr: "network unavailable" } }) });
+check("auth lookup失敗をlogin済みと扱わない", authFailure.status === "auth-lookup-failed" && authFailure.error.code === "auth-lookup-failed");
 
 const noLogin = inspectGcloud({ runner: fixtureRunner({
-  "gcloud version": { status: 0, stdout: "{}" }, "gcloud auth list": { status: 0, stdout: "[]" }, "gcloud organizations list": { status: 0, stdout: "[]" },
+  "gcloud version": { status: 0, stdout: "{}" }, "gcloud auth list": { status: 0, stdout: "[]" },
 }) });
 check("未ログインを推測で越えない", noLogin.status === "login-needed" && noLogin.changed === false);
 const multiOrg = inspectGcloud({ runner: fixtureRunner({
   "gcloud version": { status: 0, stdout: "{}" }, "gcloud auth list": { status: 0, stdout: '[{"account":"staff@example.invalid"}]' }, "gcloud organizations list": { status: 0, stdout: '[{"name":"organizations/1"},{"name":"organizations/2"}]' },
 }) });
 check("複数組織は利用者選択を待つ", multiOrg.status === "organization-selection-needed" && multiOrg.organizations.length === 2);
+const noOrganization = inspectGcloud({ runner: fixtureRunner({
+  "gcloud version": { status: 0, stdout: "{}" }, "gcloud auth list": { status: 0, stdout: '[{"account":"staff@example.invalid"}]' }, "gcloud organizations list": { status: 0, stdout: "[]" },
+}) });
+check("Workspace組織0件をcli-readyにしない", noOrganization.status === "organization-needed");
 
-const proposal = projectProposal("hogehoge");
-const confirmation = projectConfirmation({ repo: "/tmp/hogehoge", organization: "123", proposal });
+const org403 = inspectGcloud({ projectId: proposal.projectId, runner: fixtureRunner({
+  "gcloud version": { status: 0, stdout: "{}" }, "gcloud auth list": { status: 0, stdout: '[{"account":"staff@example.invalid"}]' }, "gcloud organizations list": { status: 1, stderr: "PERMISSION_DENIED 403" },
+}) });
+check("organization list 403をcli-readyにしない", org403.status === "permission-needed" && org403.error.code === "organization-lookup-permission-needed");
+
+const projectLookupFailure = inspectGcloud({ projectId: proposal.projectId, repoName: "hogehoge", runner: fixtureRunner(readyRoutes({
+  [`gcloud projects describe ${proposal.projectId} --format=json`]: { status: 1, stderr: "backend unavailable" },
+})) });
+check("Project lookup失敗を空きIDと扱わない", projectLookupFailure.status === "project-lookup-failed" && projectLookupFailure.error.code === "project-lookup-failed");
+const project403 = inspectGcloud({ projectId: proposal.projectId, repoName: "hogehoge", runner: fixtureRunner(readyRoutes({
+  [`gcloud projects describe ${proposal.projectId} --format=json`]: { status: 1, stderr: "PERMISSION_DENIED 403" },
+})) });
+check("Project describe 403は存在・権限を推測せず空きIDにしない", project403.status === "project-lookup-failed" && project403.error.code === "project-lookup-permission-needed" && project403.changed === false);
+
+const collisionPreflight = inspectGcloud({ projectId: proposal.projectId, repoName: "hogehoge", runner: fixtureRunner(readyRoutes({
+  [`gcloud projects describe ${proposal.projectId} --format=json`]: { status: 0, stdout: `{"projectId":"${proposal.projectId}","name":"same-name"}` },
+  [`gcloud projects describe ${adjustedCollision.projectId} --format=json`]: { status: 1, stderr: "NOT_FOUND 404" },
+})) });
+check("同名Projectありは理由つき候補を作り調整後IDも再確認", collisionPreflight.status === "preflight-ready" && collisionPreflight.adjustedFrom === proposal.projectId && collisionPreflight.projectId === adjustedCollision.projectId && collisionPreflight.adjustmentReasons.some((item) => item.includes("使用済み")));
+
+const allCollision = inspectGcloud({ projectId: proposal.projectId, repoName: "hogehoge", runner: fixtureRunner(readyRoutes({
+  [`gcloud projects describe ${proposal.projectId} --format=json`]: { status: 0, stdout: `{"projectId":"${proposal.projectId}"}` },
+  [`gcloud projects describe ${adjustedCollision.projectId} --format=json`]: { status: 0, stdout: `{"projectId":"${adjustedCollision.projectId}"}` },
+})) });
+check("調整後も全体衝突なら作成可能と扱わない", allCollision.status === "project-id-collision-unresolved" && allCollision.error.code === "adjusted-project-id-collision");
+
+const permissionDenied = inspectGcloud({ projectId: proposal.projectId, repoName: "hogehoge", runner: fixtureRunner(readyRoutes({
+  "gcloud policy-intelligence troubleshoot-policy iam": { status: 0, stdout: '{"overallAccessState":"CANNOT_ACCESS"}' },
+})) });
+check("Project作成権限なしを事前に止める", permissionDenied.status === "permission-needed" && permissionDenied.error.code === "project-create-permission-needed" && permissionDenied.permission.canCreate === false);
+
+const permissionApiDisabled = inspectGcloud({ projectId: proposal.projectId, repoName: "hogehoge", runner: fixtureRunner(readyRoutes({
+  "gcloud policy-intelligence troubleshoot-policy iam": { status: 1, stderr: "SERVICE_DISABLED: Policy Troubleshooter API has not been used" },
+})) });
+check("権限確認API未有効を無断有効化せずinconclusive", permissionApiDisabled.status === "permission-check-inconclusive" && permissionApiDisabled.error.code === "permission-check-api-unavailable");
+const permission403 = inspectGcloud({ projectId: proposal.projectId, repoName: "hogehoge", runner: fixtureRunner(readyRoutes({
+  "gcloud policy-intelligence troubleshoot-policy iam": { status: 1, stderr: "PERMISSION_DENIED 403" },
+})) });
+check("permission lookup 403をcli-readyにしない", permission403.status === "permission-check-inconclusive" && permission403.error.code === "permission-check-not-allowed");
+const permissionUnknown = inspectGcloud({ projectId: proposal.projectId, repoName: "hogehoge", runner: fixtureRunner(readyRoutes({
+  "gcloud policy-intelligence troubleshoot-policy iam": { status: 0, stdout: '{"overallAccessState":"UNKNOWN_INFO"}' },
+})) });
+check("権限UNKNOWNをcli-readyにしない", permissionUnknown.status === "permission-check-inconclusive" && permissionUnknown.error.code === "permission-check-inconclusive");
+const permissionMissingField = inspectGcloud({ projectId: proposal.projectId, repoName: "hogehoge", runner: fixtureRunner(readyRoutes({
+  "gcloud policy-intelligence troubleshoot-policy iam": { status: 0, stdout: '{"allowPolicyExplanation":{}}' },
+})) });
+check("権限field欠落をcli-readyにしない", permissionMissingField.status === "permission-check-inconclusive" && permissionMissingField.error.code === "permission-check-invalid-response");
+
+const confirmation = projectConfirmation({ repo: "/tmp/hogehoge", organization: "123", proposal, preflight: cliReady });
 check("作成前確認はProject・組織・API・Billing非接続を含む", confirmation.status === "cloud-project-confirmation-needed" && confirmation.changed === false && confirmation.apis.join(",") === REQUIRED_APIS.join(",") && confirmation.billingAccount.includes("自動接続しません"));
+const missingPreflight = projectConfirmation({ repo: "/tmp/hogehoge", organization: "123", proposal });
+check("preflightなしでは作成確認へ進まない", missingPreflight.status === "preflight-needed");
 
-const plan = gcloudPlan({ ...proposal, organization: "123" });
+const adjustedProposal = { ...proposal, projectId: collisionPreflight.projectId, adjusted: true, reasons: collisionPreflight.adjustmentReasons };
+const adjustedConfirmation = projectConfirmation({ repo: "/tmp/hogehoge", organization: "123", proposal: adjustedProposal, preflight: collisionPreflight });
+check("衝突調整後は旧ID・理由・最終IDを再提示", adjustedConfirmation.status === "cloud-project-confirmation-needed" && adjustedConfirmation.adjustedFrom === proposal.projectId && adjustedConfirmation.projectId === adjustedCollision.projectId && adjustedConfirmation.adjustmentReasons.length > 0);
+
+const rejectedApproval = approveProjectConfirmation({ confirmation: adjustedConfirmation, approved: false });
+let rejectedPlan = null;
+try { rejectedPlan = gcloudPlan({ ...adjustedProposal, organization: "123", approval: rejectedApproval }); } catch (error) { rejectedPlan = error; }
+check("調整後の再承認前はplan生成・Cloud変更0件", rejectedApproval.changed === false && rejectedPlan?.code === "plan-incomplete");
+let bypassCalls = 0;
+const bypass = executeApprovedPlan({
+  plan: [
+    { id: "create-project", command: "gcloud", args: ["projects", "create", adjustedProposal.projectId, "--name", adjustedProposal.displayName, "--organization", "123"] },
+  ],
+  approval: rejectedApproval,
+  approved: true,
+  runner: () => { bypassCalls += 1; return { status: 0 }; },
+});
+check("手作りplanでも再承認なしは外部変更0件", bypass.status === "confirmation-needed" && bypass.changed === false && bypassCalls === 0);
+
+const approval = approveProjectConfirmation({ confirmation, approved: true });
+const plan = gcloudPlan({ ...proposal, organization: "123", approval });
 const serializedPlan = JSON.stringify(plan);
-check("CLI planはProject作成と必要API 2件だけ", plan.length === 3 && REQUIRED_APIS.every((api) => serializedPlan.includes(api)) && !serializedPlan.includes("billing") && !serializedPlan.includes("config set project"));
+check("CLI planはProject作成と必要API 2件だけ", plan.length === 3 && REQUIRED_APIS.every((api) => serializedPlan.includes(api)) && !serializedPlan.includes("billing") && !serializedPlan.includes("config set project") && !serializedPlan.includes("policytroubleshooter"));
 check("全コマンドは対象Projectまたは組織を明示", plan.every((item) => item.args.includes("--project") || item.args.includes("--organization")));
 
 const deniedCalls = [];
@@ -77,18 +163,18 @@ const denied = executeApprovedPlan({ plan, approved: false, runner: fixtureRunne
 check("明示承認前・拒否はCloud変更0件", denied.status === "confirmation-needed" && denied.changed === false && deniedCalls.length === 0);
 
 const approvedCalls = [];
-const approved = executeApprovedPlan({ plan, approved: true, runner: fixtureRunner({ "gcloud ": { status: 0, stdout: "ok" } }, approvedCalls) });
+const approved = executeApprovedPlan({ plan, approval, approved: true, runner: fixtureRunner({ "gcloud ": { status: 0, stdout: "ok" } }, approvedCalls) });
 check("承認後だけProjectとAPIを順に準備", approved.status === "browser-step-needed" && approved.completed.length === 3 && approved.next === "audience" && approvedCalls.length === 3);
 check("CLI完了後の手動案内はAudienceから始まる", manualStep({ projectId: proposal.projectId, completed: approved.completed }).step === "audience");
 
 let apiCount = 0;
-const partial = executeApprovedPlan({ plan, approved: true, runner: (command, args) => {
+const partial = executeApprovedPlan({ plan, approval, approved: true, runner: (command, args) => {
   if (args.includes("services")) apiCount += 1;
   if (args.includes("people.googleapis.com")) return { status: 1, stderr: "permission denied" };
   return { status: 0, stdout: "ok" };
 } });
 check("API片方失敗は完了済みと未完了を分ける", partial.status === "cloud-preparing" && partial.completed.includes("enable-chat-api") && !partial.completed.includes("enable-people-api") && partial.next === "enable-people-api" && partial.error.code === "permission-needed" && apiCount === 2);
-const collisionResult = executeApprovedPlan({ plan, approved: true, runner: () => ({ status: 1, stderr: "already exists 409" }) });
+const collisionResult = executeApprovedPlan({ plan, approval, approved: true, runner: () => ({ status: 1, stderr: "already exists 409" }) });
 check("Project ID衝突を区別する", collisionResult.error.code === "project-id-collision" && collisionResult.next === "create-project");
 
 const links = officialLinks("hogehoge-google-chat");
@@ -114,6 +200,7 @@ check("利用者向けGoogle Chat面はGoogle Workspace版を明示", userSurfac
 check("対象外アカウント・Audienceの利用者向け分岐0件", !/個人Google|無料版Google|External|Test users|公開審査/.test(userSurface));
 check("自然文からGoogle Chat skillへ段階ロード", router.includes("Google Chatを設定したい") && router.includes("skills/google-chat/SKILL.md"));
 check("skillは未準備時にwizardを先に開かない", skill.includes("未設定時はwizardを先に開かない") && skill.includes("接続用JSONをダウンロードできたと確認してから"));
+check("skillはProject 403・権限UNKNOWNを推測成功にしない", skill.includes("403、通信失敗、結果を読み取れない場合") && skill.includes("UNKNOWN_INFO") && skill.includes("Policy Troubleshooter APIは無断で有効にしない"));
 check("Browser拡張を必要条件にしない", skill.includes("Browser Use、Chrome拡張機能、特定ブラウザは必要条件にしない") && !/拡張機能をインストール/.test(userSurface));
 check("wizardはJSON選択から開始", app.includes('else renderPrepareFile();') && app.includes("まだ接続用JSONがない場合") && app.includes("Google Chatを設定したい"));
 check("wizardのCloud準備3画面を撤去", !app.includes('show("prepare-cloud"') && !app.includes('show("prepare-access"') && !app.includes("Google Cloud準備 1 / 3"));

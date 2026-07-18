@@ -20,6 +20,26 @@ function commandResult(value) {
   return { stdout: value?.stdout || "", stderr: value?.stderr || "", status: Number(value?.status || 0) };
 }
 
+function resultText(result) {
+  return `${result.stderr}\n${result.stdout}`;
+}
+
+function isPermissionError(result) {
+  return /permission|forbidden|denied|PERMISSION_DENIED|403/i.test(resultText(result));
+}
+
+function isNotFoundError(result) {
+  return /not found|does not exist|NOT_FOUND|404/i.test(resultText(result));
+}
+
+function parseJson(result) {
+  try {
+    return { ok: true, value: JSON.parse(result.stdout || "null") };
+  } catch {
+    return { ok: false, value: null };
+  }
+}
+
 export function systemRunner(command, args, options = {}) {
   try {
     return { stdout: execFileSync(command, args, { cwd: options.cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }), stderr: "", status: 0 };
@@ -77,7 +97,18 @@ export function officialLinks(projectId = "") {
   };
 }
 
-export function projectConfirmation({ repo, organization, proposal }) {
+export function projectConfirmation({ repo, organization, proposal, preflight }) {
+  if (preflight?.status !== "preflight-ready"
+    || preflight.projectId !== proposal.projectId
+    || preflight.organization !== String(organization)
+    || preflight.permission?.canCreate !== true
+    || preflight.project?.available !== true) {
+    return {
+      status: "preflight-needed",
+      changed: false,
+      message: "Projectの既存確認と作成権限の確認を完了してから、作成内容を確認してください。",
+    };
+  }
   return {
     status: "cloud-project-confirmation-needed",
     changed: false,
@@ -88,10 +119,60 @@ export function projectConfirmation({ repo, organization, proposal }) {
     apis: [...REQUIRED_APIS],
     billingAccount: "自動接続しません",
     changes: ["Google Cloudプロジェクトを作成", "Google Chat APIを有効化", "People APIを有効化"],
+    adjustedFrom: preflight.adjustedFrom || null,
+    adjustmentReasons: [...(preflight.adjustmentReasons || [])],
+    preflight: {
+      status: preflight.status,
+      projectId: preflight.projectId,
+      organization: preflight.organization,
+      account: preflight.account,
+      projectAvailable: true,
+      canCreate: true,
+    },
   };
 }
 
-export function inspectGcloud({ cwd = process.cwd(), runner = systemRunner } = {}) {
+export function approveProjectConfirmation({ confirmation, approved = false } = {}) {
+  if (confirmation?.status !== "cloud-project-confirmation-needed") {
+    return { status: "preflight-needed", changed: false };
+  }
+  if (!approved) {
+    return {
+      status: "confirmation-needed",
+      changed: false,
+      projectId: confirmation.projectId,
+      organization: String(confirmation.organization),
+    };
+  }
+  return {
+    status: "cloud-project-approved",
+    changed: false,
+    projectId: confirmation.projectId,
+    displayName: confirmation.displayName,
+    organization: String(confirmation.organization),
+    preflight: { ...confirmation.preflight },
+  };
+}
+
+function preflightFailure(status, code, message, extra = {}) {
+  return { status, changed: false, error: { code, message }, ...extra };
+}
+
+function inspectProjectId({ cwd, runner, projectId }) {
+  const result = commandResult(runner("gcloud", ["projects", "describe", projectId, "--format=json"], { cwd }));
+  if (result.status === 0) {
+    const parsed = parseJson(result);
+    if (!parsed.ok || !parsed.value || Array.isArray(parsed.value)) {
+      return preflightFailure("project-lookup-failed", "project-lookup-invalid-response", "Project IDの確認結果を読み取れませんでした。", { projectId });
+    }
+    return { status: "project-id-collision", changed: false, projectId, existingProject: { projectId: parsed.value.projectId || projectId, name: parsed.value.name || null } };
+  }
+  if (isNotFoundError(result)) return { status: "project-id-available", changed: false, projectId };
+  const code = isPermissionError(result) ? "project-lookup-permission-needed" : "project-lookup-failed";
+  return preflightFailure("project-lookup-failed", code, "Project IDが使用できるか確認できませんでした。Cloudは変更していません。", { projectId });
+}
+
+export function inspectGcloud({ cwd = process.cwd(), runner = systemRunner, projectId = "", repoName = "", organization = "" } = {}) {
   const version = commandResult(runner("gcloud", ["version", "--format=json"], { cwd }));
   if (version.status !== 0) {
     return {
@@ -104,21 +185,104 @@ export function inspectGcloud({ cwd = process.cwd(), runner = systemRunner } = {
     };
   }
   const accounts = commandResult(runner("gcloud", ["auth", "list", "--filter=status:ACTIVE", "--format=json"], { cwd }));
+  if (accounts.status !== 0) {
+    return preflightFailure("auth-lookup-failed", isPermissionError(accounts) ? "auth-lookup-permission-needed" : "auth-lookup-failed", "ログイン中のGoogleアカウントを確認できませんでした。");
+  }
+  const parsedAccounts = parseJson(accounts);
+  if (!parsedAccounts.ok || !Array.isArray(parsedAccounts.value)) {
+    return preflightFailure("auth-lookup-failed", "auth-lookup-invalid-response", "ログイン中のGoogleアカウントの確認結果を読み取れませんでした。");
+  }
+  const activeAccounts = parsedAccounts.value.filter((item) => item?.account).map((item) => ({ account: item.account }));
+  if (activeAccounts.length === 0) return { status: "login-needed", changed: false, activeAccounts: [] };
+  if (activeAccounts.length > 1) return { status: "account-selection-needed", changed: false, activeAccounts };
+
   const organizations = commandResult(runner("gcloud", ["organizations", "list", "--format=json"], { cwd }));
-  let activeAccounts = [];
-  let availableOrganizations = [];
-  try { activeAccounts = accounts.status === 0 ? JSON.parse(accounts.stdout || "[]") : []; } catch { activeAccounts = []; }
-  try { availableOrganizations = organizations.status === 0 ? JSON.parse(organizations.stdout || "[]") : []; } catch { availableOrganizations = []; }
+  if (organizations.status !== 0) {
+    const permission = isPermissionError(organizations);
+    return preflightFailure(permission ? "permission-needed" : "organization-lookup-failed", permission ? "organization-lookup-permission-needed" : "organization-lookup-failed", "Google Workspace組織を確認できませんでした。組織の確認権限または接続状態を確認してください。", { activeAccounts });
+  }
+  const parsedOrganizations = parseJson(organizations);
+  if (!parsedOrganizations.ok || !Array.isArray(parsedOrganizations.value)) {
+    return preflightFailure("organization-lookup-failed", "organization-lookup-invalid-response", "Google Workspace組織の確認結果を読み取れませんでした。", { activeAccounts });
+  }
+  const availableOrganizations = parsedOrganizations.value.map((item) => ({ id: String(item.name || "").replace(/^organizations\//, ""), displayName: item.displayName || "名称未取得" })).filter((item) => item.id);
+  if (availableOrganizations.length === 0) return { status: "organization-needed", changed: false, activeAccounts, organizations: [] };
+  if (!organization && availableOrganizations.length > 1) return { status: "organization-selection-needed", changed: false, activeAccounts, organizations: availableOrganizations };
+  const selectedOrganization = String(organization || availableOrganizations[0].id);
+  if (!availableOrganizations.some((item) => item.id === selectedOrganization)) {
+    return preflightFailure("permission-needed", "organization-not-visible", "選択したGoogle Workspace組織を現在のアカウントで確認できませんでした。", { activeAccounts, organizations: availableOrganizations });
+  }
+  if (!projectId) return { status: "project-id-needed", changed: false, activeAccounts, organizations: availableOrganizations, organization: selectedOrganization };
+
+  const initialLookup = inspectProjectId({ cwd, runner, projectId });
+  if (initialLookup.status === "project-lookup-failed") return { ...initialLookup, activeAccounts, organizations: availableOrganizations, organization: selectedOrganization };
+  let finalProjectId = projectId;
+  let adjustedFrom = null;
+  let adjustmentReasons = [];
+  if (initialLookup.status === "project-id-collision") {
+    if (!repoName) return { ...initialLookup, status: "project-id-collision", activeAccounts, organizations: availableOrganizations, organization: selectedOrganization };
+    const adjusted = projectProposal(repoName, { collision: true });
+    const adjustedLookup = inspectProjectId({ cwd, runner, projectId: adjusted.projectId });
+    if (adjustedLookup.status === "project-lookup-failed") return { ...adjustedLookup, activeAccounts, organizations: availableOrganizations, organization: selectedOrganization, adjustedFrom: projectId };
+    if (adjustedLookup.status === "project-id-collision") {
+      return preflightFailure("project-id-collision-unresolved", "adjusted-project-id-collision", "調整したProject IDも使用済みでした。別の候補を確認してください。", { activeAccounts, organizations: availableOrganizations, organization: selectedOrganization, projectId: adjusted.projectId, adjustedFrom: projectId, adjustmentReasons: adjusted.reasons });
+    }
+    finalProjectId = adjusted.projectId;
+    adjustedFrom = projectId;
+    adjustmentReasons = adjusted.reasons;
+  }
+
+  const account = activeAccounts[0].account;
+  const permission = commandResult(runner("gcloud", [
+    "policy-intelligence", "troubleshoot-policy", "iam",
+    `//cloudresourcemanager.googleapis.com/organizations/${selectedOrganization}`,
+    `--principal-email=${account}`,
+    "--permission=resourcemanager.projects.create",
+    "--format=json",
+  ], { cwd }));
+  if (permission.status !== 0) {
+    const text = resultText(permission);
+    const code = /SERVICE_DISABLED|has not been used|API.+not enabled/i.test(text) ? "permission-check-api-unavailable"
+      : isPermissionError(permission) ? "permission-check-not-allowed"
+        : "permission-check-failed";
+    return preflightFailure("permission-check-inconclusive", code, "Project作成権限を確認できませんでした。APIを無断で有効にせず、管理者確認または手動支援へ切り替えてください。", { activeAccounts, organizations: availableOrganizations, organization: selectedOrganization, account, projectId: finalProjectId, adjustedFrom, adjustmentReasons });
+  }
+  const parsedPermission = parseJson(permission);
+  if (!parsedPermission.ok || !parsedPermission.value?.overallAccessState) {
+    return preflightFailure("permission-check-inconclusive", "permission-check-invalid-response", "Project作成権限の確認結果を読み取れませんでした。Cloudは変更していません。", { activeAccounts, organizations: availableOrganizations, organization: selectedOrganization, account, projectId: finalProjectId, adjustedFrom, adjustmentReasons });
+  }
+  if (parsedPermission.value.overallAccessState !== "CAN_ACCESS") {
+    const inconclusive = ["UNKNOWN_INFO", "UNKNOWN_CONDITIONAL"].includes(parsedPermission.value.overallAccessState);
+    return preflightFailure(inconclusive ? "permission-check-inconclusive" : "permission-needed", inconclusive ? "permission-check-inconclusive" : "project-create-permission-needed", inconclusive ? "Project作成権限を最後まで確認できませんでした。管理者へ確認してください。" : "このGoogle Workspace組織でProjectを作成する権限がありません。", { activeAccounts, organizations: availableOrganizations, organization: selectedOrganization, account, projectId: finalProjectId, adjustedFrom, adjustmentReasons, permission: { canCreate: false, state: parsedPermission.value.overallAccessState } });
+  }
   return {
-    status: activeAccounts.length === 0 ? "login-needed" : availableOrganizations.length > 1 ? "organization-selection-needed" : "cli-ready",
+    status: "preflight-ready",
     changed: false,
-    activeAccounts: activeAccounts.map((item) => ({ account: item.account })),
-    organizations: availableOrganizations.map((item) => ({ id: String(item.name || "").replace(/^organizations\//, ""), displayName: item.displayName || "名称未取得" })),
+    activeAccounts,
+    organizations: availableOrganizations,
+    organization: selectedOrganization,
+    account,
+    projectId: finalProjectId,
+    adjustedFrom,
+    adjustmentReasons,
+    project: { available: true },
+    permission: { canCreate: true, state: "CAN_ACCESS" },
+    confirmationRequired: true,
   };
 }
 
-export function gcloudPlan({ projectId, displayName, organization }) {
-  if (!projectId || !displayName || !organization) throw Object.assign(new Error("Project案とGoogle Workspace組織を確認してください。"), { code: "plan-incomplete" });
+export function gcloudPlan({ projectId, displayName, organization, approval }) {
+  if (!projectId || !displayName || !organization
+    || approval?.status !== "cloud-project-approved"
+    || approval.projectId !== projectId
+    || String(approval.organization) !== String(organization)
+    || approval.preflight?.status !== "preflight-ready"
+    || approval.preflight?.projectId !== projectId
+    || String(approval.preflight?.organization) !== String(organization)
+    || approval.preflight?.projectAvailable !== true
+    || approval.preflight?.canCreate !== true) {
+    throw Object.assign(new Error("既存Projectと作成権限を確認し、最終Project IDを承認してください。"), { code: "plan-incomplete" });
+  }
   return [
     { id: "create-project", command: "gcloud", args: ["projects", "create", projectId, "--name", displayName, "--organization", String(organization)] },
     { id: "enable-chat-api", command: "gcloud", args: ["services", "enable", REQUIRED_APIS[0], "--project", projectId] },
@@ -126,8 +290,20 @@ export function gcloudPlan({ projectId, displayName, organization }) {
   ];
 }
 
-export function executeApprovedPlan({ plan, approved = false, cwd = process.cwd(), runner = systemRunner, completed = [] } = {}) {
-  if (!approved) return { status: "confirmation-needed", changed: false, completed: [...completed], next: plan.find((item) => !completed.includes(item.id))?.id || null };
+export function executeApprovedPlan({ plan = [], approval, approved = false, cwd = process.cwd(), runner = systemRunner, completed = [] } = {}) {
+  const create = plan.find((item) => item.id === "create-project");
+  const projectId = create?.args?.[2];
+  const organizationIndex = create?.args?.indexOf("--organization") ?? -1;
+  const organization = organizationIndex >= 0 ? String(create.args[organizationIndex + 1] || "") : "";
+  const validApproval = approval?.status === "cloud-project-approved"
+    && approval.projectId === projectId
+    && String(approval.organization) === organization
+    && approval.preflight?.status === "preflight-ready"
+    && approval.preflight?.projectId === projectId
+    && String(approval.preflight?.organization) === organization
+    && approval.preflight?.projectAvailable === true
+    && approval.preflight?.canCreate === true;
+  if (!approved || !validApproval) return { status: "confirmation-needed", changed: false, completed: [...completed], next: plan.find((item) => !completed.includes(item.id))?.id || null };
   const allowed = new Set(["create-project", "enable-chat-api", "enable-people-api"]);
   const done = new Set(completed);
   for (const item of plan) {
@@ -196,14 +372,26 @@ if (resolve(process.argv[1] || "") === resolve(fileURLToPath(import.meta.url))) 
   const args = parseArgs(process.argv);
   const repo = discoverRepository({ cwd: args.root || process.cwd() });
   let output = repo;
-  if (args.command === "inspect" && repo.status === "repository-ready") output = { repository: repo, gcloud: inspectGcloud({ cwd: repo.root }), proposal: projectProposal(repo.repoName) };
+  if (args.command === "inspect" && repo.status === "repository-ready") {
+    const proposal = projectProposal(repo.repoName);
+    const preflight = inspectGcloud({ cwd: repo.root, projectId: proposal.projectId, repoName: repo.repoName, organization: args.organization });
+    const finalProposal = preflight.projectId && preflight.projectId !== proposal.projectId
+      ? { ...proposal, projectId: preflight.projectId, adjusted: true, reasons: [...(preflight.adjustmentReasons || proposal.reasons)] }
+      : proposal;
+    output = { repository: repo, preflight, proposal: finalProposal };
+  }
   if (args.command === "links") output = officialLinks(args.project || "");
   if (args.command === "plan") {
     if (repo.status !== "repository-ready") output = repo;
     else {
-      const proposal = projectProposal(repo.repoName, { collision: args.collision === "true" });
-      output = projectConfirmation({ repo: repo.root, organization: args.organization, proposal });
-      output.commands = args.organization ? gcloudPlan({ ...proposal, organization: args.organization }) : [];
+      const initialProposal = projectProposal(repo.repoName);
+      const preflight = inspectGcloud({ cwd: repo.root, projectId: initialProposal.projectId, repoName: repo.repoName, organization: args.organization });
+      const proposal = preflight.status === "preflight-ready"
+        ? { ...initialProposal, projectId: preflight.projectId, adjusted: Boolean(preflight.adjustedFrom), reasons: [...preflight.adjustmentReasons] }
+        : initialProposal;
+      const confirmation = projectConfirmation({ repo: repo.root, organization: preflight.organization || args.organization, proposal, preflight });
+      const approval = approveProjectConfirmation({ confirmation, approved: args.confirmed === "true" });
+      output = { preflight, confirmation, approval, commands: approval.status === "cloud-project-approved" ? gcloudPlan({ ...proposal, organization: approval.organization, approval }) : [] };
     }
   }
   process.stdout.write(`${JSON.stringify(output, null, 2)}\n`);
