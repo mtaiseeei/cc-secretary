@@ -40,7 +40,7 @@
 | sprint-019 | done | [contract](sprint-019.md) | [progress](../progress/sprint-019.md) | [feedback](../feedback/sprint-019.md) |
 | sprint-020 | done | [contract](sprint-020.md) | [progress](../progress/sprint-020.md) | [feedback](../feedback/sprint-020.md) |
 | sprint-020-patch-001 | done | [contract](sprint-020-patch-001.md) | [progress](../progress/sprint-020-patch-001.md) | [feedback](../feedback/sprint-020-patch-001.md) |
-| sprint-020-patch-002 | active | [contract](sprint-020-patch-002.md) | [progress](../progress/sprint-020-patch-002.md) | [feedback](../feedback/sprint-020-patch-002.md) |
+| sprint-020-patch-002 | awaiting-eval | [contract](sprint-020-patch-002.md) | [progress](../progress/sprint-020-patch-002.md) | [feedback](../feedback/sprint-020-patch-002.md) |
 
 ## Deferred / Superseded
 - sprint-007: superseded — 2026-07-15 製品方針転換により白紙化、`backup/sprint-007-010-plan` に退避
@@ -92,3 +92,4 @@
 - 2026-07-18: ユーザーがGoogle Workspace版Google Chatだけを正式サポートする方針を確定。Google Cloud準備をAI会話へ分離し、`gcloud`と公式リンクでJSON取得まで支援した後にlocal wizardを開始する `sprint-020-patch-002` を開始する。個人Googleアカウント向け説明、Browser Use必須化、会社別チャットルーティングは対象外とする。
 - 2026-07-18: sprint-020-patch-002 GeneratorがWorkspace限定のCloud準備会話、repo名由来Project案、承認後だけのProject・2 API操作、公式リンクfallback、秘密情報なしの再開、JSON選択開始wizardを実装。旧Cloud準備3画面と案内SVGを撤去し、専用37件、Patch 001 copy 69件、Sprint 020 50件、敵対条件16件、Chatwork 7件、配布面2件が0 FAIL。Generator環境でloopback待受が拒否された全回帰とmobile／200%相当の実画面確認を独立Evaluatorへ引き渡した。
 - 2026-07-18: sprint-020-patch-002初回評価はimplementation-issueで不合格。専用8/8、offline 316/316、online 317/317、browser 31/31は0 FAILだったが、同名ProjectとProject作成権限の事前確認がなく、組織一覧の権限エラーも `cli-ready` と誤分類するため、作成前preflightをGeneratorへ差し戻した（Retry 1）。
+- 2026-07-18: sprint-020-patch-002 Retry 1で認証・組織・Project ID・作成権限の読み取り専用preflight、衝突後の候補再確認と再承認、Policy Troubleshooter不明時の安全停止を実装。承認後の正規3コマンド差し替えも厳密一致で拒否し、専用62件、copy 69件、Sprint 020 50件、敵対条件16件、Chatwork 7件が0 FAILのため独立再評価へ引き渡した。
