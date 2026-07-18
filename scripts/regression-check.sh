@@ -657,12 +657,12 @@ check "H1: secretary 自体が symlink でも拒否（exit 3）" "[ $? -eq 3 ]"
 
 # --- H3: 秘密情報が黙って履歴化されない（commit が拒否し、履歴に入らない）---
 H3S="$WORK/h3/secretary"; mkdir -p "$WORK/h3"; mk_sec "$H3S"
-printf 'api_key = ABCDEF123456\n' > "$H3S/inbox/creds.txt"
+printf 'api_key = ABCDEF123456\n' > "$H3S/memory/creds.txt"
 bash "$TOOLS" commit "$H3S" "テストコミット" >/dev/null 2>&1
 check "H3: 秘密情報を含むと commit が拒否（exit≠0）" "[ $? -ne 0 ]"
 check "H3: 秘密ファイルが履歴に入っていない" "! git -C '$H3S' log --all --name-only --pretty=format: 2>/dev/null | grep -q 'creds.txt'"
-rm -f "$H3S/inbox/creds.txt"
-printf 'メモ\n' > "$H3S/inbox/note.md"
+rm -f "$H3S/memory/creds.txt"
+printf 'メモ\n' > "$H3S/memory/note.md"
 bash "$TOOLS" commit "$H3S" "正常な記憶を記録" >/dev/null 2>&1
 check "H3: 秘密が無ければ通常コミットは成功" "[ $? -eq 0 ] && git -C '$H3S' log -1 --name-only --pretty=format: | grep -q 'note.md'"
 

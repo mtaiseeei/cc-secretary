@@ -7,7 +7,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { applyChatworkConfig } from "../plugins/yasashii-secretary/skills/chatwork/scripts/config-transaction.mjs";
 import { applyGoogleChatConfig } from "../plugins/yasashii-secretary/skills/google-chat/scripts/config-transaction.mjs";
-import { commitOwnedChanges, stagedSnapshot } from "../plugins/yasashii-secretary/scripts/lib/safe-git.mjs";
+import { commitOwnedChanges, pushOwnedCommit, stagedSnapshot } from "../plugins/yasashii-secretary/scripts/lib/safe-git.mjs";
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const work = mkdtempSync(join(tmpdir(), "yasashii-sprint-021-"));
@@ -127,8 +127,18 @@ try {
     ["legacy-api-key.txt", () => "api_key = ABCDEF123456"],
     ["private.pem", () => `-----BEGIN PRIVATE KEY-----\n${synthetic("private-key")}\n-----END PRIVATE KEY-----`],
     ["credential-url.txt", () => `https://fixture:${synthetic("url")}@example.invalid/path`],
+    ["oauth-callback-query.txt", () => `http://127.0.0.1:48123/oauth/callback?state=${synthetic("query-state")}&code=${synthetic("query-code")}`],
+    ["oauth-callback-fragment.txt", () => `https://app.example.invalid/oauth/callback#state=${synthetic("fragment-state")}&code=${synthetic("fragment-code")}`],
+    ["letters-client-secret.txt", () => "client_secret=alphabeticcredential"],
+    ["letters-access-token.txt", () => "access_token=alphabeticcredential"],
+    ["letters-refresh-token.txt", () => "refresh_token=alphabeticcredential"],
+    ["letters-authorization-code.txt", () => "authorization_code=alphabeticcredential"],
+    ["camel-client-secret.json", () => JSON.stringify({ clientSecret: "alphabeticcredential" })],
+    ["oauth-callback-letters.txt", () => "http://127.0.0.1/oauth/callback?state=examplestate&code=alphabeticcredential"],
+    ["credential-url-camel.txt", () => "https://example.invalid/callback?clientSecret=alphabeticcredential"],
   ];
   const generatedSecrets = [];
+  let callbackHistoryProtected = true;
   for (const [name, makeBody] of secretCases) {
     const target = init(`secret-${name.replace(/[^a-z0-9]/gi, "-")}`);
     const before = baseline(target);
@@ -139,11 +149,28 @@ try {
     try { commitOwnedChanges({ root: target, ownedPaths: ["secretary"], message: "拒否fixture" }); }
     catch (caught) { error = caught; emitted.push(caught.message || ""); }
     check(error?.code === "secret-detected" && git(target, "rev-parse", "HEAD") === before, `${name}をcommit前に拒否`);
+    if (name.startsWith("oauth-callback-")) {
+      const history = git(target, "log", "-p", "--all");
+      callbackHistoryProtected = callbackHistoryProtected && !body.match(/SYN_[A-Za-z0-9_-]+/g)?.some((value) => history.includes(value));
+    }
   }
+  check(callbackHistoryProtected, "OAuth callbackのquery／fragmentをGit履歴へ残さない");
   const normal = init("normal-document");
   baseline(normal);
-  write(normal, "secretary/docs/security.md", "OAuth client JSONは保存しません。access tokenという用語だけを説明します。\n");
+  write(normal, "secretary/docs/security.md", [
+    "OAuth client JSONは保存しません。access tokenという用語だけを説明します。",
+    "OAuth callback URLのqueryにはcodeパラメータが返りますが、値は保存しません。",
+    "通常の検索URL: https://example.invalid/search?code=sample&lang=ja",
+    "説明用callback: https://docs.example.invalid/oauth/callback?code=redacted&state=example",
+    "",
+  ].join("\n"));
   check(commitOwnedChanges({ root: normal, ownedPaths: ["secretary"], message: "通常文書" }).status === "committed", "通常文書を誤拒否しない");
+  const safeNames = init("safe-credential-filenames");
+  baseline(safeNames);
+  write(safeNames, "secretary/docs/oauth-guide.json", JSON.stringify({ oauth: "ブラウザで許可し、値は保存しません" }));
+  write(safeNames, "secretary/docs/token-handling.txt", "tokenはRepository Secretだけで扱います。値はここに書きません。\n");
+  write(safeNames, "secretary/docs/credential-policy.json", JSON.stringify({ policy: "資格情報を文書や履歴へ保存しない" }));
+  check(commitOwnedChanges({ root: safeNames, ownedPaths: ["secretary/docs"], message: "安全な資格情報説明" }).status === "committed", "oauth／token／credentialを含む安全なファイル名を誤拒否しない");
 
   const commitFail = init("commit-fail");
   const commitFailHead = baseline(commitFail);
@@ -160,7 +187,6 @@ try {
   writeFileSync(fakeGh, "#!/bin/sh\nif [ \"$1 $2\" = \"repo view\" ]; then printf '{\"visibility\":\"PRIVATE\",\"url\":\"https://example.invalid/private\"}'; exit 0; fi\nexit 2\n");
   chmodSync(fakeGh, 0o755);
   const publish = init("publish");
-  baseline(publish);
   const publishRemote = bare("publish-remote");
   git(publish, "remote", "add", "origin", publishRemote);
   write(publish, "secretary/memory/MEMORY.md", "# memory\n");
@@ -182,6 +208,23 @@ try {
   write(publishSecret, "secretary/oauth-client.json", JSON.stringify({ installed: { client_id: synthetic("id"), client_secret: publishSecretValue, token_uri: "https://oauth2.example.invalid/token" } }));
   const rejectedPublish = run("node", [join(repo, "plugins/yasashii-secretary/scripts/workspace-repo.mjs"), "publish", "--root", publishSecret, "--visibility", "private", "--confirm", "--use-existing-remote"], publishSecret, { YASASHII_GH_BIN: fakeGh }, true);
   check(rejectedPublish.status === 3 && git(publishSecret, "rev-parse", "HEAD") === publishSecretHead && run("git", ["show-ref"], publishSecretRemote, {}, true).stdout === "", "OAuth JSONの初回publishはcommit／push 0件");
+
+  const publishCallback = init("publish-callback");
+  const publishCallbackHead = baseline(publishCallback);
+  const publishCallbackRemote = bare("publish-callback-remote");
+  git(publishCallback, "remote", "add", "origin", publishCallbackRemote);
+  const publishCallbackValue = synthetic("publish-callback-code");
+  generatedSecrets.push(publishCallbackValue);
+  write(publishCallback, "secretary/docs/oauth-result.txt", `http://localhost:49152/oauth/callback?state=${synthetic("publish-state")}&code=${publishCallbackValue}\n`);
+  const rejectedCallbackPublish = run("node", [join(repo, "plugins/yasashii-secretary/scripts/workspace-repo.mjs"), "publish", "--root", publishCallback, "--visibility", "private", "--confirm", "--use-existing-remote"], publishCallback, { YASASHII_GH_BIN: fakeGh }, true);
+  const callbackHistory = git(publishCallback, "log", "-p", "--all");
+  check(
+    rejectedCallbackPublish.status === 3
+      && git(publishCallback, "rev-parse", "HEAD") === publishCallbackHead
+      && run("git", ["show-ref"], publishCallbackRemote, {}, true).stdout === ""
+      && !callbackHistory.includes(publishCallbackValue),
+    "OAuth callbackの認可コードを初回publish前に拒否しcommit／push／履歴露出0件",
+  );
 
   const chatwork = init("chatwork");
   baseline(chatwork);
@@ -224,14 +267,60 @@ try {
   );
 
   const memory = init("memory");
-  baseline(memory, { "README.md": "base\n", "secretary/memory/MEMORY.md": "# memory\n" });
-  write(memory, "root-staged.txt", "keep staged\n");
-  git(memory, "add", "root-staged.txt");
+  baseline(memory, {
+    "README.md": "base\n",
+    "secretary/memory/MEMORY.md": "# memory\n",
+    "secretary/docs/guide.md": "before\n",
+    "secretary/projects/existing/PROJECT.md": "before\n",
+  });
+  write(memory, "secretary/projects/existing/staged.md", "keep staged\n");
+  git(memory, "add", "secretary/projects/existing/staged.md");
+  write(memory, "secretary/docs/guide.md", "keep unstaged\n");
+  write(memory, "secretary/projects/existing/untracked.md", "keep untracked\n");
   write(memory, "secretary/memory/MEMORY.md", "# memory\n- updated\n");
   const memoryIndex = stagedSnapshot(memory);
+  const memoryDocsBefore = readFileSync(join(memory, "secretary/docs/guide.md"), "utf8");
+  const memoryUntrackedBefore = readFileSync(join(memory, "secretary/projects/existing/untracked.md"), "utf8");
   const memoryResult = run("bash", [join(repo, "plugins/yasashii-secretary/skills/memory-care/scripts/memory-tools.sh"), "commit", join(memory, "secretary"), "記憶を更新"], memory);
-  check(memoryResult.status === 0 && commitPaths(memory).join(",") === "secretary/memory/MEMORY.md", "memory commitはsecretary変更だけをcommit");
-  check(stagedSnapshot(memory) === memoryIndex, "memory commitはrepo rootの既存stageを維持");
+  check(memoryResult.status === 0 && commitPaths(memory).join(",") === "secretary/memory/MEMORY.md", "memory commitは実際に更新したmemory関連pathだけをcommit");
+  check(
+    stagedSnapshot(memory) === memoryIndex
+      && readFileSync(join(memory, "secretary/docs/guide.md"), "utf8") === memoryDocsBefore
+      && readFileSync(join(memory, "secretary/projects/existing/untracked.md"), "utf8") === memoryUntrackedBefore,
+    "memory commitはprojects／docsのstaged／unstaged／untrackedをbyte単位で維持",
+  );
+
+  const noUpstream = init("no-upstream-prior-commit");
+  const noUpstreamOldHead = baseline(noUpstream);
+  const noUpstreamRemote = bare("no-upstream-prior-remote");
+  git(noUpstream, "remote", "add", "origin", noUpstreamRemote);
+  write(noUpstream, "secretary/memory/MEMORY.md", "# new memory\n");
+  const noUpstreamCommit = commitOwnedChanges({ root: noUpstream, ownedPaths: ["secretary/memory"], message: "今回の所有commit" });
+  let noUpstreamError;
+  try {
+    pushOwnedCommit({ root: noUpstream, oldHead: noUpstreamCommit.oldHead, newHead: noUpstreamCommit.newHead, setUpstream: true });
+  } catch (error) { noUpstreamError = error; emitted.push(error.message || ""); }
+  check(
+    noUpstreamError?.code === "push-base-changed"
+      && noUpstreamCommit.oldHead === noUpstreamOldHead
+      && run("git", ["show-ref"], noUpstreamRemote, {}, true).stdout === "",
+    "upstream未設定の空remoteへ今回以前の別commitを黙ってpushしない",
+  );
+
+  const existingRemoteBase = init("no-upstream-existing-base");
+  const existingBase = baseline(existingRemoteBase);
+  const existingBaseRemote = bare("no-upstream-existing-base-remote");
+  git(existingRemoteBase, "remote", "add", "origin", existingBaseRemote);
+  git(existingRemoteBase, "push", "-q", "origin", "main");
+  write(existingRemoteBase, "secretary/memory/MEMORY.md", "# allowed update\n");
+  const existingBaseCommit = commitOwnedChanges({ root: existingRemoteBase, ownedPaths: ["secretary/memory"], message: "remote基点からの所有commit" });
+  const existingBasePush = pushOwnedCommit({ root: existingRemoteBase, oldHead: existingBaseCommit.oldHead, newHead: existingBaseCommit.newHead, setUpstream: true });
+  check(
+    existingBaseCommit.oldHead === existingBase
+      && existingBasePush.status === "pushed"
+      && git(existingBaseRemote, "rev-parse", "refs/heads/main") === existingBaseCommit.newHead,
+    "upstream未設定でもremote先端が今回の基点なら所有commitだけをpush",
+  );
 
   const conflict = init("push-conflict");
   baseline(conflict);

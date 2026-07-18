@@ -52,21 +52,129 @@ function belongsTo(path, ownedPaths) {
   return ownedPaths.some((owned) => path === owned || path.startsWith(`${owned}/`));
 }
 
+function callbackParams(url) {
+  const params = [url.searchParams];
+  const fragment = url.hash.slice(1);
+  if (fragment) {
+    const queryStart = fragment.indexOf("?");
+    params.push(new URLSearchParams(queryStart >= 0 ? fragment.slice(queryStart + 1) : fragment));
+  }
+  return params;
+}
+
+function hasAuthorizationCode(params) {
+  const placeholders = /^(?:sample|example|placeholder|redacted|masked|authorization[-_ ]?code|auth[-_ ]?code|x+|\*+)$/i;
+  for (const item of params) {
+    for (const [key, rawValue] of item) {
+      if (key.toLowerCase() !== "code") continue;
+      const value = rawValue.trim();
+      if (!value || placeholders.test(value)) continue;
+      if (/^(?:<[^>]+>|\$\{[^}]+\}|\{\{[^}]+\}\})$/.test(value)) continue;
+      return true;
+    }
+  }
+  return false;
+}
+
+function containsOAuthCallbackCode(body) {
+  const candidates = body.match(/\bhttps?:\/\/[^\s<>"'`]+/gi) || [];
+  for (const candidate of candidates) {
+    let url;
+    try { url = new URL(candidate.replace(/[),.;]+$/, "")); } catch { continue; }
+    const params = callbackParams(url);
+    if (!hasAuthorizationCode(params)) continue;
+
+    const hostname = url.hostname.toLowerCase().replace(/^\[|\]$/g, "");
+    const loopback = hostname === "localhost" || hostname === "::1" || /^127(?:\.\d{1,3}){3}$/.test(hostname);
+    const fragmentRoute = url.hash.slice(1).split("?", 1)[0];
+    let route = `${url.pathname} ${fragmentRoute}`;
+    try { route = decodeURIComponent(route); } catch { /* 不正escapeは生文字列のまま判定する。 */ }
+    const callbackPath = /(?:^|[/._-])(?:oauth2?[/._-]?)?callback(?:$|[/._\s-])/i.test(route);
+    const hasState = params.some((item) => [...item].some(([key, value]) => key.toLowerCase() === "state" && value.trim()));
+    if (callbackPath || (loopback && hasState)) return true;
+  }
+  return false;
+}
+
+const STRICT_CREDENTIAL_KEYS = new Set([
+  "clientsecret",
+  "accesstoken",
+  "refreshtoken",
+  "authorizationcode",
+  "authcode",
+  "apikey",
+  "apitoken",
+  "chatworkapitoken",
+  "xchatworktoken",
+]);
+
+function canonicalCredentialKey(value) {
+  return String(value || "")
+    .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function isPlaceholderCredentialValue(rawValue) {
+  const value = String(rawValue ?? "").trim().replace(/^(["'])([\s\S]*)\1$/, "$2").trim();
+  if (!value) return true;
+  if (/^(?:sample|example|placeholder|redacted|masked|changeme|replace[-_ ]?me|none|null|undefined|x+|\*+)$/i.test(value)) return true;
+  if (/^(?:<[^>]+>|\$\{[^}]+\}|\{\{[^}]+\}\})$/.test(value)) return true;
+  return false;
+}
+
+function jsonContainsCredentialField(value, seen = new Set()) {
+  if (!value || typeof value !== "object" || seen.has(value)) return false;
+  seen.add(value);
+  if (Array.isArray(value)) return value.some((item) => jsonContainsCredentialField(item, seen));
+  for (const [key, fieldValue] of Object.entries(value)) {
+    if (STRICT_CREDENTIAL_KEYS.has(canonicalCredentialKey(key)) && !isPlaceholderCredentialValue(fieldValue)) return true;
+    if (jsonContainsCredentialField(fieldValue, seen)) return true;
+  }
+  return false;
+}
+
+function containsCredentialUrl(body) {
+  const candidates = body.match(/\bhttps?:\/\/[^\s<>"'`]+/gi) || [];
+  for (const candidate of candidates) {
+    let url;
+    try { url = new URL(candidate.replace(/[),.;]+$/, "")); } catch { continue; }
+    for (const params of callbackParams(url)) {
+      for (const [key, value] of params) {
+        if (STRICT_CREDENTIAL_KEYS.has(canonicalCredentialKey(key)) && !isPlaceholderCredentialValue(value)) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function containsCredentialAssignment(path, body) {
+  const codeFile = /\.(?:[cm]?[jt]sx?|py|rb|go|rs|java|kt|swift|php|sh|bash|zsh)$/i.test(path);
+  const assignment = /^\s*["']?([A-Za-z][A-Za-z0-9_.-]*)["']?\s*[:=]\s*(.*?)\s*[,;]?\s*$/gm;
+  for (const match of body.matchAll(assignment)) {
+    if (!STRICT_CREDENTIAL_KEYS.has(canonicalCredentialKey(match[1]))) continue;
+    const rawValue = match[2].trim().replace(/[,;]\s*$/, "").trim();
+    if (isPlaceholderCredentialValue(rawValue)) continue;
+    // プログラム中の `client_secret: clientSecret` のような変数参照は値そのものではない。
+    // 通常文書・設定では全英字も資格情報になり得るため、文字種や長さでは弱めない。
+    if (codeFile && !/^["'`]/.test(rawValue)) continue;
+    return true;
+  }
+  return false;
+}
+
 function secretReason(path, body) {
   const filename = posix.basename(path);
   if (
     /^(?:\.env(?:\..+)?|id_rsa|id_ed25519)$/i.test(filename)
-    || /(?:credential|client[_-]?secret|oauth)[^/]*\.json$/i.test(filename)
-    || /(?:secret|token)[^/]*\.(?:json|ya?ml|txt)$/i.test(filename)
     || /\.(?:pem|key|p12|pfx)$/i.test(filename)
   ) return "資格情報を示すファイル名";
 
   if (/-----BEGIN (?:[A-Z0-9 ]+ )?PRIVATE KEY-----/.test(body)) return "秘密鍵";
   if (/(?:https?|[a-z][a-z0-9+.-]*):\/\/[^\s/:@]+:[^\s/@]+@/i.test(body)) return "資格情報を含むURL";
-  if (/(?:https?|[a-z][a-z0-9+.-]*):\/\/[^\s]+[?&](?:access_token|refresh_token|client_secret|api[_-]?key|token)=[^\s&#]{6,}/i.test(body)) return "資格情報を含むURL";
-  if (/["'](?:client_secret|access_token|refresh_token|authorization_code|auth_code|api[_-]?token|chatwork_api_token|x-chatworktoken)["']\s*:\s*["'][^"'\r\n]{6,}["']/i.test(body)) return "資格情報の値";
-  if (/\b(?:client_secret|access_token|refresh_token|authorization_code|auth_code|api[_-]?token|chatwork_api_token|x-chatworktoken)\s*=\s*["'][^"'\r\n]{6,}["']/i.test(body)) return "資格情報の値";
-  if (/\b(?:client_secret|access_token|refresh_token|authorization_code|auth_code|api[_-]?token|chatwork_api_token|x-chatworktoken)\s*[:=]\s*[A-Za-z0-9._~+/=-]*[0-9_~+/=-][A-Za-z0-9._~+/=-]{5,}/i.test(body)) return "資格情報の値";
+  if (containsOAuthCallbackCode(body)) return "OAuth callbackの認可コード";
+  if (containsCredentialUrl(body)) return "資格情報を含むURL";
+  if (containsCredentialAssignment(path, body)) return "資格情報の値";
   if (/\b(?:token|password|api[_-]?key)\s*[:=]\s*["'][^"'\r\n]{12,}["']/i.test(body)) return "資格情報の値";
   // 旧来の設定ファイルにある unquoted 値も検出する。単なる用語説明を避けるため、
   // 8文字以上かつ数字または記号を含む値だけを資格情報候補として扱う。
@@ -80,6 +188,7 @@ function secretReason(path, body) {
     if (candidates.some((item) => item && typeof item === "object" && item.client_id && item.client_secret && item.token_uri)) {
       return "OAuth client JSON";
     }
+    if (jsonContainsCredentialField(parsed)) return "資格情報の値";
   } catch {
     // JSONでない通常文書は上の構造・内容検査だけを適用する。
   }
@@ -264,6 +373,18 @@ export function pushOwnedCommit({ root, oldHead, newHead, remote = "origin", set
   const upstream = git(normalizedRoot, ["rev-parse", "--verify", "@{upstream}"], { allowFailure: true })?.trim() || null;
   if (upstream && oldHead && upstream !== oldHead) {
     throw new GitSafetyError("push-base-changed", "今回の操作より前に未送信のcommitがあるためpushしていません。");
+  }
+  if (!upstream) {
+    let remoteHeads;
+    try {
+      remoteHeads = git(normalizedRoot, ["ls-remote", "--heads", remote, `refs/heads/${branch}`]);
+    } catch {
+      throw new GitSafetyError("push-failed", "push先の履歴基点を確認できないため、今回のcommitをpushしていません。");
+    }
+    const remoteTip = remoteHeads.trim().split(/\s+/, 1)[0] || null;
+    if ((remoteTip && remoteTip !== oldHead) || (!remoteTip && oldHead)) {
+      throw new GitSafetyError("push-base-changed", "今回の操作より前に未送信のcommitがあるためpushしていません。");
+    }
   }
   try {
     const args = ["push"];

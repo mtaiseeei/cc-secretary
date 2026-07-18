@@ -390,12 +390,15 @@ case "$cmd" in
     commit_args=(--root "$repo_real" --message "$msg")
     case "$sec_real" in
       "$repo_real")
-        # 旧形式のsecretary単体repoでは、秘書の既知領域だけを所有pathとして扱う。
-        for sec_rel in AGENTS.md CLAUDE.md memory inbox docs projects; do
-          [ -e "$repo_real/$sec_rel" ] && commit_args+=(--path "$sec_rel")
-        done
+        # 旧形式のsecretary単体repoでも、memory操作が所有する領域だけを対象にする。
+        [ -e "$repo_real/memory" ] || die_usage "memoryフォルダが見つかりません: $sec"
+        commit_args+=(--path "memory")
         ;;
-      "$repo_real"/*) commit_args+=(--path "${sec_real#"$repo_real"/}") ;;
+      "$repo_real"/*)
+        sec_rel="${sec_real#"$repo_real"/}"
+        [ -e "$repo_real/$sec_rel/memory" ] || die_usage "memoryフォルダが見つかりません: $sec"
+        commit_args+=(--path "$sec_rel/memory")
+        ;;
       *) refuse "秘書ディレクトリがworkspace repoの内側にないためcommitしません。" ;;
     esac
     result="$(node "$safe_commit" "${commit_args[@]}")" || exit $?

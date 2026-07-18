@@ -93,3 +93,61 @@ bash scripts/regression-check.sh --online
 - `--online`は公開GitHubの読み取り専用確認まで実施した。実GitHubへの書き込み、実OAuth、実Chatwork／Google Chat、Repository Secretを使うlive確認はSprint 021の安全な合成fixture範囲外であり、後続の正式live gateを代替したとは扱わない。
 - UI変更はないため新規スクリーンショットはない。既存wizardの機能回帰は完走した。
 - Planner管理の`docs/spec*`、`docs/sprints/state.md`、`docs/sprints/sprint-021.md`〜`028.md`と、既存の未追跡`docs/evidence/sprint-020-patch-001/evaluator-retry2/`には触れていない。
+
+## Retry 1 — Evaluator差し戻し4群の修正（2026-07-18）
+
+**ステータス:** 実装完了 - 再評価待ち
+
+### 修正内容
+
+- credential fieldをsnake_case／camelCase等からcanonical formへ正規化した。`client_secret`、`access_token`、`refresh_token`、`authorization_code`、`clientSecret`は、値が全英字でも文字数や記号の有無に依存せず拒否する。
+- OAuth callbackのquery／fragmentにある`code`も値の文字種に依存せず拒否する。説明用の`sample`／`redacted`等は通常文書として許可し、実値はGit履歴へ残さない。
+- `oauth`／`token`／`credential`を含むファイル名だけで即時拒否する処理を外した。内容が安全な`oauth-guide.json`、`token-handling.txt`、`credential-policy.json`を負回帰として追加した。
+- memory commitの所有範囲を、workspace形式・旧secretary単体repo形式とも`memory/`だけに限定した。`projects/`と`docs/`の既存staged／unstaged／untrackedはcommitにもindex更新にも含めない。
+- upstream未設定時もremote branchの先端を確認するようにした。空remoteに今回以前のlocal commitがある場合は`push-base-changed`で停止し、remote先端が今回の`oldHead`と一致するときだけ所有commitを送る。
+- master回帰の旧H3 fixtureをmemory commitの現行所有範囲へ合わせた。
+
+### 追加した負回帰
+
+- 全英字unquoted 4種、camelCase `clientSecret`、全英字OAuth callback code。
+- 安全な資格情報説明文書3種のファイル名誤拒否0件。
+- `secretary/projects/`と`secretary/docs/`に既存3状態があるmemory commit。
+- upstreamなし＋空remote＋既存別commitの安全停止、upstreamなし＋既存remote基点一致の正常push。
+
+### Retry 1 検査結果
+
+| コマンド | 結果 |
+|---|---|
+| `node scripts/sprint-021-git-safety-test.mjs` | `PASS=45 FAIL=0` |
+| `bash scripts/sprint-021-regression.sh` | `SPRINT021_PASS=8 SPRINT021_FAIL=0` |
+| `bash scripts/sprint-012-regression.sh` | `PASS=38 FAIL=0` |
+| `bash scripts/sprint-013-regression.sh` | `PASS=33 FAIL=0`（内部Chatwork `35/35`） |
+| `bash scripts/sprint-014-regression.sh` | `PASS=41 FAIL=0`（内部Chatwork `59/59`） |
+| `bash scripts/sprint-018-regression.sh` | `SPRINT018_PASS=41 SPRINT018_FAIL=0` |
+| `bash scripts/sprint-019-regression.sh` | `SPRINT019_WRAPPER_PASS=12 FAIL=0`（内部Google Chat `51/51`） |
+| `bash scripts/sprint-020-regression.sh` | `SPRINT020_WRAPPER_PASS=16 FAIL=0`（内部Google Chat `50/50`、敵対fixture `16/16`） |
+| `bash scripts/regression-check.sh --offline` | `PASS=327 FAIL=0` |
+| `node --check`／`bash -n`／`git diff --check` | すべてPASS |
+
+最初のsandbox内関連suiteではlocalhost bindが`EPERM`になったため、localhostを許可した同一suiteを再実行して全件PASSを確認した。これは製品FAILとは分離している。Retry 1ではonline回帰を再実行しておらず、外部書込みは0件である。Gitの動的検証はすべて`/tmp`の一時repoとlocal bare remote、合成値だけを使った。
+
+### Retry 1 自己評価
+
+| 軸 | 点 | 根拠 |
+|---|---:|---|
+| C1 完成度 | 5 | Evaluatorが再現した4群をすべて製品suiteへ追加し、45/45で閉じた。 |
+| C2 構文・整合 | 5 | Node／shell構文、関連suite、master offlineが0 FAIL。 |
+| C3 機能の実証 | 5 | 実Git＋local bare remoteで拒否、許可、既存状態維持を動的に確認した。 |
+| C4 非エンジニア体験 | 5 | 安全文書を誤拒否せず、危険時は値を出さず停止理由を示す。 |
+| C5 安全・規律 | 5 | secret commit、memory外混入、既存別commitの黙示pushを0件にした。 |
+| C6 無回帰 | 5 | master offline `327/327`、関連Chatwork／Google Chat／更新回帰が0 FAIL。 |
+| C7〜C12 | 5 | UI変更なし。既存のやさしさ、配布面、更新安全性、Google Chat境界を関連suiteで維持した。 |
+
+### 再評価への引き渡し
+
+- 起動方法／URL: CLI・Git安全境界のため新規画面なし。
+- 専用回帰: `bash scripts/sprint-021-regression.sh`
+- 全offline回帰: `bash scripts/regression-check.sh --offline`
+- 優先シナリオ: 上記4群の独立fixtureを、`/tmp`のlocal repo／local bare remoteと合成値だけで再実行する。
+- 未解決実装事項: なし。最終合否は独立Evaluatorが判定する。
+- 外部副作用: 0件。実GitHub、実OAuth、実Chatwork、実Google Chat、Repository Secret、Cloud projectは変更していない。
