@@ -175,13 +175,18 @@
 
 ### F32 各社所有Google CloudプロジェクトとユーザーOAuth
 
-- READMEに「Google Chatをつなぐ（少し高度な設定）」を設け、画面を開いている本人がGoogle Workspace管理者またはGoogle Cloudプロジェクトを作成できる場合を主経路として最初に示す。本人が設定できない場合は、管理者へ依頼する経路も同じ必要事項で残す。
-- 主導線では「今すること」を1文で先に示し、Google CloudやOAuthの準備を1画面1判断へ分ける。`loopback`、`scope`、OAuth client JSON等の内部詳細は主説明に並べず、必要な正式名称と役割を「詳しい説明」または「管理者向け」に置く。
-- 本人設定の折りたたみガイドは、Google Cloudプロジェクト作成、Google Chat API／People APIの有効化、OAuth同意画面の `Internal` 設定、`Desktop app` のOAuth client作成、接続用ファイルの取得を画像つきで順に示す。画像はメールアドレス、client ID、client secret、プロジェクト固有の機密値・識別値を含まないアカウント中立なものとし、Google側UIの確認日と変更可能性を添える。
-- 利用者の会社ごとに、そのGoogle Workspace組織が所有するGoogle Cloudプロジェクトを使う。OAuth Audienceは `Internal`、OAuth Clientは `Desktop app` とし、ShigApps共通の外部向けOAuthアプリは使わない。
+- READMEに「Google Chatをつなぐ（少し高度な設定）」を設け、最初の操作を「Google Chatを設定したい」とAIへ伝えることにする。Google WorkspaceのGoogle Chatだけを正式サポートし、無料の個人Googleアカウント向けの説明・分岐は利用者向け画面に出さない。
+- Google Cloudの準備はlocal wizardではなくGoogle Chat skillの会話が担当する。主導線は「今すること」を1文で先に示し、CLIで行う工程と本人がGoogle画面で行う工程を1回1操作で進める。
+- Google Chat skillはGit repo rootを確認し、そのディレクトリ名に `-google-chat` を付けた値をProject表示名にする。Project IDも同じ値を初期案にし、Googleの命名制約または全体重複で使えない場合だけ安全な候補へ調整する。実際に作る名前、Project ID、所属するGoogle Workspace組織、有効にするAPI、Billing Accountを自動接続しないことを、作成前に利用者へ示す。Git repo rootを確認できない場合はprojectを作成せず、対象repoの選択を求める。
+- `gcloud`が未導入なら、Google公式の管理ツールでありインストール自体は無料、非公式ソフトではないことを伝える。同時に、Google Cloudの設定を変更できるため、インストール内容と実行予定を示し、明示承認後だけ安全な導入を試みる。導入できない、権限がない、または利用者が断った場合は、直接リンクによる手動操作支援へ切り替える。
+- `gcloud`を使える場合は、Google Workspaceアカウントのログイン状態、利用可能な組織、既存候補project、作成権限を先に確認する。未ログイン、複数組織、権限不足を推測で越えず、利用者の選択または管理者対応へ止める。明示承認後だけproject作成とGoogle Chat API／People APIの有効化を行い、Billing Accountは自動接続しない。
+- Google画面で行うAudienceの `Internal` 設定、`Desktop app` のOAuth client作成、接続用JSONの取得は、Project IDを指定した直接リンクと「この画面で押す場所」を一つずつ案内する。利用者が「できました」と返してから次へ進み、Browser Useや拡張機能を必須にしない。`gcloud`を使えない場合はproject作成とAPI有効化も同じ形式で支援する。
+- 利用者の会社ごとに、そのGoogle Workspace組織が所有するGoogle Cloudプロジェクトを使う。OAuth Audienceは `Internal`、OAuth Clientは `Desktop app` とし、ShigApps共通の外部向けOAuthアプリ、`External`、個人向け手順へ切り替えない。
 - Google Chat APIと、発言者名の補完に必要なGoogle People APIを有効にする。権限は `chat.spaces.readonly`、`chat.messages.readonly`、`contacts.readonly` だけに限定し、未使用の `chat.memberships.readonly` は要求しない。People APIで一部の同僚名を補完できない場合があることと代替表示をREADMEで説明する。
-- ローカルwizardはダウンロードしたOAuth client JSONを資格情報として扱う。client secret、認可コード、access token、refresh token、client JSON全文は厳格secretとして永続物へ表示・保存しない。client IDは識別子であり、一時的なOAuth認可URLと管理者チェックリストには表示できるが、tracked file、Git差分・履歴、ログ、journal、fixture、スクリーンショット、評価証跡、再読込後も残るDOMへ保存しない。
+- 接続用JSONを取得できた後だけローカルwizardを起動する。wizardはJSON選択から開始し、Cloud project作成、API有効化、Audience、Client作成の説明画面・案内画像を重複して持たない。JSONは資格情報として扱い、client secret、認可コード、access token、refresh token、client JSON全文を厳格secretとして永続物へ表示・保存しない。client IDは識別子であり、一時的なOAuth認可URLと管理者チェックリストには表示できるが、tracked file、Git差分・履歴、ログ、journal、fixture、スクリーンショット、評価証跡、再読込後も残るDOMへ保存しない。
 - OAuthはPKCEとstateを併用し、利用者のブラウザとloopbackのローカル受付だけで完了する。認可コードは受領後すぐtokenへ交換して記録しない。取得した3つの値は現在のprivate repoのRepository Secret `GOOGLE_OAUTH_CLIENT_ID`、`GOOGLE_OAUTH_CLIENT_SECRET`、`GOOGLE_OAUTH_REFRESH_TOKEN_GCHAT` へ直接登録し、値のコピー＆ペーストを通常導線にしない。
+- JSON確認後に明示ボタンでOAuth許可画面を別タブに開き、元wizardは状態確認を続ける。許可後は元wizardが自動で通常スペース選択へ進む。ポップアップ拒否、タブ閉鎖、同意拒否、失敗時に元wizardを失わないSprint 019の合格動作を維持する。
+- Google Cloud準備は、厳格secretを含めず「repo、Project案、組織、完了済み工程、次の工程」だけで途中再開できる。中断後は完了済み工程をやり直さず、現在のProjectを確認して次の一操作から再開する。
 - Google ChatはChatworkと同じwizard骨格を共有する。各画面には「Google Chatの設定」を見出しとaccessible nameで明示し、primary CTAの背景色を `#11BB62` にする。
 - `Internal` にできない、管理者がAPI access controlsで拒否した、必要APIが無効、OAuth同意が拒否・失効した場合を区別し、Googleの英語エラーより先に必要な対応を日本語で示す。
 

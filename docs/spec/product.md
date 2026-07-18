@@ -104,8 +104,14 @@ Repository Secret設定、workflow dispatch、push、Chatwork API送信を明示
 Google Chatは、各利用組織が所有するGoogle Cloudプロジェクトと、利用者本人が同意するユーザーOAuthで接続する。
 共通の外部向けOAuthアプリは使わず、OAuth Audienceは同じGoogle Workspace組織内に限る `Internal` を前提とする。
 READMEでは通常機能と混同せず「Google Chatをつなぐ（少し高度な設定）」として扱う。
-画面を開いている本人がGoogle Workspace／Google Cloudの管理者である場合を主経路にし、Google Cloudプロジェクト作成から
-接続用ファイルの取得までをアカウント中立な画像つき手順で案内する。本人が設定できない場合は、同じ必要事項を管理者へ依頼できる経路を残す。
+Google Cloudの準備はGoogle Chat skillとの会話が担当する。起動中のGit repo名を基にProject案を示し、Google公式CLIの
+`gcloud` で可能なプロジェクト作成と必要APIの有効化を、変更内容の説明と明示確認の後だけ進める。
+Google画面で本人操作が必要な `Internal` Audience、`Desktop app`、接続用JSON取得は、対象Projectを指定した直接リンクと
+一画面一操作の案内を順に出し、利用者の「できました」を受けて次へ進む。`gcloud`を導入できない場合は同じ全工程を
+直接リンクによる手動操作支援へ切り替える。Browser Useやブラウザ拡張機能は必須にしない。
+
+接続用JSONを取得できた後だけlocal wizardを開く。wizardはJSON選択、明示ボタンから別タブで行うOAuth許可、
+通常スペース選択以降に集中し、Cloudプロジェクト作成やAPI有効化の説明画像・手順を重複して持たない。
 
 接続後は、利用者が名前を確認して選んだ `SPACE` 種別の通常スペースだけを同じprivate workspaceへ保存する。
 1対1のDMとグループDMは初版では対象外にし、投稿・編集・削除も行わない。保存形式と取得の考え方は
@@ -133,7 +139,7 @@ READMEでは通常機能と混同せず「Google Chatをつなぐ（少し高度
 10. 継続する一般業務を確認後にプロジェクト化し、ライトな1枚から開始して、必要になった時だけユーザー確認後にフル運用へ昇格できる。
 11. 特定の講座・期・教材の説明がなくても、READMEと配布物だけで一般の非エンジニアが導入・利用を始められる。
 12. 「最新版にして」から、まず現在版・最新版・変更点・影響・カスタマイズ衝突可能性を変更なしで理解でき、明示確認後だけ保護commit、更新、移行、検証、必要時の復元へ進める。
-13. `/google-chat` から各社所有Cloud projectの前提、OAuth接続、通常スペース選択、初回取得、検索、3時間推奨の定期取得へ進める。
+13. `/google-chat` からAI支援で各社所有Cloud projectを準備し、接続用JSON取得後のOAuth接続、通常スペース選択、初回取得、検索、3時間推奨の定期取得へ進める。
 
 ## 成功状態
 
@@ -163,7 +169,7 @@ READMEでは通常機能と混同せず「Google Chatをつなぐ（少し高度
 - 3時間ごとの自動取得を推奨・初期値として選べ、同意済みscheduleだけがcommit・pushする。認証失効や管理者ブロック時は、秘密値を出さず再認証または管理者確認へ進める。
 - ChatworkとGoogle Chatは共通wizard骨格で操作でき、各画面のサービス名とサービス別primary CTA色により取り違えない。
 - Chatwork／Google Chatの初見利用者が、主説明だけで「今すること」「次に起きること」「何を読み、どこへ保存し、誰が見られるか」を説明できる。正式な技術名は必要な場面だけ短い役割説明または管理者向け詳細で確認できる。
-- Google Chatを本人が設定する利用者は、主導線を離れずに画像つき手順を開き、必要API、`Internal`、`Desktop app`、接続用ファイルの取得まで進められる。初回設定ではスペースと間隔を一度だけ選び、`この設定で始める` の1回で初回取り込みと自動取得設定が完了する。完了画面のprimary CTAは `設定を終了する` だけである。
+- Google Chatを設定する利用者は、Google Chat skillの案内に沿って、現在のrepoに対応するCloud project、必要API、`Internal`、`Desktop app`、接続用JSONの取得まで進められる。`gcloud`を使えない環境でも、対象Projectを指定した直接リンクで同じ完了状態へ到達できる。JSON取得後のwizardではスペースと間隔を一度だけ選び、`この設定で始める` の1回で初回取り込みと自動取得設定が完了する。完了画面のprimary CTAは `設定を終了する` だけである。
 
 ## 非ゴール
 
@@ -183,6 +189,9 @@ READMEでは通常機能と混同せず「Google Chatをつなぐ（少し高度
 - Sprint 017/018の履歴正本は改変しない。Google Chatの接続、OAuth、同期、設定画面はSprint 019/020だけで扱う。
 - ShigApps共通の外部向けOAuthアプリ、Googleの外部公開審査を前提にした配布、サービスアカウント、Domain-Wide Delegationは初版で扱わない。
 - Google ChatのDM／グループDM、全スペース自動選択、投稿・編集・削除、添付ファイル本文のダウンロード、取得済み履歴の自動削除は行わない。
+- 無料の個人Googleアカウント向けの分岐、`External` Audience、Test users、公開審査の案内は扱わない。Google WorkspaceのGoogle Chatだけを正式サポートする。
+- Browser Use、Chrome拡張機能、特定のブラウザ自動操作環境をGoogle Cloud準備の必須条件にしない。
+- 会社別・相手別にGoogle Chat／Chatworkを自動判定するチャットルーティングは今回扱わない。
 - 読み取り専用診断中のplugin更新、workspace書込み、migration、commit、push、設定の自動変更は行わない。
 - 更新のために利用者のカスタマイズを無確認で上書きしない。自動push、履歴書換え、secretや私的内容を含む台帳は作らない。
 

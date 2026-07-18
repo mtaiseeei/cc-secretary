@@ -174,10 +174,19 @@
 12. scheduleによるcommit・pushは、選択スペース、間隔、保存内容、共同編集者への可視性を示した後の明示同意でだけ許可する。既定推奨・初期値はChatworkと同じ3時間ごとで、手動のみを選べる。
 13. public配布repoにはGoogle ChatのSecret、workflow、スペース設定、同期状態、履歴を置かない。実APIは専用private test workspaceと非機密test spaceでだけ評価し、ユーザー許可前にCloud project作成、Secret設定、OAuth認可、workflow dispatch、API送信、pushを行わない。
 14. OAuth後のキャンセルとlive gate後始末では、schedule停止、Google Chat用Secret削除、test space選択解除に加えて、Google側のOAuth grant／tokenをrevokeする。アプリ権限ページからの取消手順を示し、取得履歴やtest workspaceの削除は別の明示確認を必要とする。
-15. Google Cloud準備は、画面を開いている本人が管理者またはプロジェクト作成者である経路を主とし、管理者へ依頼する経路も残す。本人向け画像つき手順は、プロジェクト作成、必要API、`Internal`、`Desktop app`、接続用ファイル取得を扱い、メールアドレス、client ID、client secret、プロジェクト固有の機密値・識別値を表示しない。Google側UIの確認日と変更可能性を併記する。
+15. Google Cloud準備はGoogle Chat skillの会話が担当する。local wizardとREADMEへCloud準備の説明画像を置かず、wizardは接続用JSON選択から始める。READMEはAIへ設定を依頼する入口と、AIを使わず進める場合の公式リンクを持つが、同じ長い手順をwizardへ重複させない。
+16. Google ChatはGoogle WorkspaceのGoogle Chatだけを正式サポートする。OAuth Audienceは `Internal` に固定し、無料の個人Googleアカウント、`External`、Test users、公開審査へ分岐・fallbackしない。利用者向けREADME、skill会話、wizardに個人アカウント向け説明を出さない。
+17. Cloud projectのProject表示名は、Git repo rootのディレクトリ名へ `-google-chat` を付けた値とする。Project IDの初期案も同じ値とし、Googleの命名制約または全体重複で使えない場合だけ調整する。調整後を含む表示名、Project ID、Google Workspace組織、API、Billing非接続を作成前に示し、明示確認を得る。Git repo rootを確認できない場合はprojectを作らない。
+18. `gcloud`はGoogle公式の管理ツールで、インストール自体に料金は発生しないと案内できる。ただしCloud設定を変更できるため、インストール内容と実行予定を先に示し、利用者の明示承認後だけ導入・変更を行う。Billing Accountを自動接続せず、有料サービスを勝手に有効化しない。`gcloud`を導入できない、利用者が断る、権限がない場合は直接リンクの手動支援へ切り替え、行き止まりにしない。
+19. CLIでproject作成とGoogle Chat API／People API有効化を行う前に、ログイン中のアカウント、利用可能な組織、対象project、権限を確認する。未ログイン、複数組織、権限不足、Project ID衝突、CLI途中失敗を推測で越えず、完了済み工程と未完了工程を分けて表示する。同じ操作を無条件に繰り返さない。
+20. Google画面で必要な `Internal` Audience、`Desktop app`、接続用JSON取得は、Project IDを指定した公式の直接リンク、押す場所、完了条件を一画面一操作で案内し、利用者の「できました」を受けて次へ進む。Browser Use、Chrome拡張機能、特定ブラウザを必須にしない。手動工程が中断しても、厳格secretを保存せず、repo、Project案、組織、完了工程、次の工程だけで再開できる。
 
 ### Google公式情報の確認基準（2026年7月）
 
+- Google Cloud CLI install: `https://cloud.google.com/sdk/docs/install`
+- `gcloud projects create`: `https://cloud.google.com/sdk/gcloud/reference/projects/create`
+- `gcloud services enable`: `https://cloud.google.com/sdk/gcloud/reference/services/enable`
+- Google Cloud project management: `https://docs.cloud.google.com/resource-manager/docs/creating-managing-projects`
 - Google Chat authentication: `https://developers.google.com/workspace/chat/authenticate-authorize`
 - User OAuth setup: `https://developers.google.com/workspace/chat/authenticate-authorize-chat-user`
 - OAuth consent and scope categories: `https://developers.google.com/workspace/guides/configure-oauth-consent`
@@ -203,3 +212,5 @@
 10. 全画面の見出し、本文、help、details、label、CTA、empty／loading／error／success copyをinventory化し、画面・状態・対象サービス・主導線／技術詳細・必須意味要素を追跡できるようにする。未棚卸しの可視文言を残したまま合格にしない。
 11. Google Chatの初回設定はChatworkと同じ一体型フローにする。スペース選択→間隔選択→保存内容・共同編集者可視性・自動取得・commit／pushの明示同意→`この設定で始める`→初回取り込みと自動取得設定→`設定を終了する` の順とし、確定後に別の自動取得CTA、スペース／間隔の再選択、追加の設定変更フローを出さない。手動のみでも初回取り込みは行い、scheduleは作らない。
 12. 初回取り込みとschedule設定の結果が分かれ得る場合は、完了した処理と未完了の処理、次にすることを別々に表示し、全体を成功と誤認させない。既存の確認前0変更、安全なtransaction／rollback、secret非露出の境界を緩めない。後日の通常の設定変更導線は維持する。
+13. Cloud準備の会話とlocal wizardを分ける。skill会話はJSON取得までを担当し、JSON取得を確認してからwizardを起動する。wizardはJSON選択→OAuth許可→通常スペース選択へ進み、Cloud project作成・API有効化・Audience・OAuth Client作成の画像や重複説明を表示しない。
+14. OAuth許可はJSON確認後の明示ボタンで別タブに開く。元wizardの状態確認、ポップアップ拒否、タブ閉鎖、同意拒否、再試行、許可後の自動SPACE選択というSprint 019の合格動作を維持する。OAuth画面をJSON選択だけで勝手に開かない。
