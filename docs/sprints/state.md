@@ -40,7 +40,7 @@
 | sprint-019 | done | [contract](sprint-019.md) | [progress](../progress/sprint-019.md) | [feedback](../feedback/sprint-019.md) |
 | sprint-020 | done | [contract](sprint-020.md) | [progress](../progress/sprint-020.md) | [feedback](../feedback/sprint-020.md) |
 | sprint-020-patch-001 | done | [contract](sprint-020-patch-001.md) | [progress](../progress/sprint-020-patch-001.md) | [feedback](../feedback/sprint-020-patch-001.md) |
-| sprint-020-patch-002 | active | [contract](sprint-020-patch-002.md) | - | - |
+| sprint-020-patch-002 | awaiting-eval | [contract](sprint-020-patch-002.md) | [progress](../progress/sprint-020-patch-002.md) | - |
 
 ## Deferred / Superseded
 - sprint-007: superseded — 2026-07-15 製品方針転換により白紙化、`backup/sprint-007-010-plan` に退避
@@ -90,3 +90,4 @@
 - 2026-07-18: sprint-020-patch-001 Retry 2再開のGeneratorが、Google Chatの初回取り込みと自動取得設定を1回で確定する一体型フロー、手動のみschedule 0件、部分失敗表示、Chatworkのアクセス表現、共通details開閉、本人管理者向けGoogle Cloud画面例を実装。copy 71件、Google Chat 51件、Chatwork 59件、browser 32状態、offline 316件、online 317件が0 FAILのため独立Evaluatorへ引き渡した。
 - 2026-07-18: sprint-020-patch-001 Retry 2最終評価は独立Evaluatorで合格。Rubric 55/55、受入18/18、copy 71件、Google Chat 51件、Chatwork 7件、adversarial 16件、wrapper 7件、browser 32状態、schedule部分失敗browser 1件、offline 316件、online 317件が0 FAIL。ユーザー本人を含む理解テスト3 sessionは両サービス平均5.0/5、重大誤解0。secret・固有識別値0、外部変更0、評価用fixture停止を確認して完了した。
 - 2026-07-18: ユーザーがGoogle Workspace版Google Chatだけを正式サポートする方針を確定。Google Cloud準備をAI会話へ分離し、`gcloud`と公式リンクでJSON取得まで支援した後にlocal wizardを開始する `sprint-020-patch-002` を開始する。個人Googleアカウント向け説明、Browser Use必須化、会社別チャットルーティングは対象外とする。
+- 2026-07-18: sprint-020-patch-002 GeneratorがWorkspace限定のCloud準備会話、repo名由来Project案、承認後だけのProject・2 API操作、公式リンクfallback、秘密情報なしの再開、JSON選択開始wizardを実装。旧Cloud準備3画面と案内SVGを撤去し、専用37件、Patch 001 copy 69件、Sprint 020 50件、敵対条件16件、Chatwork 7件、配布面2件が0 FAIL。Generator環境でloopback待受が拒否された全回帰とmobile／200%相当の実画面確認を独立Evaluatorへ引き渡した。
