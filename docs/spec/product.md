@@ -103,8 +103,9 @@ Repository Secret設定、workflow dispatch、push、Chatwork API送信を明示
 
 Google Chatは、各利用組織が所有するGoogle Cloudプロジェクトと、利用者本人が同意するユーザーOAuthで接続する。
 共通の外部向けOAuthアプリは使わず、OAuth Audienceは同じGoogle Workspace組織内に限る `Internal` を前提とする。
-READMEでは通常機能と混同せず「Google Chatをつなぐ（少し高度な設定）」として、管理者へ依頼する内容と
-利用者が行う内容を順に示す。
+READMEでは通常機能と混同せず「Google Chatをつなぐ（少し高度な設定）」として扱う。
+画面を開いている本人がGoogle Workspace／Google Cloudの管理者である場合を主経路にし、Google Cloudプロジェクト作成から
+接続用ファイルの取得までをアカウント中立な画像つき手順で案内する。本人が設定できない場合は、同じ必要事項を管理者へ依頼できる経路を残す。
 
 接続後は、利用者が名前を確認して選んだ `SPACE` 種別の通常スペースだけを同じprivate workspaceへ保存する。
 1対1のDMとグループDMは初版では対象外にし、投稿・編集・削除も行わない。保存形式と取得の考え方は
@@ -160,6 +161,7 @@ READMEでは通常機能と混同せず「Google Chatをつなぐ（少し高度
 - 3時間ごとの自動取得を推奨・初期値として選べ、同意済みscheduleだけがcommit・pushする。認証失効や管理者ブロック時は、秘密値を出さず再認証または管理者確認へ進める。
 - ChatworkとGoogle Chatは共通wizard骨格で操作でき、各画面のサービス名とサービス別primary CTA色により取り違えない。
 - Chatwork／Google Chatの初見利用者が、主説明だけで「今すること」「次に起きること」「何を読み、どこへ保存し、誰が見られるか」を説明できる。正式な技術名は必要な場面だけ短い役割説明または管理者向け詳細で確認できる。
+- Google Chatを本人が設定する利用者は、主導線を離れずに画像つき手順を開き、必要API、`Internal`、`Desktop app`、接続用ファイルの取得まで進められる。初回取得後はそのまま終了でき、自動取得は必要な人だけが選び、直前のスペースと間隔を再選択しない。
 
 ## 非ゴール
 

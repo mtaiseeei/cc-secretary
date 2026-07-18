@@ -90,3 +90,4 @@ sprint-007 は製品方針転換で白紙化され、旧計画と実装は `back
 16. Google OAuthの厳格secret（client secret、認可コード、access token、refresh token、OAuth client JSON全文）は永続物へ残さない。client IDは識別子として扱い、認可中の一時URLと管理者チェックリストだけで表示できるが、tracked file、Git差分・履歴、ログ、journal、fixture、スクリーンショット、評価証跡、再読込後も残るDOMへ保存しない。
 17. ChatworkとGoogle Chatは1つの共通wizard骨格を使い、全画面で対象サービス名を明示する。primary CTAの背景色はChatwork `#F03747`、Google Chat `#11BB62` とし、両サービスの推奨・初期同期間隔を3時間に揃える。
 18. Chatwork／Google Chat wizardの主導線は「今すること」1文、1画面1判断、1段落1要点に絞る。内部用語は判断に必要な正式名称を除いて主説明から外し、安全同意の意味は短く分けて必ず残す。
+19. 詳細は開閉可能と見た目・支援技術の両方で分かるようにする。Google ChatのCloud準備は本人管理者を主経路、管理者依頼を副経路とし、アカウント中立な画像で案内する。初回取得後は終了をprimary、自動取得を任意のsecondaryとし、選択済みスペース・間隔を再選択させない。

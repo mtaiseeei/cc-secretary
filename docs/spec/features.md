@@ -87,8 +87,9 @@
 
 - ChatworkとGoogle Chatは同じローカルwizard骨格を共有する。Chatworkの各画面には「Chatworkの設定」を見出しとaccessible nameで明示し、primary CTAの背景色を `#F03747` にする。
 - 主導線は、最初に「今すること」を1文で示し、1画面1判断・1段落1要点にする。`Repository Secret`、`workflow`、`commit・push`等は目的を日常語で先に伝え、正式名称は判断に必要な場面か「詳しい説明」に置く。
+- 「詳しい説明」は、山形アイコン等により開閉できることが見た目で分かり、keyboard、visible focus、開閉状態、accessible nameを備える。閉じた状態でも主導線を完了できる。
 - `/chatwork` から接続状態と次の行動を確認でき、未設定ならChatworkのAPI Token取得、GitHub上の安全な保管場所への登録、ルーム選択を順に進められる。
-- API Token取得ではChatwork公式のTokenページと発行ヘルプへ直接進める。組織契約でTokenページを利用できない場合は、実際にAPIを使うアカウントで組織管理者へ利用申請し、承認後に同じ設定へ戻る導線を示す。承認前はルーム一覧取得へ進めない。
+- API Token取得ではChatwork公式のTokenページと発行ヘルプへ直接進める。組織契約でTokenページを利用できない場合は、実際にAPIを使うアカウントで組織管理者へ利用申請し、承認後にこの設定画面へアクセスする導線を示す。承認前はルーム一覧取得へ進めない。
 - Tokenはwizardや会話へ貼らせない。現在のGitHub repoのowner／nameから組み立てたSecret追加画面を「GitHub上の安全な保管場所を開く」と案内し、利用者自身が名前 `CHATWORK_API_TOKEN` で登録する。固定ownerや固定repo pathへ誘導しない。
 - API Tokenの値はrepo本文、設定ファイル、ログ、journal、fixture、画面キャプチャへ保存しない。
 - Secret登録を利用者が確認した後、GitHub Actionsが参加中のルーム一覧を取得して同じ非公開のGitHubリポジトリへ反映し、ローカル設定wizardはその一覧を読み、ルーム名を見ながら複数選択できる。Git管理するのはルーム一覧・選択結果・ルームIDであり、Tokenではない。
@@ -174,8 +175,9 @@
 
 ### F32 各社所有Google CloudプロジェクトとユーザーOAuth
 
-- READMEに「Google Chatをつなぐ（少し高度な設定）」を設け、Google Workspace管理者またはGoogle Cloudプロジェクトを作成できる人向けであることを最初に示す。
+- READMEに「Google Chatをつなぐ（少し高度な設定）」を設け、画面を開いている本人がGoogle Workspace管理者またはGoogle Cloudプロジェクトを作成できる場合を主経路として最初に示す。本人が設定できない場合は、管理者へ依頼する経路も同じ必要事項で残す。
 - 主導線では「今すること」を1文で先に示し、Google CloudやOAuthの準備を1画面1判断へ分ける。`loopback`、`scope`、OAuth client JSON等の内部詳細は主説明に並べず、必要な正式名称と役割を「詳しい説明」または「管理者向け」に置く。
+- 本人設定の折りたたみガイドは、Google Cloudプロジェクト作成、Google Chat API／People APIの有効化、OAuth同意画面の `Internal` 設定、`Desktop app` のOAuth client作成、接続用ファイルの取得を画像つきで順に示す。画像はメールアドレス、client ID、client secret、プロジェクト固有の機密値・識別値を含まないアカウント中立なものとし、Google側UIの確認日と変更可能性を添える。
 - 利用者の会社ごとに、そのGoogle Workspace組織が所有するGoogle Cloudプロジェクトを使う。OAuth Audienceは `Internal`、OAuth Clientは `Desktop app` とし、ShigApps共通の外部向けOAuthアプリは使わない。
 - Google Chat APIと、発言者名の補完に必要なGoogle People APIを有効にする。権限は `chat.spaces.readonly`、`chat.messages.readonly`、`contacts.readonly` だけに限定し、未使用の `chat.memberships.readonly` は要求しない。People APIで一部の同僚名を補完できない場合があることと代替表示をREADMEで説明する。
 - ローカルwizardはダウンロードしたOAuth client JSONを資格情報として扱う。client secret、認可コード、access token、refresh token、client JSON全文は厳格secretとして永続物へ表示・保存しない。client IDは識別子であり、一時的なOAuth認可URLと管理者チェックリストには表示できるが、tracked file、Git差分・履歴、ログ、journal、fixture、スクリーンショット、評価証跡、再読込後も残るDOMへ保存しない。
@@ -189,6 +191,7 @@
 - 初期状態で全スペースを選ばない。検索、複数選択、全解除を提供し、確定前に対象スペース、保存内容、private repoの共同編集者が本文を読めることを示す。
 - 初回取得は、選択スペースについてGoogle Chat APIと組織の保持設定が返せるメッセージをページングして取得する。0件は正常とし、APIが返さない履歴を取得済みと見せない。
 - 初回取得はOAuth完了直後の同じwizardセッション内で、メモリ上のtokenだけを使ってローカル実行する。tokenはセッション終了時に破棄し、以後の取得はGitHub Actionsが担う。取得前の確認画面で、取得結果の保存とGitのcommit・pushへ明示同意を得る。
+- 初回取得の結果画面では、初回取得と自動取得が別の設定であることを短く示し、`設定を終了する` をprimary CTAにする。自動取得は任意のsecondary導線とし、選んだ場合も直前に選択済みのスペースと間隔を再選択させず、確認→適用→終了へ進める。
 - 初回取得時にも選択済みspace IDの `spaceType=SPACE` を再確認し、設定ファイルの直編集等でDM／グループDMが混入しても取得を拒否する。
 - `my-vault` の現行Google Chat同期を製品上の基準にし、スペース別・日付別Markdown、Asia/Tokyoの時刻、スレッド親子関係、発言者、本文、添付ファイル名・種類・参照先等のメタデータを保存する。添付ファイル本文はダウンロードしない。
 - message resource nameを同一性の基準にして再取得時の重複を防ぐ。同日ファイルへ新しい投稿を追加しても既存投稿を失わず、部分失敗時は成功スペースと失敗スペースを区別する。
