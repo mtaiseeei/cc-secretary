@@ -1066,7 +1066,18 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-section "27. Harness v0.4.2 runtime移行"
+section "27. secret検査とGit所有変更の分離（sprint-021）"
+# ---------------------------------------------------------------------------
+SPRINT021_REGRESSION="$REPO/scripts/sprint-021-regression.sh"
+check "sprint-021回帰が存在し実行可能" "[ -x '$SPRINT021_REGRESSION' ]"
+if bash "$SPRINT021_REGRESSION"; then
+  ok "sprint-021 secret検査・所有path commit・失敗保護が全て成功"
+else
+  ng "sprint-021回帰に失敗"
+fi
+
+# ---------------------------------------------------------------------------
+section "28. Harness v0.4.2 runtime移行"
 # ---------------------------------------------------------------------------
 HARNESS_CONFIG="$REPO/.harness/config.toml"
 HARNESS_IGNORE="$REPO/.harness/.gitignore"
@@ -1115,8 +1126,8 @@ check "AGENTSがClaude継承・Codex既定・Terra自動除外・失敗停止を
 check "既存CLAUDE.mdの製品固有境界・secret・3行報告を維持" \
   "grep -q 'yasashii-harness' '$REPO/CLAUDE.md' && grep -q '読み取りを含む全面接触禁止' '$REPO/CLAUDE.md' && grep -q 'Repository SecretのAPI Token' '$REPO/CLAUDE.md' && grep -q 'やったこと／結果／次に何が起きるか' '$REPO/CLAUDE.md'"
 
-check "stateが完了履歴を保ちstandard/noneを記録" \
-  "grep -qx -- '- Model Tier: standard' '$HARNESS_STATE' && grep -qx -- '- Rotate: none' '$HARNESS_STATE' && grep -qx -- '- Next Planned: TBD' '$HARNESS_STATE' && ! grep -q 'Model Tier: unknown' '$HARNESS_STATE'"
+check "stateが完了履歴と有効なruntime状態を保持" \
+  "grep -q '^| sprint-020-patch-002 | done |' '$HARNESS_STATE' && grep -qE '^- Model Tier: (standard|strong)$' '$HARNESS_STATE' && grep -qE '^- Rotate: (none|runtime-migration|model-escalation|model-availability)$' '$HARNESS_STATE' && grep -qE '^- Current ID: sprint-[0-9]{3}(-patch-[0-9]{3})?$' '$HARNESS_STATE' && ! grep -q 'Model Tier: unknown' '$HARNESS_STATE'"
 
 check "guidanceがv0.4.2 runtime運用とno-overwriteを案内" \
   "grep -q '.harness/config.local.toml' '$HARNESS_GUIDANCE' && grep -q 'dispatch-ready, not launch-verified' '$HARNESS_GUIDANCE' && grep -q 'Rotate: model-escalation' '$HARNESS_GUIDANCE' && grep -q 'Rotate: model-availability' '$HARNESS_GUIDANCE' && grep -q 'never persist.*unknown' '$HARNESS_GUIDANCE' && grep -q 'Do not overwrite existing guidance' '$HARNESS_GUIDANCE'"

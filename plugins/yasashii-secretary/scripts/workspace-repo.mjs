@@ -6,11 +6,10 @@ import {
   existsSync,
   mkdirSync,
   readdirSync,
-  readFileSync,
   realpathSync,
-  statSync,
 } from "node:fs";
-import { basename, join, relative, resolve, sep } from "node:path";
+import { basename, join, resolve } from "node:path";
+import { commitOwnedChanges, inspectWorkingCandidates, pushOwnedCommit } from "./lib/safe-git.mjs";
 
 const EXIT_USAGE = 2;
 const EXIT_CONFIRM = 3;
@@ -89,40 +88,6 @@ function gitRoot(root, gitBinary) {
   return found ? realpathSync(found) : null;
 }
 
-function listFiles(root, current = "") {
-  const files = [];
-  for (const item of readdirSync(join(root, current), { withFileTypes: true })) {
-    if (item.name === ".git") continue;
-    const child = join(current, item.name);
-    if (item.isDirectory()) files.push(...listFiles(root, child));
-    else if (item.isFile()) files.push(child);
-  }
-  return files;
-}
-
-function findSensitiveFiles(root) {
-  const filenameRisk = /(^|\/)(\.env(?:\..+)?|credentials?[^/]*|secrets?[^/]*|id_rsa|id_ed25519|[^/]+\.(?:pem|key))$/i;
-  const valueRisk = /(CHATWORK_API_TOKEN|x-chatworktoken)\s*[:=]\s*["']?[A-Za-z0-9_-]{8,}/i;
-  const risks = [];
-  for (const file of listFiles(root)) {
-    const normalized = file.split(sep).join("/");
-    if (filenameRisk.test(normalized) && !/\.env\.example$/i.test(normalized)) {
-      risks.push(normalized);
-      continue;
-    }
-    const absolute = join(root, file);
-    if (statSync(absolute).size > 1024 * 1024) continue;
-    let body;
-    try {
-      body = readFileSync(absolute, "utf8");
-    } catch {
-      continue;
-    }
-    if (valueRisk.test(body)) risks.push(normalized);
-  }
-  return risks;
-}
-
 function verifyExistingRemote(root, ghBinary) {
   const raw = run(ghBinary, ["repo", "view", "--json", "visibility,url"], root, {
     quiet: true,
@@ -173,33 +138,52 @@ function publishWorkspace(args) {
     existingRemoteInfo = verifyExistingRemote(root, ghBinary);
   }
 
-  const risks = findSensitiveFiles(root);
-  if (risks.length > 0) {
-    fail(`資格情報の可能性があるファイルを検出したためcommitしません: ${risks.slice(0, 5).join(", ")}`, EXIT_CONFIRM);
+  // 初回publishが所有するinventoryを明示する。repo rootの既存文書や別作業は対象にしない。
+  const publishInventory = [
+    "secretary",
+    "chatwork",
+    "google-chat",
+    ".github/workflows/chatwork-sync.yml",
+    ".github/workflows/google-chat-sync.yml",
+    ".yasashii-secretary/update-ledger.json",
+  ].filter((path) => existsSync(join(root, path)));
+  try {
+    // commit対象外のrootファイルに資格情報が混ざっていても、初回push前に停止する。
+    // commitへ入れるのは上で明示したinventoryだけ。
+    inspectWorkingCandidates(root, readdirSync(root).filter((name) => name !== ".git"));
+  } catch (error) {
+    fail(error.message || "初回commit候補を安全に検査できないため停止しました。", EXIT_CONFIRM);
   }
 
   if (!existingRoot) run(gitBinary, ["init", "-b", "main"], root, { message: "Git repoの初期化に失敗しました。" });
-  run(gitBinary, ["add", "-A"], root, { message: "初回commitの準備に失敗しました。" });
-  const hasStagedChanges = run(gitBinary, ["diff", "--cached", "--quiet"], root, { allowFailure: true, quiet: true }) === null;
   const hasHead = run(gitBinary, ["rev-parse", "--verify", "HEAD"], root, { allowFailure: true, quiet: true }) !== null;
-  if (hasStagedChanges) {
-    run(gitBinary, ["commit", "-m", hasHead ? "秘書とChatworkのworkspaceを設定" : "秘書workspaceを作成（初回セットアップ）"], root, {
-      message: "初回commitに失敗しました。Gitの名前とメール設定を確認してください。",
+  let committed;
+  try {
+    committed = commitOwnedChanges({
+      root,
+      ownedPaths: publishInventory,
+      message: hasHead ? "秘書とチャットのworkspaceを設定" : "秘書workspaceを作成（初回セットアップ）",
     });
-  } else if (!hasHead) {
+  } catch (error) {
+    fail(error.message || "初回commitに失敗しました。Gitの名前とメール設定を確認してください。", error.code === "secret-detected" ? EXIT_CONFIRM : 1);
+  }
+  if (committed.status !== "committed" && !hasHead) {
     fail("commitするファイルがありません。初回設定の生成物を確認してください。", 1);
   }
-
+  const commit = committed.newHead;
   let remoteUrl;
   if (remotes.length > 0) {
-    run(gitBinary, ["push", "-u", "origin", "HEAD"], root, { message: "既存private repoへの初回pushに失敗しました。" });
+    try { pushOwnedCommit({ root, oldHead: committed.oldHead, newHead: commit, remote: "origin", setUpstream: true }); }
+    catch (error) { fail(error.message || "private repoへのpushに失敗しました。", 1); }
     remoteUrl = existingRemoteInfo.url;
   } else {
     const repoName = args.values.get("--repo");
     if (!repoName || !/^[A-Za-z0-9._-]{1,100}$/.test(repoName)) fail("安全なrepo名を --repo で指定してください。");
-    run(ghBinary, ["repo", "create", repoName, "--private", "--source", root, "--remote", "origin", "--push"], root, {
-      message: "private GitHub repoの作成または初回pushに失敗しました。",
+    run(ghBinary, ["repo", "create", repoName, "--private", "--source", root, "--remote", "origin"], root, {
+      message: "private GitHub repoを作成できませんでした。初回commitはローカルに残り、既存のstageや別作業は変更していません。",
     });
+    try { pushOwnedCommit({ root, oldHead: committed.oldHead, newHead: commit, remote: "origin", setUpstream: true }); }
+    catch (error) { fail(error.message || "private GitHub repoへの初回pushに失敗しました。", 1); }
     remoteUrl = run(gitBinary, ["remote", "get-url", "origin"], root, { quiet: true });
   }
 

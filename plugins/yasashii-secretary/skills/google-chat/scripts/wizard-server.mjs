@@ -5,6 +5,7 @@ import { createServer } from "node:http";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { commitOwnedChanges, pushOwnedCommit } from "../../../scripts/lib/safe-git.mjs";
 import { createGoogleChatClient } from "./client.mjs";
 import { applyGoogleChatConfig } from "./config-transaction.mjs";
 import { initialGoogleChatSync } from "./sync.mjs";
@@ -177,11 +178,10 @@ async function commitAndPush(paths) {
   const result = { status: "running", paths: existingPaths, committed: false, pushed: false };
   try {
     if (existingPaths.length === 0) throw new Error("保存対象がありません。");
-    execFileSync(git, ["add", "--", ...existingPaths], { cwd: root, stdio: "ignore" });
-    // 他の作業でstage済みのファイルを、この設定への同意へ混ぜない。
-    execFileSync(git, ["commit", "--only", "-m", "Google Chatの選択スペース履歴を初回保存", "--", ...existingPaths], { cwd: root, stdio: "ignore" });
+    const committed = commitOwnedChanges({ root, ownedPaths: existingPaths, message: "Google Chatの選択スペース履歴を初回保存" });
+    if (committed.status !== "committed") throw Object.assign(new Error("初回取得にcommitする変更がありません。"), { code: "no-change" });
     result.committed = true;
-    execFileSync(git, ["push"], { cwd: root, stdio: "ignore" });
+    pushOwnedCommit({ root, oldHead: committed.oldHead, newHead: committed.newHead });
     result.pushed = true;
     result.status = "pushed";
     return result;

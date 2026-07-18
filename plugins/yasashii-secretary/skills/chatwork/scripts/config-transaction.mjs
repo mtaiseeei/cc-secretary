@@ -5,6 +5,7 @@ import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
+import { commitOwnedChanges, pushOwnedCommit, restoreOwnedCommit } from "../../../scripts/lib/safe-git.mjs";
 import { INTERVALS, renderWorkflow } from "./schedule.mjs";
 
 const exec = promisify(execFile);
@@ -84,23 +85,20 @@ export async function applyChatworkConfig({ root, selectedRoomIds, interval, aut
     writeAtomic(configPath, `${JSON.stringify(config, null, 2)}\n`);
     writeAtomic(workflowPath, renderWorkflow(interval, scheduleEnabled));
     if (process.env.YASASHII_CHATWORK_SKIP_GIT === "1") return { status: "saved", config };
-    await run(git, ["add", "--", ...relativePaths], root);
-    await run(git, ["commit", "-m", "Chatworkのルームと自動取得の間隔を変更"], root);
-    newHead = (await run(git, ["rev-parse", "HEAD"], root)).stdout.trim();
-    await run(git, ["push"], root, 60_000);
+    const committed = commitOwnedChanges({ root, ownedPaths: relativePaths, message: "Chatworkのルームと自動取得の間隔を変更" });
+    if (committed.status !== "committed") throw Object.assign(new Error("Chatwork設定にcommitする変更がありません。"), { code: "no-change" });
+    newHead = committed.newHead;
+    pushOwnedCommit({ root, oldHead: committed.oldHead, newHead });
     return { status: "pushed", config, commit: newHead };
   } catch (error) {
     if (newHead && oldHead) {
-      try { await run(git, ["update-ref", "HEAD", oldHead, newHead], root); } catch { /* 次のrestoreで整合を試す */ }
+      try { restoreOwnedCommit({ root, oldHead, newHead, ownedPaths: relativePaths }); } catch { /* snapshot復元を続ける */ }
     }
     for (const [path, content] of snapshots) {
       if (content === null) rmSync(path, { force: true });
       else writeAtomic(path, content);
     }
-    if (oldHead && process.env.YASASHII_CHATWORK_SKIP_GIT !== "1") {
-      try { await run(git, ["restore", "--source", oldHead, "--staged", "--worktree", "--", ...relativePaths], root); } catch { /* 元内容は上で復元済み */ }
-    }
-    if (error.code === "dirty-config") throw error;
+    if (["dirty-config", "secret-detected", "inspection-failed", "candidate-changed", "commit-scope", "git-conflict", "push-base-changed", "push-failed"].includes(error.code)) throw error;
     const detail = classify(error);
     throw Object.assign(new Error(detail.message), { code: detail.code });
   }

@@ -5,6 +5,7 @@ import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { promisify } from "node:util";
+import { commitOwnedChanges, pushOwnedCommit, restoreOwnedCommit } from "../../../scripts/lib/safe-git.mjs";
 import { GOOGLE_CHAT_SECRET_NAMES } from "./oauth-session.mjs";
 import { GOOGLE_CHAT_INTERVALS, renderGoogleChatWorkflow } from "./schedule.mjs";
 
@@ -109,30 +110,20 @@ export async function applyGoogleChatConfig({ root, selectedSpaces, availableSpa
     for (const name of runtimeFiles) writeAtomic(join(root, "google-chat", "scripts", name), readFileSync(join(moduleRoot, name), "utf8"));
     if (process.env.YASASHII_GOOGLE_CHAT_SKIP_GIT === "1") return { status: "saved", config, workflow: { schedule: scheduleEnabled, interval } };
     const managedPaths = entries.map(([, relative]) => relative);
-    await run(git, ["add", "--", ...managedPaths], root);
-    // `--only` を付け、利用者が事前にstageしていた別ファイルをこの同意へ混ぜない。
-    // 対象外のindex状態はcommit後もそのまま残る。
-    await run(git, ["commit", "--only", "-m", "Google Chatのスペースと自動取得の間隔を変更", "--", ...managedPaths], root);
-    newHead = (await run(git, ["rev-parse", "HEAD"], root)).stdout.trim();
-    const committed = (await run(git, ["diff-tree", "--no-commit-id", "--name-only", "-r", newHead], root)).stdout.trim().split("\n").filter(Boolean);
-    const allowed = new Set(managedPaths);
-    if (committed.length === 0 || committed.some((path) => !allowed.has(path))) {
-      throw Object.assign(new Error("Google Chat設定以外のファイルがcommit対象に含まれたため、push前に変更を戻しました。"), { code: "commit-scope" });
-    }
-    await run(git, ["push"], root, 60_000);
+    const committed = commitOwnedChanges({ root, ownedPaths: managedPaths, message: "Google Chatのスペースと自動取得の間隔を変更" });
+    if (committed.status !== "committed") throw Object.assign(new Error("Google Chat設定にcommitする変更がありません。"), { code: "no-change" });
+    newHead = committed.newHead;
+    pushOwnedCommit({ root, oldHead: committed.oldHead, newHead });
     return { status: "pushed", config, workflow: { schedule: scheduleEnabled, interval }, commit: newHead };
   } catch (error) {
     if (newHead && oldHead) {
-      try { await run(git, ["update-ref", "HEAD", oldHead, newHead], root); } catch { /* ファイル復元を続ける */ }
+      try { restoreOwnedCommit({ root, oldHead, newHead, ownedPaths: entries.map(([, relative]) => relative) }); } catch { /* snapshot復元を続ける */ }
     }
     for (const [path, content] of snapshots) {
       if (content === null) rmSync(path, { force: true });
       else writeAtomic(path, content);
     }
-    if (oldHead && process.env.YASASHII_GOOGLE_CHAT_SKIP_GIT !== "1") {
-      try { await run(git, ["restore", "--source", oldHead, "--staged", "--worktree", "--", ...entries.map(([, relative]) => relative)], root); } catch { /* snapshotで内容は復元済み */ }
-    }
-    if (error.code === "dirty-config") throw error;
+    if (["dirty-config", "secret-detected", "inspection-failed", "candidate-changed", "commit-scope", "git-conflict", "push-base-changed", "push-failed"].includes(error.code)) throw error;
     const detail = classify(error);
     throw Object.assign(new Error(detail.message), { code: detail.code });
   }

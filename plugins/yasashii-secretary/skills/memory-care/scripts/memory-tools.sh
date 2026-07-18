@@ -383,21 +383,26 @@ case "$cmd" in
     [ -n "${msg// /}" ] || die_usage "コミットメッセージ（日本語）を指定"
     [ -L "$sec" ] && refuse "秘書ディレクトリが symlink です。安全のため操作できません。"
     git -C "$sec" rev-parse --is-inside-work-tree >/dev/null 2>&1 || die_usage "git 管理下ではありません: $sec"
-    # H3: 秘密情報を黙って履歴化しない。commit 前に秘密情報を検査し、見つかれば拒否する。
-    secret_content="$(grep -rlEi '(password|api[_-]?key|secret|token|client[_-]?secret)[[:space:]]*[:=][[:space:]]*[A-Za-z0-9_./+=-]{6,}' "$sec" --exclude-dir=.git 2>/dev/null || true)"
-    secret_files="$(find "$sec" -path "$sec/.git" -prune -o -type f \( -name '*.pem' -o -name '*.key' -o -name 'id_rsa' -o -name '.env' -o -iname '*credential*' -o -iname '*secret*' -o -iname '*token*' \) -print 2>/dev/null || true)"
-    if [ -n "${secret_content}${secret_files}" ]; then
-      echo "秘密情報らしきファイルが見つかりました。安全のためコミットしません:" >&2
-      printf '%s\n%s\n' "$secret_content" "$secret_files" | sed '/^$/d' | sed "s#^${sec}/#  #" | sort -u >&2
-      echo "トークン・パスワード・鍵ファイルは記録に含めない運用です。該当を取り除いてから、もう一度お試しください。" >&2
-      exit 3
-    fi
-    git -C "$sec" add -A
-    if git -C "$sec" diff --cached --quiet; then
+    repo_root="$(git -C "$sec" rev-parse --show-toplevel 2>/dev/null)" || die_usage "Git repo rootを確認できません: $sec"
+    sec_real="$(cd "$sec" && pwd -P)" || refuse "秘書ディレクトリを確認できません。"
+    repo_real="$(cd "$repo_root" && pwd -P)" || refuse "Git repo rootを確認できません。"
+    safe_commit="$_HERE/../../../scripts/safe-git-commit.mjs"
+    commit_args=(--root "$repo_real" --message "$msg")
+    case "$sec_real" in
+      "$repo_real")
+        # 旧形式のsecretary単体repoでは、秘書の既知領域だけを所有pathとして扱う。
+        for sec_rel in AGENTS.md CLAUDE.md memory inbox docs projects; do
+          [ -e "$repo_real/$sec_rel" ] && commit_args+=(--path "$sec_rel")
+        done
+        ;;
+      "$repo_real"/*) commit_args+=(--path "${sec_real#"$repo_real"/}") ;;
+      *) refuse "秘書ディレクトリがworkspace repoの内側にないためcommitしません。" ;;
+    esac
+    result="$(node "$safe_commit" "${commit_args[@]}")" || exit $?
+    if printf '%s' "$result" | grep -q '"status":"unchanged"'; then
       echo "変更がないためコミットしませんでした。"
       exit 0
     fi
-    git -C "$sec" commit -q -m "$msg"
     # push は決してしない（この関数は push もリモート追加も行わない）
     echo "作業の区切りを記録しました（ローカルのみ・インターネットには送っていません）。"
     ;;

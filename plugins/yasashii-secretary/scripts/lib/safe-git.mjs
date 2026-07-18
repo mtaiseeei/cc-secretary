@@ -1,0 +1,281 @@
+import { execFileSync } from "node:child_process";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, posix, relative, resolve, sep } from "node:path";
+
+const MAX_INSPECTABLE_BYTES = 5 * 1024 * 1024;
+
+export class GitSafetyError extends Error {
+  constructor(code, message) {
+    super(message);
+    this.name = "GitSafetyError";
+    this.code = code;
+  }
+}
+
+function git(root, args, { env = {}, allowFailure = false, encoding = "utf8" } = {}) {
+  try {
+    return execFileSync(process.env.YASASHII_GIT_BIN || "git", args, {
+      cwd: root,
+      encoding,
+      stdio: ["ignore", "pipe", "pipe"],
+      env: { ...process.env, ...env },
+      maxBuffer: 16 * 1024 * 1024,
+    });
+  } catch (error) {
+    if (allowFailure) return null;
+    const wrapped = new GitSafetyError("git-failed", "Gitの安全なcommit処理に失敗しました。");
+    wrapped.cause = error;
+    throw wrapped;
+  }
+}
+
+function normalizedPath(root, input) {
+  const candidate = String(input || "").split(sep).join("/").replace(/^\.\//, "").replace(/\/$/, "");
+  if (!candidate || candidate.startsWith("/") || candidate.split("/").some((part) => !part || part === "." || part === "..")) {
+    throw new GitSafetyError("owned-path-invalid", "commit対象のpathが安全な相対pathではありません。");
+  }
+  const absolute = resolve(root, candidate);
+  const rel = relative(root, absolute);
+  if (!rel || rel === ".." || rel.startsWith(`..${sep}`)) {
+    throw new GitSafetyError("owned-path-invalid", "workspace外のpathはcommit対象にできません。");
+  }
+  return candidate;
+}
+
+export function normalizeOwnedPaths(root, paths) {
+  const normalizedRoot = resolve(root);
+  return [...new Set((paths || []).map((item) => normalizedPath(normalizedRoot, item)))].sort();
+}
+
+function belongsTo(path, ownedPaths) {
+  return ownedPaths.some((owned) => path === owned || path.startsWith(`${owned}/`));
+}
+
+function secretReason(path, body) {
+  const filename = posix.basename(path);
+  if (
+    /^(?:\.env(?:\..+)?|id_rsa|id_ed25519)$/i.test(filename)
+    || /(?:credential|client[_-]?secret|oauth)[^/]*\.json$/i.test(filename)
+    || /(?:secret|token)[^/]*\.(?:json|ya?ml|txt)$/i.test(filename)
+    || /\.(?:pem|key|p12|pfx)$/i.test(filename)
+  ) return "資格情報を示すファイル名";
+
+  if (/-----BEGIN (?:[A-Z0-9 ]+ )?PRIVATE KEY-----/.test(body)) return "秘密鍵";
+  if (/(?:https?|[a-z][a-z0-9+.-]*):\/\/[^\s/:@]+:[^\s/@]+@/i.test(body)) return "資格情報を含むURL";
+  if (/(?:https?|[a-z][a-z0-9+.-]*):\/\/[^\s]+[?&](?:access_token|refresh_token|client_secret|api[_-]?key|token)=[^\s&#]{6,}/i.test(body)) return "資格情報を含むURL";
+  if (/["'](?:client_secret|access_token|refresh_token|authorization_code|auth_code|api[_-]?token|chatwork_api_token|x-chatworktoken)["']\s*:\s*["'][^"'\r\n]{6,}["']/i.test(body)) return "資格情報の値";
+  if (/\b(?:client_secret|access_token|refresh_token|authorization_code|auth_code|api[_-]?token|chatwork_api_token|x-chatworktoken)\s*=\s*["'][^"'\r\n]{6,}["']/i.test(body)) return "資格情報の値";
+  if (/\b(?:client_secret|access_token|refresh_token|authorization_code|auth_code|api[_-]?token|chatwork_api_token|x-chatworktoken)\s*[:=]\s*[A-Za-z0-9._~+/=-]*[0-9_~+/=-][A-Za-z0-9._~+/=-]{5,}/i.test(body)) return "資格情報の値";
+  if (/\b(?:token|password|api[_-]?key)\s*[:=]\s*["'][^"'\r\n]{12,}["']/i.test(body)) return "資格情報の値";
+  // 旧来の設定ファイルにある unquoted 値も検出する。単なる用語説明を避けるため、
+  // 8文字以上かつ数字または記号を含む値だけを資格情報候補として扱う。
+  const unquotedGeneric = body.match(/^\s*["']?(?:token|password|api[_-]?key)["']?\s*[:=]\s*([A-Za-z0-9._~+/=-]{8,})\s*$/im);
+  if (unquotedGeneric && /[0-9~+/=-]/.test(unquotedGeneric[1])) return "資格情報の値";
+  if (/\bcode\s*[:=]\s*["'][A-Za-z0-9._~+/=-]{24,}["']/i.test(body)) return "認可コードらしき値";
+
+  try {
+    const parsed = JSON.parse(body);
+    const candidates = [parsed?.installed, parsed?.web, parsed];
+    if (candidates.some((item) => item && typeof item === "object" && item.client_id && item.client_secret && item.token_uri)) {
+      return "OAuth client JSON";
+    }
+  } catch {
+    // JSONでない通常文書は上の構造・内容検査だけを適用する。
+  }
+  return null;
+}
+
+function collectWorkingFiles(root, owned, current = owned) {
+  const absolute = resolve(root, current);
+  if (!existsSync(absolute)) return [];
+  let detail;
+  try { detail = lstatSync(absolute); } catch { throw new GitSafetyError("inspection-failed", `commit候補を検査できませんでした: ${current}`); }
+  if (detail.isSymbolicLink()) throw new GitSafetyError("secret-detected", `symlinkはcommit候補にできません: ${current}`);
+  if (detail.isFile()) return [current];
+  if (!detail.isDirectory()) throw new GitSafetyError("inspection-failed", `内容を検査できない対象です: ${current}`);
+  const files = [];
+  let children;
+  try { children = readdirSync(absolute); } catch { throw new GitSafetyError("inspection-failed", `commit候補を読み取れませんでした: ${current}`); }
+  for (const name of children) files.push(...collectWorkingFiles(root, owned, `${current}/${name}`));
+  return files;
+}
+
+export function inspectWorkingCandidates(root, ownedPaths) {
+  const normalizedRoot = resolve(root);
+  const paths = normalizeOwnedPaths(normalizedRoot, ownedPaths);
+  const files = paths.flatMap((owned) => collectWorkingFiles(normalizedRoot, owned));
+  const risks = [];
+  for (const path of files) {
+    let buffer;
+    try { buffer = readFileSync(resolve(normalizedRoot, path)); } catch { throw new GitSafetyError("inspection-failed", `commit候補を読み取れませんでした: ${path}`); }
+    if (buffer.length > MAX_INSPECTABLE_BYTES || buffer.includes(0)) {
+      risks.push({ path, reason: "内容を安全に検査できないファイル" });
+      continue;
+    }
+    const reason = secretReason(path, buffer.toString("utf8"));
+    if (reason) risks.push({ path, reason });
+  }
+  if (risks.length > 0) {
+    throw new GitSafetyError("secret-detected", `資格情報の可能性があるcommit候補を検出したため停止しました: ${risks.slice(0, 5).map((item) => item.path).join(", ")}`);
+  }
+  return files;
+}
+
+function stagedEntries(root, env, ownedPaths) {
+  const output = git(root, ["ls-files", "--stage", "-z", "--", ...ownedPaths], { env });
+  const entries = new Map();
+  for (const record of output.split("\0").filter(Boolean)) {
+    const match = record.match(/^(\d+) ([0-9a-f]+) (\d)\t([\s\S]+)$/);
+    if (!match) throw new GitSafetyError("inspection-failed", "commit候補のGit情報を検査できませんでした。");
+    const [, mode, object, stage, path] = match;
+    if (stage !== "0") throw new GitSafetyError("inspection-failed", "競合中のファイルはcommit候補にできません。");
+    entries.set(path, { mode, object });
+  }
+  return entries;
+}
+
+function changedPaths(root, env) {
+  return git(root, ["diff", "--cached", "--name-only", "-z", "--diff-filter=ACMRTUXBD"], { env })
+    .split("\0")
+    .filter(Boolean);
+}
+
+function inspectStagedCandidates(root, env, candidates, ownedPaths) {
+  if (candidates.some((path) => !belongsTo(path, ownedPaths))) {
+    throw new GitSafetyError("commit-scope", "操作対象外のファイルがcommit候補に含まれたため停止しました。");
+  }
+  const entries = stagedEntries(root, env, ownedPaths);
+  const risks = [];
+  for (const path of candidates) {
+    const entry = entries.get(path);
+    if (!entry) continue; // 削除候補には読み取る内容がない。
+    if (entry.mode === "120000") {
+      risks.push({ path, reason: "symlink" });
+      continue;
+    }
+    if (entry.mode !== "100644" && entry.mode !== "100755") {
+      risks.push({ path, reason: "検査できないファイル形式" });
+      continue;
+    }
+    const buffer = git(root, ["cat-file", "blob", entry.object], { env, encoding: null });
+    if (!Buffer.isBuffer(buffer) || buffer.length > MAX_INSPECTABLE_BYTES || buffer.includes(0)) {
+      risks.push({ path, reason: "内容を安全に検査できないファイル" });
+      continue;
+    }
+    const reason = secretReason(path, buffer.toString("utf8"));
+    if (reason) risks.push({ path, reason });
+  }
+  if (risks.length > 0) {
+    const paths = risks.slice(0, 5).map((item) => item.path).join(", ");
+    throw new GitSafetyError("secret-detected", `資格情報の可能性があるcommit候補を検出したため停止しました: ${paths}`);
+  }
+}
+
+function head(root) {
+  const value = git(root, ["rev-parse", "--verify", "HEAD"], { allowFailure: true });
+  return value ? value.trim() : null;
+}
+
+function currentRef(root) {
+  const value = git(root, ["symbolic-ref", "-q", "HEAD"], { allowFailure: true });
+  return value ? value.trim() : null;
+}
+
+export function restoreOwnedCommit({ root, oldHead, newHead, ownedPaths }) {
+  const normalizedRoot = resolve(root);
+  const paths = normalizeOwnedPaths(normalizedRoot, ownedPaths);
+  if (oldHead) git(normalizedRoot, ["update-ref", "HEAD", oldHead, newHead]);
+  else {
+    const ref = currentRef(normalizedRoot);
+    if (!ref) throw new GitSafetyError("rollback-failed", "初回commitの参照先を確認できませんでした。");
+    git(normalizedRoot, ["update-ref", "-d", ref, newHead]);
+  }
+  if (oldHead) git(normalizedRoot, ["reset", "-q", oldHead, "--", ...paths]);
+}
+
+export function commitOwnedChanges({ root, ownedPaths, message, afterScan = null }) {
+  const normalizedRoot = resolve(root);
+  const paths = normalizeOwnedPaths(normalizedRoot, ownedPaths);
+  if (paths.length === 0) throw new GitSafetyError("owned-path-empty", "commit対象がありません。");
+  if (!String(message || "").trim()) throw new GitSafetyError("message-required", "commitメッセージが必要です。");
+
+  const oldHead = head(normalizedRoot);
+  const temporary = mkdtempSync(join(tmpdir(), "yasashii-safe-git-"));
+  const indexFile = join(temporary, "index");
+  const hooksDirectory = join(temporary, "hooks");
+  mkdirSync(hooksDirectory);
+  const env = { GIT_INDEX_FILE: indexFile };
+  let newHead = null;
+  try {
+    if (oldHead) git(normalizedRoot, ["read-tree", oldHead], { env });
+    else git(normalizedRoot, ["read-tree", "--empty"], { env });
+    git(normalizedRoot, ["add", "-A", "--", ...paths], { env });
+    const candidates = changedPaths(normalizedRoot, env);
+    if (candidates.length === 0) return { status: "unchanged", oldHead, newHead: oldHead, candidates: [] };
+    inspectStagedCandidates(normalizedRoot, env, candidates, paths);
+    const scannedTree = git(normalizedRoot, ["write-tree"], { env }).trim();
+
+    if (typeof afterScan === "function") afterScan();
+    const unstaged = git(normalizedRoot, ["diff", "--name-only", "-z", "--", ...paths], { env });
+    const untracked = git(normalizedRoot, ["ls-files", "--others", "--exclude-standard", "-z", "--", ...paths], { env });
+    const currentTree = git(normalizedRoot, ["write-tree"], { env }).trim();
+    if (unstaged || untracked || currentTree !== scannedTree) {
+      throw new GitSafetyError("candidate-changed", "secret検査後にcommit候補が変わったため、commitせず停止しました。");
+    }
+
+    // 利用者のGit hookが検査後の一時indexを書き換えないよう、このcommitだけ空のhook領域を使う。
+    git(normalizedRoot, ["-c", `core.hooksPath=${hooksDirectory}`, "commit", "-q", "-m", message], { env });
+    newHead = head(normalizedRoot);
+    if (!newHead || newHead === oldHead) throw new GitSafetyError("commit-failed", "安全なcommitを作成できませんでした。");
+    const committed = git(normalizedRoot, ["diff-tree", "--root", "--no-commit-id", "--name-only", "-r", "-z", newHead])
+      .split("\0")
+      .filter(Boolean);
+    if (committed.length === 0 || committed.some((path) => !belongsTo(path, paths))) {
+      restoreOwnedCommit({ root: normalizedRoot, oldHead, newHead, ownedPaths: paths });
+      throw new GitSafetyError("commit-scope", "操作対象外のファイルがcommitに含まれたため、commitを取り消しました。");
+    }
+
+    // 一時indexでcommitした後、元のindexは所有pathだけを新HEADへ追随させる。
+    // これにより対象外のstaged内容とstage状態は維持される。
+    git(normalizedRoot, ["reset", "-q", newHead, "--", ...paths]);
+    return { status: "committed", oldHead, newHead, candidates: committed };
+  } catch (error) {
+    if (newHead && head(normalizedRoot) === newHead) {
+      try { restoreOwnedCommit({ root: normalizedRoot, oldHead, newHead, ownedPaths: paths }); } catch { /* 元の例外を優先する */ }
+    }
+    throw error;
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+}
+
+export function stagedSnapshot(root, paths = []) {
+  const normalizedRoot = resolve(root);
+  const args = ["diff", "--cached", "--binary", "--full-index"];
+  if (paths.length > 0) args.push("--", ...normalizeOwnedPaths(normalizedRoot, paths));
+  return git(normalizedRoot, args);
+}
+
+export function pushOwnedCommit({ root, oldHead, newHead, remote = "origin", setUpstream = false }) {
+  const normalizedRoot = resolve(root);
+  const branch = git(normalizedRoot, ["symbolic-ref", "--quiet", "--short", "HEAD"], { allowFailure: true })?.trim();
+  if (!branch || !newHead) throw new GitSafetyError("push-failed", "今回のcommitをpushできるbranchを確認できませんでした。");
+  const upstream = git(normalizedRoot, ["rev-parse", "--verify", "@{upstream}"], { allowFailure: true })?.trim() || null;
+  if (upstream && oldHead && upstream !== oldHead) {
+    throw new GitSafetyError("push-base-changed", "今回の操作より前に未送信のcommitがあるためpushしていません。");
+  }
+  try {
+    const args = ["push"];
+    if (setUpstream) args.push("-u");
+    args.push(remote, `${newHead}:refs/heads/${branch}`);
+    git(normalizedRoot, args);
+  } catch (error) {
+    const raw = `${error?.cause?.stdout || ""}\n${error?.cause?.stderr || ""}`.toLowerCase();
+    if (/non-fast-forward|rejected|fetch first|divergent/.test(raw)) {
+      throw new GitSafetyError("git-conflict", "remoteに別の変更があるため、今回のcommitをpushしていません。");
+    }
+    throw new GitSafetyError("push-failed", "今回のcommitをpushできませんでした。既存のstageや別作業は変更していません。");
+  }
+  return { status: "pushed", commit: newHead, branch };
+}
