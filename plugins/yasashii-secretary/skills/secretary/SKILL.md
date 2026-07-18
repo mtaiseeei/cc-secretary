@@ -52,7 +52,7 @@ trigger: /secretary
 | 「Microsoft につなぎたい」「Outlook／Teams を見て」 | Microsoft 接続ガイド（setup-microsoft） | `${CLAUDE_PLUGIN_ROOT}/skills/setup-microsoft/SKILL.md` |
 | 「Notion につなぎたい」 | Notion 接続ガイド（任意・setup-notion） | `${CLAUDE_PLUGIN_ROOT}/skills/setup-notion/SKILL.md` |
 | 「Chatworkにつなぎたい」「roomを選びたい」「Chatworkで探して」「/chatwork」 | Chatwork接続・room設定・履歴検索（chatwork） | `${CLAUDE_PLUGIN_ROOT}/skills/chatwork/SKILL.md` |
-| 「Google Chatにつなぎたい」「GChatで探して」「/google-chat」 | Google Chat高度接続・通常スペース履歴検索（google-chat） | `${CLAUDE_PLUGIN_ROOT}/skills/google-chat/SKILL.md` |
+| 「Google Chatを設定したい」「Google Chatにつなぎたい」「GChatで探して」「/google-chat」 | Google Chat高度接続・通常スペース履歴検索（google-chat） | `${CLAUDE_PLUGIN_ROOT}/skills/google-chat/SKILL.md` |
 | 「繋がってる？」「接続の調子」「診断して」「どれが使える？」 | 接続診断（connections） | `${CLAUDE_PLUGIN_ROOT}/skills/connections/SKILL.md` |
 | 「設定変えたい」「もっとフランクに」「専門用語そのままで」「呼び方を変えて」 | 個人設定（settings） | `${CLAUDE_PLUGIN_ROOT}/skills/settings/SKILL.md` |
 | 「プロジェクトにまとめたい」「案件を整理したい」「プロジェクトの状況」「完了にしたい」「再開したい」 | 継続する仕事の整理（projects） | `${CLAUDE_PLUGIN_ROOT}/skills/projects/SKILL.md` |

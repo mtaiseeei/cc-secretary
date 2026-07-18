@@ -117,20 +117,17 @@ if (chatResult.screen.startsWith("chatwork-initial-result") && (chatResult.resul
 await click('[data-action="close"]'); report.chatwork.push(await screen("chatwork-complete"));
 await open(chatworkUrl); await screen("chatwork-select-rooms"); await click('[data-action="back"]'); report.chatwork.push(await screen("chatwork-cancelled"));
 
-// Google Chat onboarding: cancel, three preparations, auth failure, selection, interval, review, zero result, complete.
+// Google Chat onboarding: JSON selection, cancel, auth failure, selection, interval, review, zero result, complete.
 await open(googleNewUrl);
-report.google.push(await screen("google-chat-prepare-cloud"));
+report.google.push(await screen("google-chat-prepare-file"));
 const googleDetails = await detailsKeyboard('#app details'); report.details.push({ service: "google-chat", ...googleDetails });
 process.stdout.write(`BROWSER_STAGE=google-details passed=${googleDetails.passed}\n`);
-await evaluate(`document.querySelector('#app details').open=true`); await delay(300); report.guideVisual = await evaluate(`(()=>{const details=document.querySelector('#app details');const summary=details.querySelector('summary');return {open:details.open,transform:getComputedStyle(summary,'::after').transform,imageLoaded:details.querySelector('img')?.naturalWidth>0}})()`); await screenshot("google-cloud-guide-desktop.png"); await evaluate(`document.querySelector('#app details').open=false`);
+await evaluate(`document.querySelector('#app details').open=true`); await delay(300); report.guideVisual = await evaluate(`(()=>{const details=document.querySelector('#app details');const summary=details.querySelector('summary');return {open:details.open,transform:getComputedStyle(summary,'::after').transform,imageCount:details.querySelectorAll('img').length}})()`); await screenshot("google-chat-file-desktop.png"); await evaluate(`document.querySelector('#app details').open=false`);
 await click('[data-action="back"]'); report.google.push(await screen("google-chat-cancelled"));
-await click('[data-action="restart"]'); await screen("google-chat-prepare-cloud");
-await click('[data-action="next"]'); report.google.push(await screen("google-chat-prepare-access"));
-await click('[data-action="next"]'); report.google.push(await screen("google-chat-prepare-file"));
+await click('[data-action="restart"]'); report.google.push(await screen("google-chat-prepare-file"));
 await setFileInput("#client-json", testClient.path); await click('[data-action="next"]'); report.google.push(await screen("google-chat-authorize"));
 await evaluate(`fetch('/api/oauth/synthetic',{method:'POST',headers:{'content-type':'application/json'},body:'{"mode":"admin-blocked"}'}).then(r=>r.json())`); await send("Page.reload", { ignoreCache: true }); report.google.push(await screen("google-chat-authorize-failure")); await screenshot("google-chat-failure-desktop.png");
-await click('[data-action="next"]'); await screen("google-chat-prepare-cloud");
-await click('[data-action="next"]'); await screen("google-chat-prepare-access"); await click('[data-action="next"]'); await screen("google-chat-prepare-file");
+await click('[data-action="next"]'); await screen("google-chat-prepare-file");
 await setFileInput("#client-json", testClient.path); await click('[data-action="next"]'); await screen("google-chat-authorize");
 await evaluate(`window.__realFetch=window.fetch;window.fetch=(u,o)=>String(u).includes('/api/spaces')?Promise.resolve(new Response(JSON.stringify({error:'synthetic space discovery failure',code:'synthetic-discovery-failed'}),{status:503,headers:{'content-type':'application/json'}})):window.__realFetch(u,o)`);
 await click('[data-action="synthetic"]'); const googleDiscoverFailureBack = await screen("google-chat-discover-failure"); report.google.push(googleDiscoverFailureBack); await screenshot("google-chat-discover-failure-desktop.png");
@@ -140,8 +137,7 @@ const beforeBack = await evaluate(`fetch('/api/bootstrap').then(r=>r.json()).the
 await click('[data-action="back"]'); await screen("google-chat-cancelled");
 const afterBack = await evaluate(`fetch('/api/bootstrap').then(r=>r.json()).then(x=>({configured:x.configured,oauth:x.oauth.status}))`); report.sideEffects.push({ action: "discover-failure-back", ...afterBack });
 if (beforeBack.configured || afterBack.configured || afterBack.oauth !== "cancelled") throw new Error("Google discover failure back changed configuration or skipped cleanup");
-await click('[data-action="restart"]'); await screen("google-chat-prepare-cloud");
-await click('[data-action="next"]'); await screen("google-chat-prepare-access"); await click('[data-action="next"]'); await screen("google-chat-prepare-file");
+await click('[data-action="restart"]'); await screen("google-chat-prepare-file");
 await setFileInput("#client-json", testClient.path); await click('[data-action="next"]'); await screen("google-chat-authorize");
 await evaluate(`window.__realFetch=window.fetch;window.fetch=(u,o)=>String(u).includes('/api/spaces')?Promise.resolve(new Response(JSON.stringify({error:'synthetic retry failure',code:'synthetic-retry-failed'}),{status:503,headers:{'content-type':'application/json'}})):window.__realFetch(u,o)`);
 await click('[data-action="synthetic"]'); const googleDiscoverFailureRetry = await screen("google-chat-discover-failure"); googleDiscoverFailureRetry.tabSequence = await actionTabSequence(); report.google.push(googleDiscoverFailureRetry);
@@ -160,7 +156,7 @@ process.stdout.write("BROWSER_STAGE=google-automatic passed=true\n");
 await click('[data-action="close"]'); report.google.push(await screen("google-chat-complete"));
 
 // Google Chat manual onboarding: the same confirmation still runs initial import but creates no schedule.
-await open(googleManualUrl); await screen("google-chat-prepare-cloud"); await click('[data-action="next"]'); await screen("google-chat-prepare-access"); await click('[data-action="next"]'); await screen("google-chat-prepare-file");
+await open(googleManualUrl); await screen("google-chat-prepare-file");
 await setFileInput("#client-json", testClient.path); await click('[data-action="next"]'); await screen("google-chat-authorize"); await click('[data-action="synthetic"]'); await screen("google-chat-select-spaces");
 await check('input[value="spaces/space-empty"]'); await click('[data-action="next"]'); await screen("google-chat-select-interval"); await check('input[value="manual"]'); await click('[data-action="next"]'); const manualReview = await screen("google-chat-review"); report.google.push(manualReview);
 if (await evaluate(`document.querySelector('#automatic-consent')!==null`)) throw new Error("manual initial flow requested automatic consent");
@@ -189,7 +185,7 @@ const passed = browserErrors.length === 0 && all.every((item) => !item.forbidden
   && report.google.some((item) => item.screen === "google-chat-authorize-failure") && report.google.filter((item) => item.screen === "google-chat-discover-failure").length === 2 && report.google.some((item) => item.screen === "google-chat-select-spaces") && report.google.some((item) => item.screen === "google-chat-initial-result-empty") && report.google.some((item) => item.screen === "google-chat-review" && item.safety.length === 5)
   && report.sideEffects.every((item) => item.configured === false)
   && report.details.length === 2 && report.details.every((item) => item.passed)
-  && report.guideVisual?.open && report.guideVisual.imageLoaded
+  && report.guideVisual?.open && report.guideVisual.imageCount === 0
   && report.unifiedFlow.some((item) => item.mode === "automatic" && item.scheduleEnabled) && report.unifiedFlow.some((item) => item.mode === "manual" && !item.scheduleEnabled)
   && report.google.some((item) => item.screen === "google-chat-settings-result-stopped");
 report.browserErrors = browserErrors;
