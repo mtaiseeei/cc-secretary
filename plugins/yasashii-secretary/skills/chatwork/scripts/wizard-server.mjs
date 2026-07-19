@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { applyChatworkConfig } from "./config-transaction.mjs";
 import { workingRoot, writeFileAtomicSafe } from "../../../scripts/lib/safe-fs.mjs";
 import { runExternal, runExternalSync } from "../../../scripts/lib/external-ops.mjs";
+import { createWizardSessionGuard } from "../../../scripts/lib/wizard-session.mjs";
 
 const INTERVALS = new Set(["30m", "1h", "3h", "6h", "12h", "manual"]);
 const args = new Map();
@@ -18,6 +19,14 @@ const assets = resolve(dirname(fileURLToPath(import.meta.url)), "..", "assets", 
 let dispatch = { status: "idle", operation: null, config: null, message: "" };
 let discovery = { status: "idle", message: "" };
 let discoveryConfirmed = false;
+
+function origin() {
+  const address = server.address();
+  return `http://${host}:${address.port}`;
+}
+
+const sessionGuard = createWizardSessionGuard({ origin, cookieName: "yasashii_chatwork_session" });
+const mutationPaths = new Set(["/api/discover", "/api/confirm"]);
 
 function githubRepository() {
   const git = process.env.YASASHII_GIT_BIN || "git";
@@ -77,6 +86,7 @@ function send(response, status, body, type = "application/json; charset=utf-8") 
     "cache-control": "no-store",
     "x-content-type-options": "nosniff",
     "content-security-policy": "default-src 'self'; connect-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+    "set-cookie": sessionGuard.cookieHeader(),
   });
   if (Buffer.isBuffer(body) || typeof body === "string") {
     response.end(body);
@@ -95,7 +105,8 @@ async function bodyJson(request) {
     body += chunk;
     if (body.length > 64 * 1024) throw new Error("too-large");
   }
-  return JSON.parse(body || "{}");
+  try { return JSON.parse(body || "{}"); }
+  catch { throw Object.assign(new Error("設定内容のJSONを読み取れませんでした。"), { code: "invalid-json" }); }
 }
 
 async function runSync(mode, config) {
@@ -170,7 +181,11 @@ async function discoverRooms() {
 }
 
 const server = createServer(async (request, response) => {
-  const url = new URL(request.url || "/", `http://${host}`);
+  const url = new URL(request.url || "/", origin());
+  if (mutationPaths.has(url.pathname)) {
+    const rejected = sessionGuard.validateMutation(request);
+    if (rejected) return send(response, rejected.status, { error: rejected.message, code: rejected.code });
+  }
   if (request.method === "GET" && url.pathname === "/api/bootstrap") {
     const rooms = readJson(join(root, "chatwork", "rooms.json"), { status: "not-discovered", rooms: [] });
     const config = readJson(join(root, "chatwork", "config.json"), { selectedRoomIds: [], interval: "3h", scheduleEnabled: false });
@@ -178,10 +193,11 @@ const server = createServer(async (request, response) => {
   }
   if (request.method === "POST" && url.pathname === "/api/discover") {
     try {
+      await bodyJson(request);
       const rooms = await discoverRooms();
       return send(response, 200, { rooms, discovery });
     } catch (error) {
-      return send(response, error.code === "discovery-running" ? 409 : 502, { error: error.message, code: error.code || "discovery-failed", discovery });
+      return send(response, error.code === "invalid-json" ? 400 : error.code === "discovery-running" ? 409 : 502, { error: error.message, code: error.code || "discovery-failed", discovery });
     }
   }
   if (request.method === "GET" && url.pathname === "/api/status") {

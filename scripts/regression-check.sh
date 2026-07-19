@@ -1089,7 +1089,18 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-section "29. Harness v0.4.2 runtime移行"
+section "29. OAuth callbackとloopback session保護（sprint-023）"
+# ---------------------------------------------------------------------------
+SPRINT023_REGRESSION="$REPO/scripts/sprint-023-regression.sh"
+check "sprint-023回帰が存在し実行可能" "[ -x '$SPRINT023_REGRESSION' ]"
+if bash "$SPRINT023_REGRESSION"; then
+  ok "sprint-023 Origin・session・Content-Type・OAuth一度限り・cleanupが全て成功"
+else
+  ng "sprint-023回帰に失敗"
+fi
+
+# ---------------------------------------------------------------------------
+section "30. Harness v0.4.2 runtime移行"
 # ---------------------------------------------------------------------------
 HARNESS_CONFIG="$REPO/.harness/config.toml"
 HARNESS_IGNORE="$REPO/.harness/.gitignore"

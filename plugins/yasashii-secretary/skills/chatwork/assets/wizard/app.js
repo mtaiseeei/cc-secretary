@@ -117,7 +117,7 @@ async function discoverRooms() {
   button.disabled = true;
   show("discover-loading", `<p class="eyebrow">接続 4 / 4</p><h1>Chatworkのルームを確認しています。</h1><p class="lead" data-copy-role="status">参加しているルームの一覧を取得しています。</p><p class="notice">確認が終わるまで、この画面を開いたままお待ちください。</p>`, "loading");
   try {
-    const response = await fetch("/api/discover", { method: "POST" });
+    const response = await fetch("/api/discover", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "ルーム一覧を取得できませんでした。");
     state.rooms = result.rooms.rooms || [];

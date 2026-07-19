@@ -2,11 +2,11 @@
 
 <!-- オーケストレーターだけが書く進行状態の正本 -->
 
-- Current ID: sprint-023
+- Current ID: sprint-024
 - Retry Count: 0
 - Model Tier: strong
 - Rotate: none
-- Next Planned: sprint-024
+- Next Planned: sprint-025
 
 <!-- 2026-07-08: sprint-001 は再評価で合格（初回はクレジット方針の spec/実装不一致で不合格 →
      ユーザー確認で単段クレジットに正本改訂、回帰assert強化のうえ合格）。
@@ -45,7 +45,7 @@
 | sprint-020-patch-002 | done | [contract](sprint-020-patch-002.md) | [progress](../progress/sprint-020-patch-002.md) | [feedback](../feedback/sprint-020-patch-002.md) |
 | sprint-021 | done | [contract](sprint-021.md) | [progress](../progress/sprint-021.md) | [feedback](../feedback/sprint-021.md) |
 | sprint-022 | done | [contract](sprint-022.md) | [progress](../progress/sprint-022.md) | [feedback](../feedback/sprint-022.md) |
-| sprint-023 | planned | [contract](sprint-023.md) | - | - |
+| sprint-023 | done | [contract](sprint-023.md) | [progress](../progress/sprint-023.md) | [feedback](../feedback/sprint-023.md) |
 | sprint-024 | planned | [contract](sprint-024.md) | - | - |
 | sprint-025 | planned | [contract](sprint-025.md) | - | - |
 | sprint-026 | planned | [contract](sprint-026.md) | - | - |
@@ -129,5 +129,7 @@
 - 2026-07-19: sprint-022 Retry 1のSol/high fresh Evaluatorはimplementation-issueで不合格。Node共通guardは改善したが、Shell `path-guard.sh`の途中symlink rootで外部書込み／確認済み削除が進み、`update-apply.mjs`も途中symlink先の外部Git repoをworkspaceとして受理した。Retry Countを2とし、high risk／strong tierを維持したfresh Generatorへ限定差し戻し。
 - 2026-07-19: sprint-022 Retry 2のSol/high fresh GeneratorがShellと更新入口の途中symlink root検査を限定修正。専用69/69、wrapper 8/8、Sprint 018 41/41、隔離clone offline 330/330・online 331/331が0 FAIL。commit・push・実外部service書込み0件でfresh独立Evaluatorへ引き渡す。
 - 2026-07-19: sprint-022 Retry 2はSol/high fresh Evaluatorで製品判定PASS。専用69/69、wrapper 8/8、独立fixture 30/30、Sprint 018 41/41が0 FAIL。Shell書込み／確認済み削除とupdate-applyは途中symlink rootを副作用0で拒否し、外部sentinel・Git状態・session・link不変を確認。評価操作で禁止evidence配下のファイル名列挙が1件発生したが、内容読取・変更0件で製品合否と分離記録。sprint-022をdone、Current IDをsprint-023、Retry Countを0へ更新。
+- 2026-07-19: sprint-023のAgentic Harness 0.4.3 Sol/high fresh GeneratorがOAuth callback一回性、Origin／session／Content-Type／method gate、部分Secret cleanup、失敗の正直な`cleanup-required`表示を実装。専用21/21、wrapper 15/15、browser 13/13、master offline 332/332・online 333/333が0 FAIL。実OAuth・API・Repository Secret・remote pushは0件でfresh独立Evaluatorへ引き渡す。
+- 2026-07-19: sprint-023はAgentic Harness 0.4.4 Sol/high fresh EvaluatorでPASS（59/60）。専用21/21、wrapper 15/15、関連suite全0 FAIL、既存browser 13/13と3 screenshot目視でAC1〜12の全閾値を達成。今回のCDP再実行は環境`EPERM`で未実施と明記し、fixture・対象process 0件を確認。sprint-023をdone、Current IDをsprint-024へ更新。
 - 2026-07-18: sprint-021 Generatorが一時indexによる所有path限定commit、stage後のsecret再検査、候補差替え拒否、push失敗時の既存index保護を初回publish／Chatwork／Google Chat／memory commitへ実装。専用31件、wrapper 8件、全offline 327件、全online 328件が0 FAIL、実外部サービス変更0件のため独立Evaluatorへ引き渡した。
 - 2026-07-18: sprint-021 Retry 1でcredential key正規化、OAuth callback code検査、安全文書の誤拒否解消、memory所有path限定、upstreamなし初回pushの履歴基点確認を実装。独立fixture相当を製品suiteへ取り込み、専用45件、wrapper 8件、全offline 327件と関連suiteが0 FAILのためfresh独立Evaluatorへ再引き渡した。

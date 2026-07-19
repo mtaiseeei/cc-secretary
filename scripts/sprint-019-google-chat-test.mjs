@@ -57,7 +57,7 @@ const cleanupCopies = [
   cleanupDescription(null, { networkFailure: true }),
   cleanupDescription({ hadConnection: false, secretsDeleted: true, grantRevoked: false, manualCheckRequired: false }),
 ];
-check("cleanup UIは全成功・Secret失敗・grant失敗・両失敗・通信失敗・接続前を区別", cleanupCopies[0].kind === "success" && cleanupCopies[1].technical.includes("Secrets and variables") && !cleanupCopies[1].technical.includes("アプリ権限ページ") && cleanupCopies[2].technical.includes("アプリ権限ページ") && !cleanupCopies[2].technical.includes("Secrets and variables") && cleanupCopies[3].technical.includes("Secrets and variables") && cleanupCopies[3].technical.includes("アプリ権限ページ") && cleanupCopies[4].text.includes("確認できません") && cleanupCopies[5].kind === "none");
+check("cleanup UIは全成功・Secret失敗・grant失敗・両失敗・通信失敗・接続前を区別", cleanupCopies[0].kind === "success" && cleanupCopies[1].technical.includes("Repository Secret") && !cleanupCopies[1].technical.includes("OAuth grant") && cleanupCopies[2].technical.includes("OAuth grant") && !cleanupCopies[2].technical.includes("Repository Secret") && cleanupCopies[3].technical.includes("Repository Secret") && cleanupCopies[3].technical.includes("OAuth grant") && cleanupCopies[4].text.includes("確認できません") && cleanupCopies[5].kind === "none");
 
 function fixtureClient(data = fixture) {
   return {
@@ -101,7 +101,22 @@ async function startServer(extraEnv = {}, options = {}) {
   return { child, root, base };
 }
 
-async function api(base, path, body) { const response = await fetch(`${base}${path}`, { method: body === undefined ? "GET" : "POST", headers: { "content-type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) }); return { response, json: await response.json() }; }
+const wizardCookies = new Map();
+async function api(base, path, body) {
+  if (body !== undefined && !wizardCookies.has(base)) {
+    const bootstrap = await fetch(`${base}api/bootstrap`);
+    wizardCookies.set(base, bootstrap.headers.get("set-cookie")?.split(";", 1)[0] || "");
+  }
+  const response = await fetch(`${base}${path}`, {
+    method: body === undefined ? "GET" : "POST",
+    headers: body === undefined ? { cookie: wizardCookies.get(base) || "" } : { "content-type": "application/json", origin: new URL(base).origin, cookie: wizardCookies.get(base) || "" },
+    body: body === undefined ? undefined : JSON.stringify(body),
+    redirect: "manual",
+  });
+  const cookie = response.headers.get("set-cookie")?.split(";", 1)[0];
+  if (cookie) wizardCookies.set(base, cookie);
+  return { response, json: await response.json() };
+}
 const wizard = await startServer();
 const bootstrap = await api(wizard.base, "api/bootstrap");
 check("Google Chat wizardはloopbackだけで起動し3時間初期値", wizard.base.startsWith("http://127.0.0.1:") && bootstrap.json.defaultInterval === "3h" && bootstrap.json.intervals.join() === "1h,3h,6h,12h,manual");
@@ -128,7 +143,7 @@ const manualConfig = JSON.parse(readFileSync(join(manualWizard.root, "google-cha
 check("手動のみも初回取得しscheduleを作らない", manualCompleted.response.ok && manualCompleted.json.sync.results.length === 1 && manualCompleted.json.schedule.status === "manual" && manualConfig.scheduleEnabled === false && manualConfig.automaticPushConsent === false && !readFileSync(join(manualWizard.root, ".github", "workflows", "google-chat-sync.yml"), "utf8").includes("  schedule:"));
 manualWizard.child.kill("SIGTERM");
 const cancelled = await api(wizard.base, "api/cancel", {});
-check("OAuth後キャンセルはSecret削除とgrant revoke状態", cancelled.json.cleanup.secretsDeleted === true && cancelled.json.cleanup.grantRevoked === true && cancelled.json.oauth.secretNames.length === 0);
+check("token破棄後のキャンセルはSecret削除とOAuth残存を正直に表示", cancelled.json.cleanup.secretsDeleted === true && cancelled.json.cleanup.grantRevoked === false && cancelled.json.cleanup.oauthGrantRemaining === true && cancelled.json.oauth.status === "cleanup-required" && cancelled.json.oauth.secretNames.length === 0);
 const persisted = readdirSync(wizard.root, { recursive: true }).filter((name) => typeof name === "string").map((name) => { try { return readFileSync(join(wizard.root, name), "utf8"); } catch { return ""; } }).join("\n");
 check("runtime client ID・secret・tokenを永続化しない", !persisted.includes(runtimeId) && !persisted.includes(runtimeSecret) && !persisted.includes("memory-") && !persisted.includes("runtime-code"));
 wizard.child.kill("SIGTERM");
@@ -164,7 +179,7 @@ const normalClientJson = JSON.stringify({ installed: { client_id: runtimeId, cli
 await api(normalUiServer.base, "api/oauth/client", { clientJson: normalClientJson });
 const normalBootstrap = await api(normalUiServer.base, "api/bootstrap");
 const normalAppSource = await (await fetch(`${normalUiServer.base}app.js`)).text();
-check("通常UIは別タブOAuthと元wizard pollingを使う", normalBootstrap.json.testing === false && normalBootstrap.json.oauth.status === "ready" && normalAppSource.includes('window.open("/api/oauth/authorize"') && normalAppSource.includes("waitForOAuth") && normalAppSource.includes("Googleの確認画面を") && normalAppSource.includes("もう一度開く"));
+check("通常UIは別タブOAuthと元wizard pollingを使う", normalBootstrap.json.testing === false && normalBootstrap.json.oauth.status === "client-ready" && normalAppSource.includes('window.open("about:blank"') && normalAppSource.includes('json("/api/oauth/authorize", { method: "POST" })') && normalAppSource.includes("waitForOAuth") && normalAppSource.includes("Googleの確認画面を") && normalAppSource.includes("もう一度開く"));
 normalUiServer.child.kill("SIGTERM");
 
 async function runGitSync({ name, selectedSpace, data }) {

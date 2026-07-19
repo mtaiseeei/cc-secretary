@@ -124,11 +124,22 @@ export async function exchangeAuthorizationCode({ tokenUri, clientId, clientSecr
 }
 
 export function publicOAuthState(session) {
-  return {
+  const result = {
     status: session.status,
     code: session.errorCode || null,
     message: session.message || "",
     scopes: GOOGLE_CHAT_SCOPES,
     secretNames: session.status === "connected" ? GOOGLE_CHAT_SECRET_NAMES : [],
   };
+  if (session.cleanup) result.cleanup = {
+    hadConnection: session.cleanup.hadConnection === true,
+    secretsDeleted: session.cleanup.secretsDeleted === true,
+    grantRevoked: session.cleanup.grantRevoked === true,
+    remainingSecretNames: [...(session.cleanup.remainingSecretNames || [])],
+    oauthGrantRemaining: session.cleanup.oauthGrantRemaining === true,
+    manualCheckRequired: session.cleanup.manualCheckRequired === true,
+    retryable: session.cleanup.retryable === true,
+  };
+  if (session.managerChecklist) result.managerChecklist = { scopes: [...(session.managerChecklist.scopes || [])] };
+  return result;
 }
