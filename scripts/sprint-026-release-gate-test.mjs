@@ -81,13 +81,16 @@ try {
     writeFileSync(pluginPath, JSON.stringify(validPlugin));
   }
 
-  // Build a test archive only from explicit distribution directories.  The
-  // repository's docs and any audit evidence are intentionally not copied.
+  // Build a test archive only from explicit distribution directories and the
+  // public guides required by archive-compatible suites. Other docs and audit
+  // evidence are intentionally not copied.
   const fullArchive = join(fixture, "full-archive");
   mkdirSync(fullArchive, { recursive: true });
   cpSync(join(root, ".claude-plugin"), join(fullArchive, ".claude-plugin"), { recursive: true });
   cpSync(join(root, "plugins"), join(fullArchive, "plugins"), { recursive: true });
   cpSync(join(root, "scripts"), join(fullArchive, "scripts"), { recursive: true });
+  mkdirSync(join(fullArchive, "docs"), { recursive: true });
+  cpSync(join(root, "docs", "guide"), join(fullArchive, "docs", "guide"), { recursive: true });
   cpSync(join(root, "LICENSE"), join(fullArchive, "LICENSE"));
   cpSync(join(root, "README.md"), join(fullArchive, "README.md"));
   const fullArchiveResult = spawnSync(process.execPath, [gate, "--mode", "archive", "--root", fullArchive, "--timeout-ms", "120000"], { encoding: "utf8", timeout: 150000, env: { ...process.env, TMPDIR: "/private/tmp" } });
