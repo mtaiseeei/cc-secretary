@@ -1100,7 +1100,18 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-section "30. Harness v0.4.2 runtime移行"
+section "30. 履歴境界とActions実行因果性（sprint-024）"
+# ---------------------------------------------------------------------------
+SPRINT024_REGRESSION="$REPO/scripts/sprint-024-regression.sh"
+check "sprint-024回帰が存在し実行可能" "[ -x '$SPRINT024_REGRESSION' ]"
+if bash "$SPRINT024_REGRESSION"; then
+  ok "sprint-024 履歴境界・再取得安定性・Actions run相関が全て成功"
+else
+  ng "sprint-024回帰に失敗"
+fi
+
+# ---------------------------------------------------------------------------
+section "31. Harness v0.4.2 runtime移行"
 # ---------------------------------------------------------------------------
 HARNESS_CONFIG="$REPO/.harness/config.toml"
 HARNESS_IGNORE="$REPO/.harness/.gitignore"

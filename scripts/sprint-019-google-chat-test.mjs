@@ -81,7 +81,7 @@ check("添付本文を保存しない", !day17.includes("attachmentData") && !da
 const before = day17;
 await initialGoogleChatSync({ root: storageRoot, selectedSpaceNames: ["spaces/space-a"], spaces: normalSpaces, client: fixtureClient() });
 const repeated = readFileSync(day17Path, "utf8");
-check("同一message再取得で重複せず既存投稿を保持", (repeated.match(/google-chat-message:/g) || []).length === 2 && repeated === before);
+check("同一message再取得で重複せず既存投稿を保持", (repeated.match(/^<!-- google-chat-message:/gm) || []).length === 2 && repeated === before);
 const tamperedSpaces = [...normalSpaces, { name: "spaces/direct-a", displayName: "個別DM", spaceType: "SPACE" }];
 const rejected = await initialGoogleChatSync({ root: temp("tamper"), selectedSpaceNames: ["spaces/direct-a"], spaces: tamperedSpaces, client: fixtureClient() });
 check("取得実行時のspaceType再検証でDM拒否", rejected.status === "failed" && rejected.results[0].code === "space-type-rejected");

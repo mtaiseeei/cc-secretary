@@ -5,6 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { applyChatworkConfig } from "./config-transaction.mjs";
+import { dispatchCorrelatedWorkflow, watchCorrelatedWorkflow } from "../../../scripts/lib/actions-run.mjs";
 import { workingRoot, writeFileAtomicSafe } from "../../../scripts/lib/safe-fs.mjs";
 import { runExternal, runExternalSync } from "../../../scripts/lib/external-ops.mjs";
 import { createWizardSessionGuard } from "../../../scripts/lib/wizard-session.mjs";
@@ -125,28 +126,38 @@ async function runSync(mode, config) {
     message: operation === "initial" ? "初回取得の自動取得処理（GitHub Actions）を開始しています。" : "設定変更後の自動取得処理（GitHub Actions）を開始しています。",
   };
   try {
-    await runExternal(gh, ["workflow", "run", "chatwork-sync.yml", "-f", `mode=${mode}`], { cwd: root, timeoutMs: 30_000, label: "GitHub Actions" });
-    dispatch = { status: "waiting", operation, config, message: "自動取得処理（GitHub Actions）の完了を待っています。" };
-    await new Promise((resolveWait) => setTimeout(resolveWait, 2500));
-    const listed = await runExternal(gh, ["run", "list", "--workflow", "chatwork-sync.yml", "--limit", "1", "--json", "databaseId"], { cwd: root, timeoutMs: 30_000, label: "GitHub Actions" });
-    const runs = JSON.parse(listed.stdout || "[]");
-    if (!runs[0]?.databaseId) throw new Error("run-not-found");
-    await runExternal(gh, ["run", "watch", String(runs[0].databaseId), "--exit-status"], { cwd: root, timeoutMs: 5 * 60_000, label: "GitHub Actions" });
+    const run = await dispatchCorrelatedWorkflow({
+      root,
+      workflowFile: "chatwork-sync.yml",
+      workflowName: "Chatwork sync",
+      inputs: { mode },
+      gh,
+      discoveryTimeoutMs: Number(process.env.YASASHII_RUN_DISCOVERY_TIMEOUT_MS || 5_000),
+      pollIntervalMs: Number(process.env.YASASHII_RUN_POLL_MS || 250),
+    });
+    const runSummary = { id: run.runId, workflow: run.workflowFile, branch: run.branch, createdAt: run.createdAt };
+    dispatch = { status: "waiting", operation, config, run: runSummary, message: "今回開始した自動取得処理（GitHub Actions）の完了を待っています。" };
+    await watchCorrelatedWorkflow({ root, run, gh, timeoutMs: 5 * 60_000 });
     await runExternal(process.env.YASASHII_GIT_BIN || "git", ["pull", "--ff-only"], { cwd: root, timeoutMs: 60_000, label: "git pull" });
     dispatch = {
       status: "success",
       operation,
       config,
+      run: runSummary,
       message: operation === "initial" ? "初回取得が完了し、リポジトリへ反映しました。" : "設定変更後の同期が完了し、リポジトリへ反映しました。",
     };
-  } catch {
+  } catch (error) {
+    const unconfirmed = ["run-correlation-unconfirmed", "branch-unconfirmed", "run-list-invalid"].includes(error?.code);
     dispatch = {
       status: "failed",
       operation,
       config,
-      message: operation === "initial"
-        ? "初回取得を完了できませんでした。自動取得処理（GitHub Actions）の結果を確認して再実行してください。"
-        : "設定は変更しましたが、同期を完了できませんでした。自動取得処理（GitHub Actions）の結果を確認して再実行してください。",
+      run: error?.correlatedRun ? { id: error.correlatedRun.runId, workflow: error.correlatedRun.workflowFile, branch: error.correlatedRun.branch, createdAt: error.correlatedRun.createdAt } : null,
+      message: unconfirmed
+        ? "今回開始した自動取得処理（GitHub Actions）を確認できませんでした。古い成功結果は使わず停止しました。Actions画面で今回の実行を確認してから再実行してください。"
+        : operation === "initial"
+          ? "今回の初回取得が失敗しました。古い成功結果へ切り替えず停止しました。Actions画面で今回の実行を確認してから再実行してください。"
+          : "設定は変更しましたが、今回の同期が失敗しました。古い成功結果へ切り替えず停止しました。Actions画面で今回の実行を確認してから再実行してください。",
     };
   }
 }
@@ -162,21 +173,33 @@ async function discoverRooms() {
   }
   const gh = process.env.YASASHII_GH_BIN || "gh";
   try {
-    await runExternal(gh, ["workflow", "run", "chatwork-sync.yml", "-f", "mode=discover"], { cwd: root, timeoutMs: 30_000, label: "GitHub Actions" });
-    await new Promise((resolveWait) => setTimeout(resolveWait, 2500));
-    const listed = await runExternal(gh, ["run", "list", "--workflow", "chatwork-sync.yml", "--limit", "1", "--json", "databaseId"], { cwd: root, timeoutMs: 30_000, label: "GitHub Actions" });
-    const runs = JSON.parse(listed.stdout || "[]");
-    if (!runs[0]?.databaseId) throw new Error("run-not-found");
-    await runExternal(gh, ["run", "watch", String(runs[0].databaseId), "--exit-status"], { cwd: root, timeoutMs: 5 * 60_000, label: "GitHub Actions" });
+    const run = await dispatchCorrelatedWorkflow({
+      root,
+      workflowFile: "chatwork-sync.yml",
+      workflowName: "Chatwork sync",
+      inputs: { mode: "discover" },
+      gh,
+      discoveryTimeoutMs: Number(process.env.YASASHII_RUN_DISCOVERY_TIMEOUT_MS || 5_000),
+      pollIntervalMs: Number(process.env.YASASHII_RUN_POLL_MS || 250),
+    });
+    discovery = { status: "running", run: { id: run.runId, workflow: run.workflowFile, branch: run.branch, createdAt: run.createdAt }, message: "今回開始した自動取得処理（GitHub Actions）で参加中のルーム一覧を取得しています。" };
+    await watchCorrelatedWorkflow({ root, run, gh, timeoutMs: 5 * 60_000 });
     await runExternal(process.env.YASASHII_GIT_BIN || "git", ["pull", "--ff-only"], { cwd: root, timeoutMs: 60_000, label: "git pull" });
     const rooms = readJson(join(root, "chatwork", "rooms.json"), { status: "not-discovered", rooms: [] });
     if (rooms.status !== "ready") throw new Error("rooms-not-ready");
-    discovery = { status: "success", message: "ルーム一覧を取得しました。" };
+    discovery = { status: "success", run: { id: run.runId, workflow: run.workflowFile, branch: run.branch, createdAt: run.createdAt }, message: "ルーム一覧を取得しました。" };
     discoveryConfirmed = true;
     return rooms;
-  } catch {
-    discovery = { status: "failed", message: "ルーム一覧を取得できませんでした。GitHub Actionsの結果とAPI Tokenの登録を確認してください。" };
-    throw Object.assign(new Error(discovery.message), { code: "discovery-failed" });
+  } catch (error) {
+    const unconfirmed = ["run-correlation-unconfirmed", "branch-unconfirmed", "run-list-invalid"].includes(error?.code);
+    discovery = {
+      status: "failed",
+      run: error?.correlatedRun ? { id: error.correlatedRun.runId, workflow: error.correlatedRun.workflowFile, branch: error.correlatedRun.branch, createdAt: error.correlatedRun.createdAt } : null,
+      message: unconfirmed
+        ? "今回開始したルーム一覧取得を確認できませんでした。古い成功結果は使わず停止しました。Actions画面で今回の実行を確認してから再実行してください。"
+        : "今回のルーム一覧取得が失敗しました。古い成功結果へ切り替えず停止しました。Actions画面の今回runとAPI Tokenの登録を確認してください。",
+    };
+    throw Object.assign(new Error(discovery.message), { code: unconfirmed ? "run-unconfirmed" : "discovery-failed" });
   }
 }
 
