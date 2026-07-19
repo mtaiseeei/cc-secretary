@@ -50,7 +50,7 @@
 | sprint-025 | done | [contract](sprint-025.md) | [progress](../progress/sprint-025.md) | [feedback](../feedback/sprint-025.md) |
 | sprint-026 | done | [contract](sprint-026.md) | [progress](../progress/sprint-026.md) | [feedback](../feedback/sprint-026.md) |
 | sprint-027 | done | [contract](sprint-027.md) | [progress](../progress/sprint-027.md) | [feedback](../feedback/sprint-027.md) |
-| sprint-028 | planned | [contract](sprint-028.md) | - | - |
+| sprint-028 | done | [contract](sprint-028.md) | [progress](../progress/sprint-028.md) | [feedback](../feedback/sprint-028.md) |
 
 ## Deferred / Superseded
 - sprint-007: superseded — 2026-07-15 製品方針転換により白紙化、`backup/sprint-007-010-plan` に退避
@@ -152,3 +152,8 @@
 - 2026-07-19: sprint-027 Retry 1再評価はimplementation-issueでFAIL（54/60）。初回3指摘とUI本体は合格したが、Google synthetic開始用の別Runtime式line 94に欠落`}`があり実ChromeでSyntaxError停止。独立補正版は12/12・caret 6/6・screenshot 6枚目視PASS。Retry Count 2の閾値によりstrong／Rotate model-escalationへ切替え、Sol/high fresh Generatorへline 94だけを差し戻す。
 - 2026-07-19: sprint-027 Retry 2のfresh Generatorが`scripts/sprint-027-browser-check.mjs:94`の欠落`}`だけを限定修正。構文、expression 6/6、copy 66/66、wrapper 5/5が0 FAIL。role別model／effort適用面とlaunch metadataは未確認のため実起動modelは`unverified`。既存`LICENSE`差分と`docs/evidence`には触れず、fresh独立Evaluatorへ引き渡す。
 - 2026-07-19: sprint-027 Retry 2はfresh独立EvaluatorでPASS（59/60、受入1〜10）。正式browser 12/12、screenshot 6枚目視、専用5/5・copy 66/66・expression 6/6・M8 2/2、禁止領域を持たないallowlist隔離repoでmaster offline 416/416・online 417/417が0 FAIL。最初の隔離試行で禁止領域の追跡path名を1回列挙した操作逸脱は内容読取・実体化・変更・stage・外部送信0件として製品合否と分離記録。sprint-027をdone、Retry Countを0、Current IDをsprint-028へ更新する。
+- 2026-07-19: sprint-028は実OAuth、Repository Secret、Actions、remote push、外部後始末を扱うhigh risk Sprint。Agentic Harness 0.4.4 resolverはstrong tierを維持し、resume保持未確認のためfresh isolated Generatorを選択。role targetはSol/highだが適用面とlaunch metadataがないため実起動modelは`unverified`として開始する。
+- 2026-07-19: sprint-028 Generatorが固定RC `3029203`の事前gateを調査し、Sprint 026のfull archive fixtureが現行Sprint 027公開guide検査に必要な`docs/guide`を含まない1件の実FAILを検出。fresh Generatorがfixtureへ公開guideだけを限定追加し、Sprint 026 21/21・wrapper 3/3、Sprint 027 copy 66/66・expression 6/6・wrapper 5/5、archive 81/81を0 FAILへ修正。新RC `bd23a8a`をbranchへcommit/pushした。
+- 2026-07-19: Agentic Harnessのinstalled cacheが0.4.5へ更新されたため、残りのruntime解決とEvaluator dispatchは0.4.5へ切替える。Generator handoffは新RC `bd23a8ad68c52765c9d7d630bdb0bd7212908a5a`を固定し、製品コードの追加変更なしで評価待ち。GitHub Appのread-only検索で専用private workspaceを`mtaiseeei/yasashii-workspace-e2e`、過去Google Chat test projectを`yasashii-secretary-gchat-test`と再特定した。GitHubは既存Git credentialの値非表示・メモリ内利用でAPI認証PASS。Google Cloudは`taisei@shigapps.jp`の再サインイン、Chatworkはcleanup済み`CHATWORK_API_TOKEN`のRepository Secret再登録が必要なため、外部live gate開始前のユーザー操作を待つ。
+- 2026-07-20: Sprint 028 live Evaluatorが同一RCでSprint 021〜027専用回帰、master offline 416/416・online 417/417、archive 81/81、browser 12/12を0 FAILで確認。専用private workspaceでChatworkは103件、Google Chatは1件を保持し、両サービスのActions・commit・push・pull後search・同条件再実行duplicate 0を実証。完了後はschedule停止、選択0、Repository Secrets 0、Google OAuth grant 0、追加client secret削除、Actions running・queued 0を確認した。製品implementation/spec issueは0件だが、host tool outputを保持評価ログと解釈した証跡手順逸脱により、初回判定は`evaluation-procedure-issue`として製品判定と分離した。Retry Countは消費しない。
+- 2026-07-20: Sol/high fresh Evaluatorが同じSprint 028 current live gateのrun ID・時刻・status・commit hash・件数・cleanup fieldだけをread-onlyで最小再取得。対象名・本文・発言者名・credential suffix・OAuth値・認可URLを出力せず、AC1〜14全件PASS、Rubric 59/60、High〜Low全verified、Release readiness `ready`、既知失敗・未検証・cleanup残り0件で合格。sprint-028をdone、Retry Count 0、Next Planned `TBD`とし、0.7.0最終live gateを完了する。
