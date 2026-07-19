@@ -7,7 +7,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { applyChatworkConfig } from "../plugins/yasashii-secretary/skills/chatwork/scripts/config-transaction.mjs";
 import { applyGoogleChatConfig } from "../plugins/yasashii-secretary/skills/google-chat/scripts/config-transaction.mjs";
-import { commitOwnedChanges, pushOwnedCommit, stagedSnapshot } from "../plugins/yasashii-secretary/scripts/lib/safe-git.mjs";
+import { commitOwnedChanges, inspectWorkingCandidates, pushOwnedCommit, stagedSnapshot } from "../plugins/yasashii-secretary/scripts/lib/safe-git.mjs";
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const work = mkdtempSync(join(tmpdir(), "yasashii-sprint-021-"));
@@ -172,6 +172,83 @@ try {
   }
   check(callbackHistoryProtected, "OAuth callbackのquery／fragmentをGit履歴へ残さない");
   check(shellHistoryProtected, "shell内の資格情報literalをGit履歴へ残さない");
+
+  const retryFourCases = [
+    ["shell-snake-google-key", "runtime/oauth.sh", () => `GOOGLE_OAUTH_CLIENT_SECRET=${synthetic("shell-google-client-secret")}`],
+    ["shell-camel-google-key", "runtime/oauth.zsh", () => `googleOauthRefreshTokenGchat=${synthetic("shell-google-refresh-token")}`],
+    ["js-same-line-snake", "runtime/oauth.js", () => `export default { client_secret: "${synthetic("js-same-line-snake")}" };`],
+    ["js-same-line-camel", "runtime/oauth.mjs", () => `export default { clientSecret: '${synthetic("js-same-line-camel")}' };`],
+  ];
+  for (const [name, path, makeBody] of retryFourCases) {
+    const target = init(`retry-four-${name}`);
+    const before = baseline(target);
+    const remote = bare(`retry-four-${name}-remote`);
+    git(target, "remote", "add", "origin", remote);
+    git(target, "push", "-q", "-u", "origin", "main");
+    const body = makeBody();
+    generatedSecrets.push(...body.match(/SYN_[A-Za-z0-9_-]+/g) || []);
+    write(target, `secretary/${path}`, body);
+
+    let inspectError;
+    try { inspectWorkingCandidates(target, ["secretary/runtime"]); }
+    catch (error) { inspectError = error; emitted.push(error.message || ""); }
+    let commitError;
+    try { commitOwnedChanges({ root: target, ownedPaths: ["secretary/runtime"], message: "4回目の拒否fixture" }); }
+    catch (error) { commitError = error; emitted.push(error.message || ""); }
+
+    const localHistory = git(target, "log", "-p", "--all");
+    const remoteHistory = git(remote, "log", "-p", "--all");
+    check(
+      inspectError?.code === "secret-detected"
+        && commitError?.code === "secret-detected"
+        && git(target, "rev-parse", "HEAD") === before
+        && git(remote, "rev-parse", "refs/heads/main") === before
+        && !localHistory.includes(body)
+        && !remoteHistory.includes(body),
+      `${name}をinspectで拒否しcommit／push／両履歴への露出0件`,
+    );
+  }
+
+  const safeMetadataCases = [
+    ["json-client-secret-policy", "metadata/policy.json", JSON.stringify({ clientSecretPolicy: "Repository Secretだけで扱い、値は永続化しない" })],
+    ["json-google-refresh-handling", "metadata/google.json", JSON.stringify({ googleOauthRefreshTokenGchatHandling: "runtime-only; never persisted" })],
+    ["ts-policy-handling", "metadata/oauth.ts", "export const oauthMetadata = { clientSecretPolicy: 'Repository Secretだけで扱う', refreshTokenHandling: \"runtime-only; never persisted\" };\n"],
+    ["json-client-secret-name", "metadata/name.json", JSON.stringify({ clientSecretName: "GOOGLE_OAUTH_CLIENT_SECRET" })],
+    ["ts-refresh-description", "metadata/description.ts", "export const refreshTokenDescription = '実行時だけ参照し、Git履歴へ保存しない';\n"],
+    ["json-operational-guidance", "metadata/guidance.json", JSON.stringify({ apiTokenGuidance: "担当者が交代したら管理画面で更新してください v2.1" })],
+    ["ts-readable-label", "metadata/label.ts", "export const clientSecretLabel = 'Google OAuth の接続情報（管理者向け）';\n"],
+    ["json-redacted-placeholder", "metadata/redacted.json", JSON.stringify({ clientSecret: "[REDACTED]" })],
+  ];
+  for (const [name, path, body] of safeMetadataCases) {
+    const target = init(`safe-metadata-${name}`);
+    const before = baseline(target);
+    const remote = bare(`safe-metadata-${name}-remote`);
+    git(target, "remote", "add", "origin", remote);
+    git(target, "push", "-q", "-u", "origin", "main");
+    write(target, `secretary/${path}`, body);
+
+    let inspectError;
+    try { inspectWorkingCandidates(target, ["secretary/metadata"]); }
+    catch (error) { inspectError = error; emitted.push(error.message || ""); }
+    let commitResult;
+    try { commitResult = commitOwnedChanges({ root: target, ownedPaths: ["secretary/metadata"], message: "安全なmetadata fixture" }); }
+    catch (error) { emitted.push(error.message || ""); }
+    let pushResult;
+    if (commitResult?.status === "committed") {
+      try { pushResult = pushOwnedCommit({ root: target, oldHead: commitResult.oldHead, newHead: commitResult.newHead }); }
+      catch (error) { emitted.push(error.message || ""); }
+    }
+    const remoteBody = git(remote, "show", "refs/heads/main:secretary/" + path);
+    check(
+      !inspectError
+        && commitResult?.status === "committed"
+        && pushResult?.status === "pushed"
+        && commitResult.oldHead === before
+        && remoteBody === body.trim(),
+      `${name}の説明metadataをinspect／commit／local bare pushで許可`,
+    );
+  }
+
   const normal = init("normal-document");
   baseline(normal);
   write(normal, "secretary/docs/security.md", [
@@ -198,6 +275,8 @@ try {
   write(safeRuntimeReferences, "secretary/runtime/declare.bash", "declare -gx authorization_code=${OAUTH_AUTHORIZATION_CODE}\n");
   write(safeRuntimeReferences, "secretary/runtime/quoted.zsh", "typeset -gx clientSecret=\"$RUNTIME_CLIENT_SECRET\" # runtime reference\n");
   write(safeRuntimeReferences, "secretary/runtime/double-dash.sh", "export -- CHATWORK_API_TOKEN=$RUNTIME_CHATWORK_TOKEN\n");
+  write(safeRuntimeReferences, "secretary/runtime/google-snake.sh", "GOOGLE_OAUTH_CLIENT_SECRET=$RUNTIME_GOOGLE_CLIENT_SECRET\n");
+  write(safeRuntimeReferences, "secretary/runtime/google-camel.zsh", "googleOauthRefreshTokenGchat=\"${RUNTIME_GOOGLE_REFRESH_TOKEN}\"\n");
   write(safeRuntimeReferences, "secretary/runtime/empty.sh", "CLIENT_SECRET=\nreadonly ACCESS_TOKEN=''\ndeclare REFRESH_TOKEN\n");
   check(
     commitOwnedChanges({ root: safeRuntimeReferences, ownedPaths: ["secretary/runtime"], message: "shell runtime参照" }).status === "committed",
@@ -212,6 +291,8 @@ try {
     "  client_secret: clientSecret,",
     "  access_token: process.env.OAUTH_ACCESS_TOKEN,",
     "};",
+    "export const oneLine = { client_secret: process.env.GOOGLE_OAUTH_CLIENT_SECRET, clientSecret };",
+    "export const actionsReference = { client_secret: \"${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}\" };",
     "",
   ].join("\n"));
   check(

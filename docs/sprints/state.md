@@ -2,11 +2,11 @@
 
 <!-- オーケストレーターだけが書く進行状態の正本 -->
 
-- Current ID: sprint-020-patch-002
+- Current ID: sprint-022
 - Retry Count: 0
-- Model Tier: standard
+- Model Tier: strong
 - Rotate: none
-- Next Planned: TBD
+- Next Planned: sprint-023
 
 <!-- 2026-07-08: sprint-001 は再評価で合格（初回はクレジット方針の spec/実装不一致で不合格 →
      ユーザー確認で単段クレジットに正本改訂、回帰assert強化のうえ合格）。
@@ -43,6 +43,14 @@
 | sprint-020 | done | [contract](sprint-020.md) | [progress](../progress/sprint-020.md) | [feedback](../feedback/sprint-020.md) |
 | sprint-020-patch-001 | done | [contract](sprint-020-patch-001.md) | [progress](../progress/sprint-020-patch-001.md) | [feedback](../feedback/sprint-020-patch-001.md) |
 | sprint-020-patch-002 | done | [contract](sprint-020-patch-002.md) | [progress](../progress/sprint-020-patch-002.md) | [feedback](../feedback/sprint-020-patch-002.md) |
+| sprint-021 | done | [contract](sprint-021.md) | [progress](../progress/sprint-021.md) | [feedback](../feedback/sprint-021.md) |
+| sprint-022 | planned | [contract](sprint-022.md) | - | - |
+| sprint-023 | planned | [contract](sprint-023.md) | - | - |
+| sprint-024 | planned | [contract](sprint-024.md) | - | - |
+| sprint-025 | planned | [contract](sprint-025.md) | - | - |
+| sprint-026 | planned | [contract](sprint-026.md) | - | - |
+| sprint-027 | planned | [contract](sprint-027.md) | - | - |
+| sprint-028 | planned | [contract](sprint-028.md) | - | - |
 
 ## Deferred / Superseded
 - sprint-007: superseded — 2026-07-15 製品方針転換により白紙化、`backup/sprint-007-010-plan` に退避
@@ -98,3 +106,21 @@
 - 2026-07-18: sprint-020-patch-002 Retry 1再評価はimplementation-issueで不合格。wrapper 8/8、offline 316/316、online 317/317、Sprint 016 2/2は0 FAILだったが、Project確認の複合エラー文に403と `does not exist` が共存すると権限エラーより404判定を優先し、未使用IDとして `preflight-ready` へ進む1件を独立負テストで検出。判定優先順位の修正をRetry 2へ差し戻した。
 - 2026-07-18: sprint-020-patch-002 Retry 2で権限・403判定を404／NOT_FOUNDより優先し、stdout／stderr分散を含む複合エラーを安全停止へ修正。専用68件、前Evaluator独立負テスト28件、wrapper 8/8、offline 316/316、online 317/317、Sprint 016 2/2が0 FAILで、実Cloud等の外部変更0件のまま独立最終評価へ引き渡した。
 - 2026-07-18: sprint-020-patch-002 Retry 2最終評価は独立Evaluatorで合格。受入基準20/20、Rubric 54/55、新規独立負テスト70/70、Retry 1負テスト28/28、Cloud製品68/68、wrapper 8/8、offline 316/316、online 317/317、Sprint 016 2/2が0 FAIL。Google Chat JSON開始とChatwork入口をdesktop／mobileで再確認し、実`gcloud`導入・Cloud・OAuth・Secret・Billing・push変更0件のまま完了した。
+- 2026-07-18: 配布前監査への対応方針を `1A` HighからLowまで全指摘を解消、`2A` 既存0.6.0から安全更新できる0.7.0、`3A` 自動回帰と専用private test workspaceの両チャットlive gateまで、と確定。Plannerが安全性、データ保護、更新配布、回帰、UX、最終live gateをsprint-021〜028へ分割した。sprint-021は資格情報・Git commit・remote pushを扱う高リスクSprintのため、runtime resolverの判断によりModel Tierをstrong、Rotateをmodel-escalationとしてfresh Generatorを開始する。
+- 2026-07-18: sprint-021初回評価はimplementation-issueで不合格。提供suite 31/31、wrapper 8/8、offline 327/327、online 328/328は合格したが、独立敵対fixture 7 PASS／11 FAILで、全英字・camelCase secretの見逃し、安全な説明文書の誤拒否、memory commitによる別PJ／文書の巻込み、upstream未設定時の既存別commit pushを再現した。Retry Countを1へ更新し、strong tierを維持したfresh Generatorへ差し戻す。
+- 2026-07-18: sprint-021 Retry 1の独立Evaluatorは一度合格を報告したが、遅延書き込みに含まれた具体的指摘をオーケストレーターが最小fixtureで再確認し、shell code内の全英字unquoted `client_secret=<literal>`がsecret検査を通過することを確認した。stateへの越権書き込みは採用せず、Retry Count 1の`awaiting-eval`を維持したままfresh Evaluatorへ追加敵対評価を依頼する。
+- 2026-07-18: sprint-021 Retry 1の追加敵対評価はimplementation-issueで不合格。製品suite 45/45、wrapper 8/8は合格したが、独立fixture 33 PASS／12 FAILで`.sh`／`.bash`／`.zsh`のunquoted credential literalが検査、local commit、local bare remote push、両Git履歴へ入る1根本原因を再現した。`$VAR`／`${VAR}`／`process.env`／JS identifierは誤拒否していない。Retry Countを2とし、strong tierを維持したfresh Generatorへ差し戻す。
+- 2026-07-18: sprint-021 Retry 2の独立Evaluatorはimplementation-issueで不合格。製品専用59/59、wrapper 8/8と関連suiteは合格したが、製品fixtureを流用しない独立matrix 169 PASS／20 FAILで、実運用名`GOOGLE_OAUTH_CLIENT_SECRET`、`googleOauthRefreshTokenGchat`と1行JavaScript object内のsnake／camel credential literalが検査を通過し、local commit、local bare remote push、両Git履歴への混入まで再現した。値そのもののエラー表示は0件。Retry Countが3に達したため、strong tierを維持したまま自動修正を停止し、ユーザー判断を待つ。
+- 2026-07-19: ユーザーが4回目の限定修正を明示承認。過去3回の不合格履歴は保持し、自動停止後にユーザーが再承認した新しい限定再試行サイクルとしてRetry Countを0へ戻す。対象はRetry 2で再現した実運用Google OAuth key 2件と1行JavaScript object 2件の根本原因・回帰だけに閉じる。Sprintはhigh risk、Model Tierはstrong、Rotateはnoneを維持し、resume未確認のためfresh Generatorをdispatchする。
+- 2026-07-19: 限定再試行Generatorがcredential keyのword列判定と1行JS／TS object property検査を実装。専用63/63、wrapper 8/8、関連6 suite、隔離clone online 328/328が0 FAIL。Generator所有3ファイルだけの限定commitは管理環境の許可を得られなかったため作成せず、既存staged正本を混ぜない未commit差分としてfresh Evaluatorへ引き渡す。実外部サービス書込み0件。
+- 2026-07-19: ユーザー再承認後サイクルの初回独立評価はimplementation-issueで不合格。危険側10形式はすべて遮断したが、独立matrix 83 PASS／12 FAILで`clientSecretPolicy`、`googleOauthRefreshTokenGchatHandling`等の値を含まない説明metadataまで`secret-detected`で誤拒否した。専用63/63、wrapper 8/8と関連suiteは合格。受入2の通常文書負ケース違反としてRetry Countを1にし、high risk／strong tierを維持したfresh Generatorへ差し戻す。
+- 2026-07-19: Retry 1 Generatorがmetadata用途keyと値の二重判定を実装し、安全なpolicy／handling／name／descriptionを許可しつつ、suffix付き危険literal・説明内埋込み・TSX／CTS偽装を拒否する回帰へ拡張。専用76/76、wrapper 8/8、関連suite、隔離clone offline 327/327・online 328/328が0 FAIL。未commit差分のままfresh Evaluatorへ引き渡す。
+- 2026-07-19: Retry 1独立評価はimplementation-issueで不合格。独立matrix 131 PASS／49 FAILで、metadata安全文へ埋めた短い・分割payload 12形式中9形式がinspect／commitを通過し、local bare remote pushと両Git履歴保存まで成立。前回危険側10形式60/60、製品専用76/76、wrapper 8/8は合格したがCritical境界違反のため打切り。一般的な`[REDACTED]`の誤拒否も確認。Retry Countを2とし、high risk／strong tierのfresh Generatorへ差し戻す。
+- 2026-07-19: Retry 2 Generatorがmetadata安全許可を部分一致・長さheuristicから閉じた安全文法の値全体一致へ変更。未認識prefix／suffix、改行、escape、Unicode、短いpayload残余を拒否し、`[REDACTED]`を許可。専用89/89、wrapper 8/8、関連suite、隔離clone offline 327/327・online 328/328が0 FAIL。未commit差分のままfresh Evaluatorへ引き渡す。
+- 2026-07-19: Retry 2独立評価はimplementation-issueで不合格。独立65ケース中58 PASS／7 FAILで、escaped／computed key 3形式、広すぎるplaceholder 3形式、name identifier payload 1形式がinspect／commit／local bare pushを通過し両Git履歴へ保存された。製品専用89/89、wrapper 8/8は合格したがCritical確定後に残り回帰を打切り。再承認後サイクルのRetry Countが3に達したため、strong tierを維持して自動修正を停止し、セキュリティ優先の仕様境界についてユーザー判断を待つ。
+- 2026-07-19: ユーザー確認により、Repository Secretへ直接登録する通常フローと合理的に起こり得る誤操作を厳格に守り、利用者が独自コードを意図的に特殊構文へ改変して補助scannerを回避するケースは完全保証の対象外とする方針を確定。最新worktreeの構文、Sprint 021専用89/89、wrapper 8/8は合格し、ファイル自体の破損はない。問題を過剰なゼロ許容仕様のspec-issueとしてfresh Plannerへ戻す。Planner中はRetry Count 3とModel Tier strongを保持する。
+- 2026-07-19: fresh Plannerがsecret安全性の保証境界を7つの正本へ反映。通常wizardのmemory→Repository Secret直接登録、通常フロー非露出、製品管理対象／初回publish inventoryの合理的な誤混入拒否、正規runtime参照／通常文書／合理的metadataの誤拒否0件を合格条件とした。意図的な特殊構文・難読化・computed／escaped key・偽placeholderの完全検出は非ゴール。新仕様の実装サイクルとしてRetry Countを0へ戻し、high risk／strong tierを維持してfresh Generatorへ引き渡す。
+- 2026-07-19: Generatorがscannerの過剰なmetadata定型文解析・文字種／長さheuristicと非ゴール敵対回帰を整理し、実装・test合計追加行を307行から155行へ縮小。専用71/71、wrapper 8/8、関連suite、隔離clone offline 327/327・online 328/328が0 FAIL。PlannerがChatworkは本人のGitHub Secret画面直接入力、Google Chatはwizard memory→gh stdin直接登録へ仕様を再整合し、fresh Generatorが現コード一致・追加変更不要を確認。未commit差分のままfresh Evaluatorへ引き渡す。
+- 2026-07-19: sprint-021は改訂保証境界でfresh独立Evaluator合格。受入12/12、Rubric 59/60、独立16/16、専用71/71、wrapper 8/8、関連suite全0 FAIL、master offline 327/327・online 328/328。通常フローsecret露出0、外部書込み0、評価資産残存0。sprint-021をdone、Retry Countを0、Current IDをsprint-022、Next Plannedをsprint-023へ進める。Model Tier strongは次Generatorのresolver判断まで保持する。
+- 2026-07-18: sprint-021 Generatorが一時indexによる所有path限定commit、stage後のsecret再検査、候補差替え拒否、push失敗時の既存index保護を初回publish／Chatwork／Google Chat／memory commitへ実装。専用31件、wrapper 8件、全offline 327件、全online 328件が0 FAIL、実外部サービス変更0件のため独立Evaluatorへ引き渡した。
+- 2026-07-18: sprint-021 Retry 1でcredential key正規化、OAuth callback code検査、安全文書の誤拒否解消、memory所有path限定、upstreamなし初回pushの履歴基点確認を実装。独立fixture相当を製品suiteへ取り込み、専用45件、wrapper 8件、全offline 327件と関連suiteが0 FAILのためfresh独立Evaluatorへ再引き渡した。

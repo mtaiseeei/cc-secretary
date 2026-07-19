@@ -108,6 +108,25 @@ const STRICT_CREDENTIAL_KEYS = new Set([
   "xchatworktoken",
 ]);
 
+const STRICT_CREDENTIAL_WORD_SEQUENCES = [
+  ["client", "secret"],
+  ["access", "token"],
+  ["refresh", "token"],
+  ["authorization", "code"],
+  ["auth", "code"],
+  ["api", "key"],
+  ["api", "token"],
+];
+
+function credentialKeyWords(value) {
+  return String(value || "")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2")
+    .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+}
+
 function canonicalCredentialKey(value) {
   return String(value || "")
     .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
@@ -115,11 +134,37 @@ function canonicalCredentialKey(value) {
     .replace(/[^a-z0-9]/g, "");
 }
 
+function isStrictCredentialKey(value) {
+  if (STRICT_CREDENTIAL_KEYS.has(canonicalCredentialKey(value))) return true;
+  const words = credentialKeyWords(value);
+  // policy / description / name 等は値を保持するfieldではなく、製品の説明metadataである。
+  // 値の文字種や長さを推測せず、keyの役割だけで通常の資格情報fieldと分ける。
+  if (CREDENTIAL_METADATA_SUFFIXES.has(words.at(-1))) return false;
+  return STRICT_CREDENTIAL_WORD_SEQUENCES.some((sequence) => words.some(
+    (_, index) => sequence.every((word, offset) => words[index + offset] === word),
+  ));
+}
+
+const CREDENTIAL_METADATA_SUFFIXES = new Set([
+  "policy",
+  "handling",
+  "description",
+  "example",
+  "name",
+  "label",
+  "documentation",
+  "docs",
+  "note",
+  "guidance",
+  "help",
+]);
+
 function isPlaceholderCredentialValue(rawValue) {
   const value = String(rawValue ?? "").trim().replace(/^(["'])([\s\S]*)\1$/, "$2").trim();
   if (!value) return true;
-  if (/^(?:sample|example|placeholder|redacted|masked|changeme|replace[-_ ]?me|none|null|undefined|x+|\*+)$/i.test(value)) return true;
-  if (/^(?:<[^>]+>|\$\{\{[^}]+\}\}|\$\{[^}]+\}|\{\{[^}]+\}\})$/.test(value)) return true;
+  if (/^(?:sample|example|placeholder|redacted|\[redacted\]|masked|changeme|replace[-_ ]?me|none|null|undefined|x+|\*+)$/i.test(value)) return true;
+  if (/^\$\{\{\s*secrets\.[A-Za-z_][A-Za-z0-9_]*\s*\}\}$/.test(value)) return true;
+  if (/^\$(?:[A-Za-z_][A-Za-z0-9_]*|\{[A-Za-z_][A-Za-z0-9_]*\})$/.test(value)) return true;
   return false;
 }
 
@@ -128,7 +173,7 @@ function jsonContainsCredentialField(value, seen = new Set()) {
   seen.add(value);
   if (Array.isArray(value)) return value.some((item) => jsonContainsCredentialField(item, seen));
   for (const [key, fieldValue] of Object.entries(value)) {
-    if (STRICT_CREDENTIAL_KEYS.has(canonicalCredentialKey(key)) && !isPlaceholderCredentialValue(fieldValue)) return true;
+    if (isStrictCredentialKey(key) && !isPlaceholderCredentialValue(fieldValue)) return true;
     if (jsonContainsCredentialField(fieldValue, seen)) return true;
   }
   return false;
@@ -141,7 +186,7 @@ function containsCredentialUrl(body) {
     try { url = new URL(candidate.replace(/[),.;]+$/, "")); } catch { continue; }
     for (const params of callbackParams(url)) {
       for (const [key, value] of params) {
-        if (STRICT_CREDENTIAL_KEYS.has(canonicalCredentialKey(key)) && !isPlaceholderCredentialValue(value)) return true;
+        if (isStrictCredentialKey(key) && !isPlaceholderCredentialValue(value)) return true;
       }
     }
   }
@@ -157,7 +202,7 @@ function containsCredentialAssignment(path, body) {
     "gm",
   );
   for (const match of body.matchAll(assignment)) {
-    if (!STRICT_CREDENTIAL_KEYS.has(canonicalCredentialKey(match[1]))) continue;
+    if (!isStrictCredentialKey(match[1])) continue;
     const rawValue = match[2].trim().replace(/[,;]\s*$/, "").trim();
     if (shellFile) {
       const withoutComment = rawValue.replace(/\s+#.*$/, "").trim();
@@ -175,6 +220,29 @@ function containsCredentialAssignment(path, body) {
     // 通常文書・設定では全英字も資格情報になり得るため、文字種や長さでは弱めない。
     if (codeFile && !/^["'`]/.test(rawValue)) continue;
     return true;
+  }
+
+  if (codeFile) {
+    // 行頭だけでなく、`{ client_secret: "..." }` のような同一行object propertyも検査する。
+    // keyの開始境界と代入記号だけを正規表現で見つけ、値は引用符の終端まで個別に読む。
+    const property = /(?:^|[,{;]\s*|\b(?:const|let|var)\s+)["']?([A-Za-z][A-Za-z0-9_.-]*)["']?[ \t]*[:=][ \t]*/gm;
+    for (const match of body.matchAll(property)) {
+      if (!isStrictCredentialKey(match[1])) continue;
+      const start = match.index + match[0].length;
+      const quote = body[start];
+      if (quote !== '"' && quote !== "'" && quote !== "`") continue;
+      let end = start + 1;
+      let escaped = false;
+      for (; end < body.length; end += 1) {
+        const character = body[end];
+        if (escaped) { escaped = false; continue; }
+        if (character === "\\") { escaped = true; continue; }
+        if (character === quote) break;
+      }
+      const rawValue = body.slice(start, end < body.length ? end + 1 : body.length);
+      if (isPlaceholderCredentialValue(rawValue)) continue;
+      return true;
+    }
   }
   return false;
 }
