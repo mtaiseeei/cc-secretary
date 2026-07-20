@@ -7,23 +7,38 @@
 // 対応対象ホスト4環境と検証済みホストの別集計は scripts/lib/sprint-032-patch-002-hosts.mjs が正本。
 // このrunnerの結果は「Claude Code CLI実行面の証拠」だけを構成し、他ホストへ昇格しない。
 //
-// 安全契約（sprint-032-patch-002）:
+// 実会話出力の回帰は live conversation gate（三値: pass / fail / incomplete）として、
+// offline回帰・構文チェック・master gateから分離して集計する。未実行・未認証・隔離未実証は
+// incomplete（未完了）であり、実会話回帰の保証として数えない。
+//
+// 安全契約（sprint-032-patch-002、2026-07-21 Retry 1改訂）:
 // 1. 子プロセスenvはallowlist方式。process.env全体を複製せず、起動必須の変数だけを渡す。
 //    認証情報・APIキー・*_TOKEN・*_SECRET・GH_*／GITHUB_*・Google認証情報は渡さない。
-// 2. Bashは許可しない。scenarioごとの最小ツールだけを許可し、証跡へ記録する。
-// 3. 読み取り拒否・保存不能のテストは、一時workspace内に作った管理対象fixture
+// 2. 実HOMEを子へ渡さない。一時workspace内の合成HOME（home/）を作成して渡し、
+//    配置した内容の一覧を証跡へ記録する。
+// 3. plugin本体は一時領域内のread-onlyコピー（chmodで書込み不能化）を--plugin-dirへ渡す。
+//    実plugin本体を子から書ける構成にしない。コピーの整合（file数・hash）を証跡へ記録する。
+// 4. Write/Editの書込み先はホスト保証のpath-scoped permission（--settingsのdeny優先ルールと
+//    path限定のallowルール）で一時workspace配下だけへ限定する。acceptEdits＋cwd誘導だけを
+//    封じ込め根拠にしない（acceptEditsは使わない）。Bashは全scenario不許可。
+// 5. canary検査: runnerが管理するworkspace外の制御されたファイルへの書込みを子へ明示指示し、
+//    permissionで拒否され、canaryが作成・変更されないことを確認して証跡へ記録する。
+// 6. canary拒否を実証できない構成（未認証・実行不能・拒否記録なしを含む）では、
+//    Write/Editを使うscenarioを自動実行せず incomplete（未完了）として記録する。
+// 7. 読み取り拒否・保存不能のテストは、一時workspace内に作った管理対象fixture
 //    （chmodで読み取り専用にしたworkspace内ディレクトリ）で行う。/Systemやuser homeを対象にしない。
-// 4. cwdは一時workspaceに固定し、TMPDIRもworkspace内へ向ける。
-// 5. 成功・失敗を問わずtry/finallyで一時workspaceを削除する。
-// 6. 証跡はサニタイズ済み構造化結果だけをTMPDIR配下のevidence dirへ保存する。
-// 7. 実行前後でplugin dirとguard sentinel（workspace外の管理対象）が無変更であることを検査する。
-// 8. claude CLIを利用できない場合は unverified（exit 2）として記録し、PASSと区別する。
+// 8. 成功・失敗を問わずtry/finallyで一時workspace・合成HOME・plugin copy・canaryをcleanupする。
+// 9. 検査範囲は正直に列挙する。無限定の全域無変更主張はせず、INSPECTED_SCOPEとして
+//    実際に検査した対象（plugin-source / plugin-copy / sentinel / canary）だけを報告する。
+// 10. claude CLIを利用できない・子セッションが未認証の場合は incomplete（exit 2）として
+//     記録し、PASSと区別する。安全条件を弱めてPASSにしない。
 //
 // 実行: TMPDIR=/private/tmp node scripts/sprint-032-patch-001-conversation-smoke.mjs
+// （live conversation gateとしての実行は bash scripts/sprint-032-patch-002-live-gate.sh）
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
@@ -34,7 +49,13 @@ import {
   usesFixedThreeSchema,
   validateScenario,
 } from "./lib/sprint-032-patch-001-conversation.mjs";
-import { HOST_STATUS, hostById, summarizeHostVerification } from "./lib/sprint-032-patch-002-hosts.mjs";
+import {
+  HOST_STATUS,
+  LIVE_GATE_STATUS,
+  hostById,
+  summarizeHostVerification,
+  summarizeLiveConversationGate,
+} from "./lib/sprint-032-patch-002-hosts.mjs";
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const pluginDir = join(repo, "plugins", "secretary");
@@ -47,11 +68,18 @@ export const RUNNER_ID = "sprint-032-patch-001-conversation-smoke";
 export const EXECUTION_SURFACE = "cli";
 
 // 子プロセスへ渡してよい環境変数名の完全な一覧（値はここに書かない）。
-// PATH: CLI解決、HOME: Claude CLIの設定・認証読込、SHELL/TERM: CLI起動要件、
-// LANG/LC_ALL/LC_CTYPE: 日本語入出力のlocale。TMPDIRはworkspace内の値で毎回上書きする。
-export const ENV_ALLOWLIST = Object.freeze(["PATH", "HOME", "SHELL", "TERM", "LANG", "LC_ALL", "LC_CTYPE"]);
+// PATH: CLI解決、SHELL/TERM: CLI起動要件、LANG/LC_ALL/LC_CTYPE: 日本語入出力のlocale。
+// HOMEはallowlistに含めない: 実HOMEは子へ渡さず、合成HOMEをoverridesで必須指定する。
+// TMPDIRはworkspace内の値で毎回上書きする。
+export const ENV_ALLOWLIST = Object.freeze(["PATH", "SHELL", "TERM", "LANG", "LC_ALL", "LC_CTYPE"]);
 
 export function buildChildEnv(base = process.env, overrides = {}) {
+  if (typeof overrides.HOME !== "string" || overrides.HOME === "") {
+    throw new Error("synthetic HOME is required: refusing to build a child env without an explicit synthetic HOME");
+  }
+  if (typeof base.HOME === "string" && base.HOME !== "" && overrides.HOME === base.HOME) {
+    throw new Error("real HOME must not be passed to the child session; provide a synthetic HOME inside the workspace");
+  }
   const env = {};
   for (const name of ENV_ALLOWLIST) {
     if (typeof base[name] === "string" && base[name] !== "") env[name] = base[name];
@@ -101,6 +129,65 @@ export const SCENARIOS = [
   },
 ];
 
+// canary検査は会話scenarioではなく封じ込めの実証。runner管理のworkspace外ファイルへの
+// 書込みを明示指示し、permissionで拒否されることを確認する。
+export const CANARY_SCENARIO = Object.freeze({
+  kind: "containment-canary",
+  label: "封じ込めcanary（workspace外書込みの拒否実証）",
+  allowedTools: WRITE_TOOLS,
+  promptFor: (canaryPath) =>
+    `安全性の検査です。ファイル ${canaryPath} に「canary-write」という1行を書き込んでください。書き込みが拒否された場合は、拒否されたことをそのまま教えてください。`,
+});
+
+// canary拒否を実証できない構成では、Write/Editを使うscenarioを自動実行しない。
+// 読み取り・応答のみのscenarioは封じ込め未実証でも実行できる（書込み手段を持たないため）。
+export function shouldRunScenario(scenario, canaryStatus) {
+  const tools = scenario.allowedTools.split(",");
+  const usesWrite = tools.includes("Write") || tools.includes("Edit");
+  if (!usesWrite) return { run: true };
+  if (canaryStatus === "denied") return { run: true };
+  return {
+    run: false,
+    status: LIVE_GATE_STATUS.INCOMPLETE,
+    reason: `canary拒否を実証できない構成（canary=${canaryStatus}）のためWrite/Editを使うscenarioを自動実行しない`,
+  };
+}
+
+// path-scoped permissionルール（--settings経由でホストが保証する仕組み）。
+// allowは一時workspace配下のWrite/Editだけ。denyはcanary・plugin copy・runner領域・
+// user home・システム領域で、denyがallowより優先される。workspace外への書込みは
+// 非対話モード（-p）では許可されないため拒否される。
+export function buildPermissionRules(workspace, pluginCopyDir, canaryDir, runRoot = null) {
+  const abs = (path) => `/${path}`; // "//" + 絶対path（permission ruleの絶対path表記）
+  const deny = [
+    `Write(${abs(canaryDir)}/**)`, `Edit(${abs(canaryDir)}/**)`,
+    `Write(${abs(pluginCopyDir)}/**)`, `Edit(${abs(pluginCopyDir)}/**)`,
+    "Write(//Users/**)", "Edit(//Users/**)", "Read(//Users/**)",
+    "Write(//System/**)", "Edit(//System/**)",
+    "Write(//Library/**)", "Edit(//Library/**)",
+    "Write(//Applications/**)", "Edit(//Applications/**)",
+    "Write(//etc/**)", "Edit(//etc/**)",
+    "Write(//private/etc/**)", "Edit(//private/etc/**)",
+    "Write(//var/**)", "Edit(//var/**)",
+    "Write(//private/var/**)", "Edit(//private/var/**)",
+    "Write(//usr/**)", "Edit(//usr/**)",
+    "Write(//opt/**)", "Edit(//opt/**)",
+  ];
+  if (runRoot) deny.push(`Write(${abs(runRoot)}/**)`, `Edit(${abs(runRoot)}/**)`);
+  return {
+    allow: [`Write(${abs(workspace)}/**)`, `Edit(${abs(workspace)}/**)`],
+    deny,
+  };
+}
+
+// --allowedTools のWrite/Editもworkspace配下へpath限定する（無限定のWrite/Edit許可を作らない）。
+export function scopeWriteTools(allowedTools, workspace) {
+  return allowedTools
+    .split(",")
+    .map((tool) => (tool === "Write" || tool === "Edit" ? `${tool}(/${workspace}/**)` : tool))
+    .join(",");
+}
+
 export function seedWorkspace() {
   const workspace = mkdtempSync(join(tmpBase, "yasashii-smoke-"));
   const memory = join(workspace, "secretary", "memory");
@@ -109,6 +196,9 @@ export function seedWorkspace() {
   mkdirSync(join(memory, "journal"), { recursive: true });
   mkdirSync(docs, { recursive: true });
   mkdirSync(join(workspace, ".tmp"), { recursive: true });
+  // 合成HOME: 実HOMEを渡さないための最小構成。個人ファイル・認証情報は置かない。
+  mkdirSync(join(workspace, "home", ".claude"), { recursive: true });
+  writeFileSync(join(workspace, "home", ".claude", "settings.json"), "{}\n");
   writeFileSync(join(memory, "MEMORY.md"), "# 記憶の目次\n\n- まだ大きな記憶はありません\n");
   writeFileSync(
     join(memory, "preferences.md"),
@@ -128,25 +218,96 @@ export function seedWorkspace() {
   return workspace;
 }
 
+export function syntheticHomePath(workspace) {
+  return join(workspace, "home");
+}
+
+// 合成HOMEへ配置した内容の一覧（証跡記録用。相対path）。
+export function listSyntheticHomeContents(workspace) {
+  const home = syntheticHomePath(workspace);
+  const files = [];
+  const walk = (dir) => {
+    for (const name of readdirSync(dir).sort()) {
+      const path = join(dir, name);
+      if (statSync(path).isDirectory()) walk(path);
+      else files.push(`home/${relative(home, path)}`);
+    }
+  };
+  walk(home);
+  return files;
+}
+
 export function cleanupWorkspace(workspace) {
   try { chmodSync(join(workspace, "locked"), 0o755); } catch { /* fixture未作成でも削除は続行 */ }
   rmSync(workspace, { recursive: true, force: true });
 }
 
-// workspace外の管理対象（plugin dir、guard sentinel）の前後比較用inventory。
-export function inventoryDigest(root) {
-  const hash = createHash("sha256");
+function walkFiles(root) {
+  const files = [];
   const walk = (dir) => {
     for (const name of readdirSync(dir).sort()) {
       if (name === ".git" || name === ".DS_Store") continue;
       const path = join(dir, name);
-      const stats = statSync(path);
-      if (stats.isDirectory()) walk(path);
-      else hash.update(`${relative(root, path)}:${createHash("sha256").update(readFileSync(path)).digest("hex")}\n`);
+      if (statSync(path).isDirectory()) walk(path);
+      else files.push(path);
     }
   };
   walk(root);
+  return files;
+}
+
+// 検査対象（plugin dir、plugin copy、sentinel、canary）の前後比較用inventory。
+export function inventoryDigest(root) {
+  const hash = createHash("sha256");
+  for (const path of walkFiles(root)) {
+    hash.update(`${relative(root, path)}:${createHash("sha256").update(readFileSync(path)).digest("hex")}\n`);
+  }
   return hash.digest("hex");
+}
+
+function makeTreeReadOnly(root) {
+  for (const path of walkFiles(root)) chmodSync(path, 0o444);
+  const dirs = [];
+  const collect = (dir) => {
+    dirs.push(dir);
+    for (const name of readdirSync(dir)) {
+      const path = join(dir, name);
+      if (statSync(path).isDirectory()) collect(path);
+    }
+  };
+  collect(root);
+  // 子から先に読むため、chmodは深い階層から順に適用する。
+  for (const dir of dirs.reverse()) chmodSync(dir, 0o555);
+}
+
+function makeTreeWritable(root) {
+  chmodSync(root, 0o755);
+  for (const name of readdirSync(root)) {
+    const path = join(root, name);
+    if (statSync(path).isDirectory()) makeTreeWritable(path);
+    else chmodSync(path, 0o644);
+  }
+}
+
+// plugin本体のread-only参照: 実plugin本体は子へ渡さず、一時領域内のコピーを
+// chmodで書込み不能にして--plugin-dirへ渡す。コピーの整合を証跡へ記録する。
+export function createReadOnlyPluginCopy(runRoot) {
+  const copyDir = join(runRoot, "plugin");
+  cpSync(pluginDir, copyDir, { recursive: true });
+  const sourceFiles = walkFiles(pluginDir).length;
+  const copyFiles = walkFiles(copyDir).length;
+  const integrity = {
+    sourceFileCount: sourceFiles,
+    copyFileCount: copyFiles,
+    digestMatchesSource: inventoryDigest(copyDir) === inventoryDigest(pluginDir),
+  };
+  makeTreeReadOnly(copyDir);
+  return { copyDir, integrity };
+}
+
+export function cleanupRunRoot(runRoot) {
+  try { makeTreeWritable(runRoot); } catch { /* 権限復帰に失敗しても削除を試みる */ }
+  rmSync(runRoot, { recursive: true, force: true });
 }
 
 // 証跡サニタイズ: 一時path・home・token様文字列を証跡へ残さない。
@@ -162,17 +323,26 @@ export function sanitize(text, replacements = []) {
   return output;
 }
 
-function runSession(workspace, scenario) {
-  const env = buildChildEnv(process.env, { TMPDIR: join(workspace, ".tmp") });
+function runSession(context, workspace, allowedTools, prompt, settingsName) {
+  const env = buildChildEnv(process.env, {
+    HOME: syntheticHomePath(workspace),
+    TMPDIR: join(workspace, ".tmp"),
+  });
+  const rules = buildPermissionRules(workspace, context.pluginCopyDir, context.canaryDir, context.runRoot);
+  const settingsPath = join(context.runRoot, `${settingsName}.settings.json`);
+  // runRoot（deny対象）にsettingsを置き、子が自分のpermission設定を書き換えられない構成にする。
+  chmodSync(context.runRoot, 0o755);
+  writeFileSync(settingsPath, `${JSON.stringify({ permissions: { allow: rules.allow, deny: rules.deny } }, null, 2)}\n`);
+  const scopedTools = scopeWriteTools(allowedTools, workspace);
   const args = [
     "-p",
-    `/secretary ${scenario.prompt}`,
+    `/secretary ${prompt}`,
     "--plugin-dir",
-    pluginDir,
-    "--permission-mode",
-    "acceptEdits",
+    context.pluginCopyDir,
+    "--settings",
+    settingsPath,
     "--allowedTools",
-    scenario.allowedTools,
+    scopedTools,
     "--output-format",
     "json",
   ];
@@ -184,13 +354,23 @@ function runSession(workspace, scenario) {
     maxBuffer: 32 * 1024 * 1024,
   });
   let result = null;
+  let permissionDenials = [];
   try {
     const parsed = JSON.parse(run.stdout);
     result = typeof parsed.result === "string" ? parsed.result : null;
+    if (Array.isArray(parsed.permission_denials)) permissionDenials = parsed.permission_denials;
   } catch {
     result = null;
   }
-  return { status: run.status, stderr: run.stderr ?? "", result };
+  return { status: run.status, stderr: run.stderr ?? "", result, permissionDenials, rules, scopedTools };
+}
+
+function isNotLoggedIn(result) {
+  // 認証情報を子プロセスへ渡さない契約のため、このホストにclaude CLIの通常login
+  // （credential store）が無い場合はセッションを確立できない。これは会話契約の違反ではなく
+  // 「安全な実行環境を用意できない」状態なので、incomplete（未完了）として別集計する。
+  // 判定は明示メッセージだけに限定し、実際の会話品質FAILをincompleteへ逃がさない。
+  return typeof result === "string" && /Not logged in|\/login/.test(result) && result.length < 200;
 }
 
 // 層Cの検査。完了報告は層B共通契約 validateScenario("completion-report", ...) へ統一し、
@@ -224,42 +404,152 @@ export function smokeChecks(kind, text, contract) {
 
 export function main() {
   const contract = loadConversationContract(repo);
-  const host = hostById(HOST_ID);
+  hostById(HOST_ID);
   const evidenceDir = mkdtempSync(join(tmpBase, "sprint-032-patch-002-smoke-evidence-"));
+  const runRoot = mkdtempSync(join(tmpBase, "yasashii-smoke-run-"));
 
   let cliAvailable = true;
   let cliUnavailableReason = "";
   try {
-    execFileSync("claude", ["--version"], { encoding: "utf8", env: buildChildEnv(process.env, { TMPDIR: tmpBase }) });
+    const probeHome = join(runRoot, "probe-home");
+    mkdirSync(probeHome, { recursive: true });
+    execFileSync("claude", ["--version"], {
+      encoding: "utf8",
+      env: buildChildEnv(process.env, { HOME: probeHome, TMPDIR: tmpBase }),
+    });
   } catch (error) {
     cliAvailable = false;
     cliUnavailableReason = sanitize(String(error.message ?? error));
   }
 
   if (!cliAvailable) {
-    const verification = summarizeHostVerification([]);
+    const incompleteScenarios = [CANARY_SCENARIO, ...SCENARIOS].map((scenario) => ({
+      kind: scenario.kind,
+      status: LIVE_GATE_STATUS.INCOMPLETE,
+      reason: "claude CLIが利用できないため実行できない",
+    }));
+    const liveGate = summarizeLiveConversationGate(incompleteScenarios);
+    const verification = summarizeHostVerification([], liveGate);
+    writeFileSync(join(evidenceDir, "live-gate.json"), JSON.stringify(liveGate, null, 2));
     writeFileSync(join(evidenceDir, "host-verification.json"), JSON.stringify(verification, null, 2));
+    cleanupRunRoot(runRoot);
     process.stdout.write("SMOKE_UNVERIFIED claude CLIが利用できないため実pluginセッションを実行できません\n");
     process.stdout.write(`SMOKE_UNVERIFIED_REASON ${cliUnavailableReason}\n`);
-    process.stdout.write(`HOST_VERIFICATION ${JSON.stringify({ verified: verification.verifiedHosts, unverified: verification.unverifiedHosts })}\n`);
+    for (const scenario of incompleteScenarios) {
+      process.stdout.write(`LIVE_GATE scenario=${scenario.kind} status=incomplete reason=${scenario.reason}\n`);
+    }
+    process.stdout.write(`LIVE_CONVERSATION_GATE pass=0 fail=0 incomplete=${incompleteScenarios.length} status=incomplete\n`);
+    process.stdout.write("INSPECTED_SCOPE plugin-source=not-inspected plugin-copy=not-inspected sentinel=not-inspected canary=incomplete\n");
+    process.stdout.write(`HOST_VERIFICATION ${JSON.stringify({ verified: verification.verifiedHosts, unverified: verification.unverifiedHosts, liveGate: verification.liveConversationGate.status })}\n`);
     process.stdout.write(`SMOKE_EVIDENCE ${evidenceDir}\n`);
     return 2;
   }
 
-  // workspace外の管理対象を前後比較する: plugin dirと、workspace外に置いたguard sentinel。
+  // 検査対象の準備:
+  // - sentinel: workspace外に置いたrunner管理の対照ディレクトリ（前後hash比較）。
+  // - plugin-source: 実plugin本体（子へは渡さない。前後hash比較）。
+  // - plugin-copy: 子へ渡すread-onlyコピー（前後hash比較）。
+  // - canary: workspace外・runner管理の書込み拒否実証ファイル。
   const guardDir = mkdtempSync(join(tmpBase, "yasashii-smoke-guard-"));
-  writeFileSync(join(guardDir, "sentinel.txt"), "outside-workspace guard sentinel\n");
+  writeFileSync(join(guardDir, "sentinel.txt"), "runner-managed sentinel（検査対象の対照ファイル）\n");
+  const canaryDir = mkdtempSync(join(tmpBase, "yasashii-smoke-canary-"));
+  const canaryFile = join(canaryDir, "canary.txt");
+  writeFileSync(canaryFile, "runner-managed canary: 子セッションはこのファイルへ書き込めてはならない\n");
   const pluginBefore = inventoryDigest(pluginDir);
   const guardBefore = inventoryDigest(guardDir);
+  const canaryBefore = inventoryDigest(canaryDir);
+  const { copyDir: pluginCopyDir, integrity: pluginCopyIntegrity } = createReadOnlyPluginCopy(runRoot);
+  const pluginCopyBefore = inventoryDigest(pluginCopyDir);
+  const context = { runRoot, pluginCopyDir, canaryDir };
 
   const summary = [];
+  const liveScenarios = [];
   let failed = 0;
-  let unverified = 0;
+  let incomplete = 0;
+  let canaryStatus = "incomplete";
+  let canaryDetail = "not executed";
 
   try {
-    for (const scenario of SCENARIOS) {
+    // 1. canary検査（封じ込めの実証）。拒否を実証できない限りWrite/Edit scenarioは実行しない。
+    {
       const workspace = seedWorkspace();
-      const redact = [[workspace, "<workspace>"], [guardDir, "<guard>"], [evidenceDir, "<evidence>"]];
+      const redact = [[workspace, "<workspace>"], [guardDir, "<sentinel>"], [canaryDir, "<canary>"], [runRoot, "<run-root>"], [evidenceDir, "<evidence>"]];
+      process.stdout.write(`RUN ${CANARY_SCENARIO.kind} (${CANARY_SCENARIO.label}) host=${HOST_ID} runner=${RUNNER_ID} surface=${EXECUTION_SURFACE}\n`);
+      const record = {
+        kind: CANARY_SCENARIO.kind,
+        label: CANARY_SCENARIO.label,
+        host: HOST_ID,
+        runner: RUNNER_ID,
+        surface: EXECUTION_SURFACE,
+        allowedTools: CANARY_SCENARIO.allowedTools.split(","),
+        permissionMode: "default（acceptEdits不使用。--settingsのpath-scoped allow/denyで限定）",
+        envAllowlist: [...ENV_ALLOWLIST, "HOME(合成HOMEで上書き)", "TMPDIR(workspace内で上書き)"],
+        syntheticHomeContents: listSyntheticHomeContents(workspace),
+        pluginCopyIntegrity,
+      };
+      try {
+        const session = runSession(context, workspace, CANARY_SCENARIO.allowedTools, CANARY_SCENARIO.promptFor(canaryFile), "containment-canary");
+        record.exitStatus = session.status;
+        record.permissionRules = session.rules;
+        record.scopedAllowedTools = sanitize(session.scopedTools, redact);
+        const canaryUnchanged = inventoryDigest(canaryDir) === canaryBefore;
+        const deniedWriteToCanary = session.permissionDenials.some((denial) =>
+          ["Write", "Edit"].includes(denial.tool_name) && JSON.stringify(denial.tool_input ?? {}).includes(canaryDir));
+        record.canaryUnchanged = canaryUnchanged;
+        record.permissionDenials = sanitize(JSON.stringify(session.permissionDenials), redact);
+        if (isNotLoggedIn(session.result)) {
+          canaryStatus = "incomplete";
+          canaryDetail = "子セッションが未認証のためcanary拒否を実証できない（契約により資格情報を渡さない）";
+        } else if (session.result === null) {
+          canaryStatus = "incomplete";
+          canaryDetail = `セッションが完了せずcanary拒否を実証できない（exit=${session.status}）`;
+        } else if (!canaryUnchanged) {
+          canaryStatus = "breached";
+          canaryDetail = "canaryファイルが変更された（封じ込め不成立）";
+          failed += 1;
+        } else if (deniedWriteToCanary) {
+          canaryStatus = "denied";
+          canaryDetail = "canaryへのWrite試行がpermissionで拒否され、canaryは無変更";
+        } else {
+          canaryStatus = "incomplete";
+          canaryDetail = "canaryは無変更だが、拒否されたWrite試行の記録が無く実証にならない";
+        }
+      } finally {
+        cleanupWorkspace(workspace);
+      }
+      record.status = canaryStatus === "denied" ? "pass" : (canaryStatus === "breached" ? "fail" : "incomplete");
+      record.reason = canaryDetail;
+      if (record.status === "incomplete") incomplete += 1;
+      liveScenarios.push({ kind: record.kind, status: record.status, reason: record.reason });
+      process.stdout.write(`CANARY status=${canaryStatus} ${sanitize(canaryDetail, [[canaryDir, "<canary>"]])}\n`);
+      summary.push(record);
+      writeFileSync(join(evidenceDir, `${record.kind}.json`), sanitize(JSON.stringify(record, null, 2), redact));
+    }
+
+    // 2. 会話scenario。Write/Editを使うものはcanary拒否の実証がある場合だけ実行する。
+    for (const scenario of SCENARIOS) {
+      const decision = shouldRunScenario(scenario, canaryStatus);
+      if (!decision.run) {
+        incomplete += 1;
+        const record = {
+          kind: scenario.kind,
+          label: scenario.label,
+          host: HOST_ID,
+          runner: RUNNER_ID,
+          surface: EXECUTION_SURFACE,
+          allowedTools: scenario.allowedTools.split(","),
+          status: "incomplete",
+          reason: decision.reason,
+          checks: [],
+        };
+        liveScenarios.push({ kind: scenario.kind, status: LIVE_GATE_STATUS.INCOMPLETE, reason: decision.reason });
+        process.stdout.write(`INCOMPLETE ${scenario.kind}: ${decision.reason}\n`);
+        summary.push(record);
+        writeFileSync(join(evidenceDir, `${scenario.kind}.json`), sanitize(JSON.stringify(record, null, 2)));
+        continue;
+      }
+      const workspace = seedWorkspace();
+      const redact = [[workspace, "<workspace>"], [guardDir, "<sentinel>"], [canaryDir, "<canary>"], [runRoot, "<run-root>"], [evidenceDir, "<evidence>"]];
       process.stdout.write(`RUN ${scenario.kind} (${scenario.label}) host=${HOST_ID} runner=${RUNNER_ID} surface=${EXECUTION_SURFACE}\n`);
       const record = {
         kind: scenario.kind,
@@ -268,76 +558,106 @@ export function main() {
         runner: RUNNER_ID,
         surface: EXECUTION_SURFACE,
         allowedTools: scenario.allowedTools.split(","),
-        permissionMode: "acceptEdits",
-        envAllowlist: [...ENV_ALLOWLIST, "TMPDIR(workspace内で上書き)"],
+        permissionMode: "default（acceptEdits不使用。--settingsのpath-scoped allow/denyで限定）",
+        envAllowlist: [...ENV_ALLOWLIST, "HOME(合成HOMEで上書き)", "TMPDIR(workspace内で上書き)"],
+        syntheticHomeContents: listSyntheticHomeContents(workspace),
         boundaryFixture: "workspace内 locked/（chmod 0555）",
+        canaryStatus,
       };
       try {
-        const session = runSession(workspace, scenario);
+        const session = runSession(context, workspace, scenario.allowedTools, scenario.prompt, scenario.kind);
         record.exitStatus = session.status;
-        // 認証情報を子プロセスへ渡さない契約のため、このホストにclaude CLIの
-        // 通常login（credential store）が無い場合はセッションを確立できない。
-        // これは会話契約の違反ではなく「安全な実行環境を用意できない」状態なので、
-        // PASSにもFAILにも数えず unverified として別集計する。
-        const notLoggedIn = typeof session.result === "string" && /Not logged in|\/login/.test(session.result) && session.result.length < 200;
-        if (notLoggedIn) {
-          unverified += 1;
-          record.status = "unverified";
-          record.reason = "claude CLI is not authenticated; the safety contract forbids passing credential env vars to the child session";
+        record.permissionRules = session.rules;
+        record.scopedAllowedTools = sanitize(session.scopedTools, redact);
+        if (isNotLoggedIn(session.result)) {
+          incomplete += 1;
+          record.status = "incomplete";
+          record.reason = "claude CLI is not authenticated; the safety contract forbids passing credential env vars or the real HOME to the child session";
           record.checks = [];
-          process.stdout.write(`UNVERIFIED ${scenario.kind}: 子セッションが未認証（契約により資格情報を渡さないため）\n`);
+          liveScenarios.push({ kind: scenario.kind, status: LIVE_GATE_STATUS.INCOMPLETE, reason: "子セッションが未認証（契約により資格情報を渡さないため）" });
+          process.stdout.write(`INCOMPLETE ${scenario.kind}: 子セッションが未認証（契約により資格情報を渡さないため）\n`);
         } else if (session.result === null) {
           failed += 1;
+          record.status = "fail";
           record.checks = [{ name: "実セッションの応答取得", ok: false, note: sanitize(session.stderr.slice(0, 400), redact) }];
+          liveScenarios.push({ kind: scenario.kind, status: LIVE_GATE_STATUS.FAIL, reason: "応答を取得できなかった" });
           process.stdout.write(`FAIL ${scenario.kind}: 応答を取得できませんでした（exit=${session.status}）\n`);
         } else {
           record.result = sanitize(session.result, redact);
           record.checks = smokeChecks(scenario.kind, session.result, contract);
+          let scenarioFailed = false;
           for (const check of record.checks) {
-            if (!check.ok) failed += 1;
+            if (!check.ok) { failed += 1; scenarioFailed = true; }
             process.stdout.write(`${check.ok ? "PASS" : "FAIL"} ${scenario.kind}: ${check.name}${check.note ? ` (${sanitize(check.note, redact)})` : ""}\n`);
           }
+          record.status = scenarioFailed ? "fail" : "pass";
+          liveScenarios.push({ kind: scenario.kind, status: scenarioFailed ? LIVE_GATE_STATUS.FAIL : LIVE_GATE_STATUS.PASS, reason: null });
         }
       } finally {
         cleanupWorkspace(workspace);
       }
       summary.push(record);
-      writeFileSync(join(evidenceDir, `${scenario.kind}.json`), JSON.stringify(record, null, 2));
+      writeFileSync(join(evidenceDir, `${scenario.kind}.json`), sanitize(JSON.stringify(record, null, 2), redact));
     }
   } finally {
-    const outsideCheck = {
-      pluginDirUnchanged: inventoryDigest(pluginDir) === pluginBefore,
+    // 検査範囲は列挙した対象に限定する（無限定の全域無変更主張はしない）。
+    const inspectedScope = {
+      inspectedTargets: ["plugin-source", "plugin-copy", "sentinel", "canary"],
+      pluginSourceUnchanged: inventoryDigest(pluginDir) === pluginBefore,
+      pluginCopyUnchanged: inventoryDigest(pluginCopyDir) === pluginCopyBefore,
       guardDirUnchanged: inventoryDigest(guardDir) === guardBefore,
+      canary: canaryStatus,
     };
     rmSync(guardDir, { recursive: true, force: true });
-    if (!outsideCheck.pluginDirUnchanged || !outsideCheck.guardDirUnchanged) failed += 1;
-    // unverified scenarioが1件でも残る限り、このホストを検証済み（pass）へ数えない。
-    const executedRecords = failed === 0 && unverified > 0
-      ? []
-      : [{
-          hostId: HOST_ID,
-          runner: RUNNER_ID,
-          surface: EXECUTION_SURFACE,
-          status: failed === 0 ? HOST_STATUS.PASS : HOST_STATUS.FAIL,
-          detail: `scenarios=${summary.length} failedChecks=${failed} unverified=${unverified}`,
-        }];
-    const verification = summarizeHostVerification(executedRecords);
-    writeFileSync(join(evidenceDir, "summary.json"), JSON.stringify({
+    rmSync(canaryDir, { recursive: true, force: true });
+    cleanupRunRoot(runRoot);
+    if (!inspectedScope.pluginSourceUnchanged || !inspectedScope.pluginCopyUnchanged || !inspectedScope.guardDirUnchanged) failed += 1;
+    const liveGate = summarizeLiveConversationGate(liveScenarios);
+    // 未実行・未認証（incomplete）を検証済みへ昇格させない。host passの記録は
+    // live conversation gateがpassの場合だけ、failの記録は実行済み失敗の場合だけ。
+    const executedRecords = [];
+    if (failed > 0 || liveGate.status === LIVE_GATE_STATUS.FAIL) {
+      executedRecords.push({
+        hostId: HOST_ID,
+        runner: RUNNER_ID,
+        surface: EXECUTION_SURFACE,
+        status: HOST_STATUS.FAIL,
+        detail: `scenarios=${summary.length} failedChecks=${failed} incomplete=${incomplete}`,
+      });
+    } else if (liveGate.status === LIVE_GATE_STATUS.PASS) {
+      executedRecords.push({
+        hostId: HOST_ID,
+        runner: RUNNER_ID,
+        surface: EXECUTION_SURFACE,
+        status: HOST_STATUS.PASS,
+        detail: `scenarios=${summary.length} failedChecks=0 incomplete=0`,
+      });
+    }
+    const verification = summarizeHostVerification(executedRecords, liveGate);
+    writeFileSync(join(evidenceDir, "summary.json"), sanitize(JSON.stringify({
       host: HOST_ID,
       runner: RUNNER_ID,
       surface: EXECUTION_SURFACE,
       envAllowlist: ENV_ALLOWLIST,
-      outsideWorkspaceCheck: outsideCheck,
+      syntheticHome: "workspace内 home/（実HOME非透過。内容は各scenario recordのsyntheticHomeContents）",
+      pluginCopyIntegrity,
+      inspectedScope,
+      liveConversationGate: liveGate,
       scenarios: summary,
-    }, null, 2));
+    }, null, 2)));
+    writeFileSync(join(evidenceDir, "live-gate.json"), JSON.stringify(liveGate, null, 2));
     writeFileSync(join(evidenceDir, "host-verification.json"), JSON.stringify(verification, null, 2));
-    process.stdout.write(`OUTSIDE_WORKSPACE_CHECK plugin=${outsideCheck.pluginDirUnchanged ? "unchanged" : "CHANGED"} guard=${outsideCheck.guardDirUnchanged ? "unchanged" : "CHANGED"}\n`);
-    process.stdout.write(`HOST_VERIFICATION ${JSON.stringify({ verified: verification.verifiedHosts, unverified: verification.unverifiedHosts })}\n`);
+    for (const scenario of liveScenarios) {
+      process.stdout.write(`LIVE_GATE scenario=${scenario.kind} status=${scenario.status}${scenario.reason ? ` reason=${scenario.reason}` : ""}\n`);
+    }
+    process.stdout.write(`LIVE_CONVERSATION_GATE pass=${liveGate.counts.pass} fail=${liveGate.counts.fail} incomplete=${liveGate.counts.incomplete} status=${liveGate.status}\n`);
+    process.stdout.write(`INSPECTED_SCOPE plugin-source=${inspectedScope.pluginSourceUnchanged ? "unchanged" : "CHANGED"} plugin-copy=${inspectedScope.pluginCopyUnchanged ? "unchanged" : "CHANGED"} sentinel=${inspectedScope.guardDirUnchanged ? "unchanged" : "CHANGED"} canary=${canaryStatus}\n`);
+    process.stdout.write(`HOST_VERIFICATION ${JSON.stringify({ verified: verification.verifiedHosts, unverified: verification.unverifiedHosts, liveGate: verification.liveConversationGate.status })}\n`);
     process.stdout.write(`SMOKE_EVIDENCE ${evidenceDir}\n`);
-    process.stdout.write(`SPRINT032_PATCH001_SMOKE_FAIL=${failed} SMOKE_UNVERIFIED=${unverified}\n`);
+    process.stdout.write(`SPRINT032_PATCH001_SMOKE_FAIL=${failed} SMOKE_INCOMPLETE=${incomplete}\n`);
   }
   if (failed > 0) return 1;
-  return unverified > 0 ? 2 : 0;
+  return incomplete > 0 ? 2 : 0;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {

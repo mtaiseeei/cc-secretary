@@ -300,3 +300,181 @@ file数 368、bytes合計 3,777,541、一覧SHA-256
 外部write 0件。commit・push・remote変更・plugin install・Repository Secret・Actions・
 OAuth・実API・公開操作は行っていない（commitはOrchestratorが実施する）。
 検証に使ったlocal fixture・headless Chrome・一時workspaceは停止・削除済み。
+
+---
+
+## Retry 1（2026-07-21: ユーザーレビュー差し戻しP1・P2の修正）
+
+**ステータス:** Retry 1実装完了 - 再評価待ち
+
+2026-07-21のユーザーレビュー差し戻し2件（P1: 封じ込め不足、P2: 実会話が回帰に未組み込み）を、
+改訂済み契約（sprint-032-patch-002の「改訂（2026-07-21 Retry 1）」節、constraints §16.7・§16.11、
+rubric検証方法42）に従って修正した。上記の初回記述は書き換えず、本節で訂正・追記する。
+初回記録の「workspace外変更: 0件」という無限定表現は、本Retryで「検査対象を列挙した
+範囲限定表現」（後述のINSPECTED_SCOPE）へ置き換えた。plugin本体（`plugins/secretary/`）は
+今回変更していない（差し戻しはrunner・gate側のみ）。
+
+### P1: 封じ込めの再実装（`scripts/sprint-032-patch-001-conversation-smoke.mjs`）
+
+1. **合成HOME**: 実HOMEを子プロセスへ渡す構成を廃止。`ENV_ALLOWLIST` から `HOME` を除去し、
+   `buildChildEnv` は合成HOMEのoverride指定が無い・実HOMEと同値の場合に**例外で拒否**する。
+   合成HOMEは各一時workspace内の `home/` で、配置内容は `home/.claude/settings.json`（空の
+   `{}` のみ）の1 fileだけ。内容一覧は `syntheticHomeContents` として各scenarioの証跡JSONへ
+   記録し、workspaceごとcleanupされる。
+2. **plugin本体のread-only参照**: `createReadOnlyPluginCopy` がplugin本体を一時run領域内へ
+   コピーし、コピー全treeを `chmod`（file 0444／dir 0555）で書込み不能化して `--plugin-dir` へ
+   渡す。実plugin本体は子へ渡さない。コピー整合（source/copyのfile数一致と全fileハッシュの
+   digest一致）を `pluginCopyIntegrity` として証跡へ記録。cleanupは権限復帰後に削除。
+3. **path-scoped permission**: `--permission-mode acceptEdits` を廃止し、`--settings` のJSON
+   permissionルール（deny優先）と、`--allowedTools` のWrite/Edit自体のpath限定
+   （`Write(//<workspace>/**)` 形式）で書込み先を一時workspace配下だけへ限定した。
+   - allow: `Write(//<workspace>/**)`・`Edit(//<workspace>/**)` のみ（無限定のWrite/Edit許可なし）
+   - deny: canary領域、plugin copy、runner管理run領域、`//Users/**`（Write/Edit/Readとも）、
+     `//System/**`・`//Library/**`・`//Applications/**`・`//etc/**`・`//private/etc/**`・
+     `//var/**`・`//private/var/**`・`//usr/**`・`//opt/**`
+   - 非対話モード（`-p`）ではallowされないtool useは承認できず拒否されるため、
+     workspace外への書込みは「cwd誘導」ではなくホストのpermission機構で不能になる。
+   - 適用したルール一式は `permissionRules` として各scenario証跡へ記録（サニタイズ済み）。
+     settings fileは子のdeny対象であるrun領域に置き、子が自分のpermission設定を書換えられない。
+4. **canary検査**: runnerが管理する一時workspace外の制御領域（`/private/tmp` 配下の
+   `yasashii-smoke-canary-*`）に `canary.txt` を置き、子セッションへ**そのpathへの書込みを
+   明示指示**するcanary scenarioを最初に実行する。canary=denied（拒否実証）は、
+   (a) canary領域の前後ハッシュ無変更、かつ (b) 実出力の `permission_denials` にcanary pathへの
+   Write/Edit試行の拒否記録があること、の両方を要求する。無変更でも拒否記録が無い場合は
+   「実証にならない」としてincompleteに落とす（refusalをdenialと混同しない）。
+5. **Write/Edit抑止gate**: `shouldRunScenario` により、canary=denied以外
+   （incomplete=未認証・実行不能・拒否記録なし／breached=canary変更）の構成では
+   partial-failure・completion-reportを**自動実行せずincomplete（未完了）として記録**する。
+   読み取り・応答のみのscenario（complex-question・diagnosis・search-results）は書込み手段を
+   持たないため実行可能（未認証時はそれ自体がincomplete）。
+6. **範囲限定表現**: `OUTSIDE_WORKSPACE_CHECK`（無限定の外部無変更表現）を廃止し、
+   検査対象を列挙する `INSPECTED_SCOPE` へ変更した。今回の実出力:
+   `INSPECTED_SCOPE plugin-source=unchanged plugin-copy=unchanged sentinel=unchanged canary=incomplete`
+   （検査対象はplugin本体・plugin copy・runner管理sentinel・canaryの4つに限定。
+   無限定の「workspace外変更0件」はrunner出力・証跡・本progressのいずれにも新規記載しない）。
+
+### P2: live conversation gateの分離
+
+7. **分離gate**: 実会話出力の回帰確認を三値（pass／fail／incomplete）で集計する
+   live conversation gateとして分離した。
+   - 集計契約: `scripts/lib/sprint-032-patch-002-hosts.mjs` の `summarizeLiveConversationGate`
+     （fail優先→incomplete残存または実行0件でincomplete→全passのときだけpass。
+     `offlineChecksCountAsEvidence: false` を構造上明示）。
+   - 実行wrapper: 新設 `scripts/sprint-032-patch-002-live-gate.sh`（runnerを実行し、
+     scenarioごとの `LIVE_GATE scenario=... status=...` と
+     `LIVE_CONVERSATION_GATE pass=N fail=N incomplete=N status=...` を表示。
+     結果を `$TMPDIR/sprint-032-patch-002-live-gate-latest.json` へ記録。exit 0=pass／
+     2=incomplete／その他=fail。incomplete時は「元指摘は未解消のまま保持しSprint 033へ
+     引き継ぐ」ことを明示表示）。
+8. **表示・集計の分離**: `sprint-032-patch-002-regression.sh` のrunner構文チェックの名称を
+   「実会話runnerの構文のみ（実会話回帰の保証ではない。実会話はlive gateで別集計）」へ変更し、
+   `LIVE_CONVERSATION_GATE separate=true ...` の明示行を追加。master release gateは
+   live gateの記録fileを読み、総合表示の直前に
+   `LIVE_CONVERSATION_GATE status=incomplete ... separate=true note=実会話回帰はこのgateの合否に含めない...`
+   を明示表示し、JSON reportへ `liveConversationGate`（`countedInThisGate: false`）を記録する。
+   master gateのoffline判定自体は実会話を要求しない（incompleteをFAILにしない）が、
+   incompleteを総合表示で隠さない。
+9. **hosts集計への反映**: `summarizeHostVerification(records, liveGate)` はlive gate状態を
+   `host-verification.json` の `liveConversationGate` として保持し、**live gateがpassでない限り
+   どのホストもpass（検証済み）として記録できない**（例外で拒否）。未実行（liveGate省略）も
+   incomplete扱いで同様に拒否。fail recordは実行済み失敗の記録として許可し、検証済みには
+   数えない。
+
+### 変更ファイル（Retry 1）
+
+- `scripts/sprint-032-patch-001-conversation-smoke.mjs` — 封じ込め再実装（合成HOME・
+  read-only plugin copy・path-scoped permission・canary・Write/Edit抑止・INSPECTED_SCOPE・
+  三値live gate出力・証跡サニタイズ拡張）
+- `scripts/lib/sprint-032-patch-002-hosts.mjs` — `LIVE_GATE_STATUS`／
+  `summarizeLiveConversationGate` 新設、`summarizeHostVerification` へのlive gate反映と
+  pass昇格拒否
+- `scripts/sprint-032-patch-002-live-gate.sh` — 新設（live conversation gate wrapper）
+- `scripts/sprint-032-patch-002-regression.sh` — 構文チェックの名称変更・live gate分離の明示行・
+  live gate wrapper構文チェック追加（7→8 checks）
+- `scripts/master-release-gate.mjs` — live gate状態の明示行とreport記録（合否には不算入）
+- `scripts/sprint-032-patch-002-test.mjs` — 24→32 checksへ拡張（下記negative含む）
+- `docs/progress/sprint-032-patch-002.md` — 本節の追記のみ
+
+### Retry 1のテスト結果（環境: `NODE_USE_SYSTEM_CA=0 TMPDIR=/private/tmp`）
+
+| 検査 | コマンド | 結果 |
+|---|---|---:|
+| Patch専用（拡張後） | `node scripts/sprint-032-patch-002-test.mjs` | 32 PASS / 0 FAIL |
+| Patch専用wrapper | `bash scripts/sprint-032-patch-002-regression.sh` | 8 PASS / 0 FAIL |
+| 会話可読性 | `node scripts/sprint-032-patch-001-readability-test.mjs` | 28 PASS / 0 FAIL / 32 surfaces |
+| Patch 001回帰 | `bash scripts/sprint-032-patch-001-regression.sh` | 7 PASS / 0 FAIL |
+| 実会話smoke（新構成） | `node scripts/sprint-032-patch-001-conversation-smoke.mjs` | FAIL=0 / INCOMPLETE=6（exit 2） |
+| live conversation gate | `bash scripts/sprint-032-patch-002-live-gate.sh` | status=incomplete（exit 2） |
+| **master offline** | `node scripts/master-release-gate.mjs --mode offline --root <repo>` | pass 10/10 suites, 457/457（live gate行はincompleteを明示） |
+| **archive相当** | `node scripts/master-release-gate.mjs --mode archive --root <candidate>` | pass 8/8 required, 117/117 |
+| 空白検査 | `git diff --check` | 0件 |
+
+archive candidateは初回と同じ方法（`/private/tmp` 配下へ `.git`・`docs/evidence`・`.DS_Store`・
+`.harness/config.local.*`・`.env*`・`*.pem`・`*.key` を除外したrsync、371 files）で生成し、
+検証後に削除した。実会話smokeの実行では、一時workspace・合成HOME・plugin copy・canary領域・
+run領域の残存0件を確認した（サニタイズ済み証跡dirのみ意図的に残存）。
+
+### 実会話smokeの新構成での実挙動（本環境）
+
+本環境のClaude Code CLIは資格情報env経由のため、合成HOME＋credential非透過の契約下では
+子セッションが未認証になる。その結果:
+canary=incomplete（拒否を実証できない）→ Write/Editを使うpartial-failure・completion-reportは
+**自動実行されず** incomplete、読み取り系3 scenarioは実行のうえ未認証でincomplete、
+`LIVE_CONVERSATION_GATE pass=0 fail=0 incomplete=6 status=incomplete`、
+`HOST_VERIFICATION verified=[] unverified=[4ホスト] liveGate=incomplete`、exit 2。
+これは契約（Scope 2-8・受入基準3・13）が要求する正しい挙動で、安全条件を弱めるPASS化は
+存在しない。
+
+### incompleteとして残る項目（未解消のまま保持）
+
+- **実plugin sessionの会話出力の回帰確認（元指摘）は未解消**。live conversation gateは
+  incompleteであり、offline回帰・構文チェック・master gateのPASSをその代わりに数えていない。
+  完了はSprint 033の受入基準6（4環境それぞれの検証。実会話runner検証を含む）へ引き継ぐ。
+  合格条件は契約の(b)経路（未完了の明示＋引き継ぎ）を使う。
+- canary拒否の実証（denied）も、認証済み端末での実行までincomplete。denied実証後に初めて
+  Write/Edit scenarioが自動実行される。
+
+### Evaluatorが確認すべきnegative case（Retry 1追加分）
+
+1. `buildChildEnv(base, { TMPDIR })`（合成HOME欠落）と `buildChildEnv(base, { HOME: base.HOME })`
+   （実HOME透過）がともに例外で拒否されること。`ENV_ALLOWLIST` に `HOME` が無いこと。
+2. `shouldRunScenario` がcanary=incomplete／breachedでWrite/Edit scenarioの実行を拒否し、
+   canary=deniedでだけ許可すること（読み取り系は常に実行可）。
+3. runnerソース・出力に `OUTSIDE_WORKSPACE_CHECK`・「workspace外変更0件」が無く、
+   `INSPECTED_SCOPE` が検査対象4つを列挙すること。
+4. `summarizeLiveConversationGate` で pass+incomplete混在→incomplete、空→incomplete、
+   fail優先、が成立し、incompleteがpassへ昇格しないこと。
+5. live gateがpass以外のとき `summarizeHostVerification` がpass recordを例外で拒否すること
+   （liveGate省略時も同様）。
+6. plugin copyへの新規file作成・既存file上書きがEACCES等で拒否されること
+   （`createReadOnlyPluginCopy` の実file検査）。
+7. `sprint-032-patch-002-regression.sh`・master gateの表示が構文チェックを実会話回帰の保証と
+   表示せず、live gateのincompleteを明示すること。
+
+### 自己評価（Retry 1反映後。`docs/spec/rubric.md` の基準）
+
+| 基準 | スコア(1-5) | コメント |
+|------|------------|---------|
+| 機能完全性 | 4 | P1・P2の改訂要件（Scope 2・7、受入基準2/3/4/13）を実装。実会話検証は契約(b)経路のincompleteとして正直に保持 |
+| 動作安定性 | 4 | 全offline回帰0 FAIL。runnerは未認証・実行不能・封じ込め未実証を三値で安定分類 |
+| デザイン性 | 4 | 初回から不変（wizard・copyは今回未変更） |
+| 独自性 | 3 | canaryの二重実証（無変更＋拒否記録）とdeny優先permission構成は契約要件からの素直な設計 |
+| エラーハンドリング | 4 | 実HOME透過・合成HOME欠落・不正status・未実証時のWrite/Editはすべて構造的に拒否。cleanupはfinallyで保証 |
+| 回帰なし | 5 | master offline 10/10・457/457、archive 8/8・117/117、patch-001回帰・readability・専用32件すべて0 FAIL |
+
+### Evaluatorへの引き渡し（Retry 1）
+
+- 回帰チェック一括: `NODE_USE_SYSTEM_CA=0 TMPDIR=/private/tmp bash scripts/sprint-032-patch-002-regression.sh`
+  ＋master offline／archive gate（上表）。
+- live conversation gate: `NODE_USE_SYSTEM_CA=0 TMPDIR=/private/tmp bash scripts/sprint-032-patch-002-live-gate.sh`
+  （未認証環境ではstatus=incomplete・exit 2が正しい。認証済み端末ではcanary denied実証後に
+  Write/Edit scenarioまで実行される）。
+- 証跡: `SMOKE_EVIDENCE` に表示される `/private/tmp/sprint-032-patch-002-smoke-evidence-*`
+  （サニタイズ済み。`syntheticHomeContents`・`permissionRules`・`pluginCopyIntegrity`・
+  `inspectedScope`・`live-gate.json`・`host-verification.json` を含む）。
+
+### 外部操作（Retry 1）
+
+外部write 0件。commit・push・remote変更・plugin install・Repository Secret・Actions・OAuth・
+実API・公開操作は行っていない（commitはOrchestratorが実施する）。docs/spec・docs/sprints・
+docs/feedback・docs/evidence・plugins/secretary配下への変更0件。
