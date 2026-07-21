@@ -1,0 +1,3056 @@
+{
+  "schemaVersion": 1,
+  "baseCommit": "b32cb33db5f2bd0e5a9ca4a98e30276c92bfb36c",
+  "files": [
+    {
+      "path": ".agents/plugins/marketplace.json",
+      "classification": "metadata-overlay",
+      "sha256": "394ab3ba0b4ea96ea48cf0eeaf9637e25b5388096c89889d45fedd2c0e4f85b0"
+    },
+    {
+      "path": ".claude-plugin/marketplace.json",
+      "classification": "metadata-overlay",
+      "sha256": "d21b8d6781b79db6f8d64d8f2680fbcd0ce804a9299c2bed380f617d172be1c6"
+    },
+    {
+      "path": ".harness/.gitignore",
+      "classification": "repo-owned",
+      "sha256": "3bdb7e389a4f2e3790fd616bde5362fd488a77f6472de4f30aa081177720ef8b"
+    },
+    {
+      "path": ".harness/config.toml",
+      "classification": "repo-owned",
+      "sha256": "bd6a3bb19633857d743048a579590f14781c1c66138e2032d73b14b1471c3290"
+    },
+    {
+      "path": "AGENTS.md",
+      "classification": "repo-owned",
+      "sha256": "dd4343eb57b108bc54f867f458040d3315060da4ccf3df476106323401f7b5da"
+    },
+    {
+      "path": "CLAUDE.md",
+      "classification": "repo-owned",
+      "sha256": "c3a54954910197d467bdd9aaf5bd21de47871fdac2a50ef6c697569b033452f6"
+    },
+    {
+      "path": "LICENSE",
+      "classification": "repo-owned",
+      "sha256": "b6d97ac224e82462221382f7af3c40051489be2312daf6e706c5a5ad15c13ec9"
+    },
+    {
+      "path": "README.md",
+      "classification": "repo-owned",
+      "sha256": "3ce8027c5be58c83fc36857b86eae59d4c2daa54fc41723e5055ddcd400df5ac"
+    },
+    {
+      "path": "adapters/agentic-overlay.json",
+      "classification": "upstream-only",
+      "sha256": "6b575b380eab7c156d390d1e65f6998f5c57091cd97091886076a8edc8aa6157"
+    },
+    {
+      "path": "adapters/claude-code-cli/README.md",
+      "classification": "upstream-only",
+      "sha256": "6f0b856300094389036b5acb8f8612ccdea4750514faaa275bde1876159a4a6b"
+    },
+    {
+      "path": "adapters/claude-code-cli/adapter.json",
+      "classification": "upstream-only",
+      "sha256": "46b573b5c2b5f2c18c495ea0c138ba2509858ac2ac616be6c5d076c88561b9d3"
+    },
+    {
+      "path": "adapters/claude-code-desktop-app/README.md",
+      "classification": "upstream-only",
+      "sha256": "5ede275ca0488a7426a9157200454956c00b9d0405a26f64a52a08980af3c7b2"
+    },
+    {
+      "path": "adapters/claude-code-desktop-app/adapter.json",
+      "classification": "upstream-only",
+      "sha256": "29d9b6a0ac3aeb421fe98f6137b979e0e3dd189ed4b89af1569fb4095e5323bd"
+    },
+    {
+      "path": "adapters/codex-app/README.md",
+      "classification": "upstream-only",
+      "sha256": "7a72224006dd996cab305ef85295a0a5374897d7c3b1984ea7f38d1f441a8e2d"
+    },
+    {
+      "path": "adapters/codex-app/adapter.json",
+      "classification": "upstream-only",
+      "sha256": "3fe3fa69f8030a434f8dfbca31046f8350525407328cff1b0caa5d81ce1524c1"
+    },
+    {
+      "path": "adapters/codex-cli/README.md",
+      "classification": "upstream-only",
+      "sha256": "dde1f6a2951023a282a54a188300cfedc843c0dd6594583ea0209e721e54602f"
+    },
+    {
+      "path": "adapters/codex-cli/adapter.json",
+      "classification": "upstream-only",
+      "sha256": "3fc822366604e728911a5f6826eb81eb8c99d42ce663a046018aa6bb6375ae78"
+    },
+    {
+      "path": "adapters/codex-common/AGENTS.md",
+      "classification": "upstream-only",
+      "sha256": "6587cba03540d6357345a6ec9fa89d53e5de9e6e367a5e92d08ab0649a127648"
+    },
+    {
+      "path": "adapters/codex-common/config.toml.example",
+      "classification": "upstream-only",
+      "sha256": "3da19b8fe169d8a2516fce9cc997d4be0ad6d0b0e4d5f5f790fb88031ed9fe95"
+    },
+    {
+      "path": "adapters/host-matrix.json",
+      "classification": "upstream-only",
+      "sha256": "8013c6932458c73e89906178fab326841804ad6fce1bd2ebbfa71882c3a45aec"
+    },
+    {
+      "path": "adapters/neutral-base.json",
+      "classification": "upstream-only",
+      "sha256": "4643d28972f66e29f184dbea74a5f2a27a2d1f4e765d2a023e83fc7fd98d5bc1"
+    },
+    {
+      "path": "docs/DESIGN.md",
+      "classification": "repo-owned",
+      "sha256": "18395b72bb064d50a5abcfe94031efd2aa7a93dc074a00dbdbaf98fa93fe65d0"
+    },
+    {
+      "path": "docs/agentic-upstream-mapping.md",
+      "classification": "repo-owned",
+      "sha256": "62d51486b8e758d3e34ef5585dfe468293144bc093c760eaed5e065d9fe1d429"
+    },
+    {
+      "path": "docs/assets/chatwork-settings-review.png",
+      "classification": "repo-owned",
+      "sha256": "d512accd39502a0cd4ad0698885cbf041b2b9d6873603a86748783039a734c41"
+    },
+    {
+      "path": "docs/assets/google-chat-settings-review.png",
+      "classification": "repo-owned",
+      "sha256": "586231287bcb459f05f3b153a384391c77f495231a9cc454c6717c5c379bc7a3"
+    },
+    {
+      "path": "docs/evidence/sprint-013/browser-evidence.json",
+      "classification": "repo-owned",
+      "sha256": "2552caa9da38e40507b5f7cd740251f26c2c0eb5c40b220f4235a8b1b457d8bf"
+    },
+    {
+      "path": "docs/evidence/sprint-013/cdp-evaluate.mjs",
+      "classification": "repo-owned",
+      "sha256": "d9e5c0192ae1e9b595ebc90af4f5ebe0cf0e827686fdc4adccbde90f0977b92f"
+    },
+    {
+      "path": "docs/evidence/sprint-013/desktop-broken-response.png",
+      "classification": "repo-owned",
+      "sha256": "99a255b7323a30677f7fd3649275686566ceb7406fb23cf1d1656d645e000958"
+    },
+    {
+      "path": "docs/evidence/sprint-013/mobile-broken-response.png",
+      "classification": "repo-owned",
+      "sha256": "80ab207b1007c44c23a63f4cfd7f8bafcd67dcf4a54cbc95c52a878d0466c658"
+    },
+    {
+      "path": "docs/evidence/sprint-013/retry1-400-error.png",
+      "classification": "repo-owned",
+      "sha256": "cb895f688b6f5c7bc5ebd80c280b235bc1b2997bbffdf45a298c0e363c41d875"
+    },
+    {
+      "path": "docs/evidence/sprint-013/retry1-browser-evidence.json",
+      "classification": "repo-owned",
+      "sha256": "fd84cda942e9132a68c784df22b89402f64abbaf23d2c03b9b6248ba50cb3e05"
+    },
+    {
+      "path": "docs/evidence/sprint-013/retry1-desktop-review.png",
+      "classification": "repo-owned",
+      "sha256": "baff2170230f44f2f91c46569cab3e92595430fc4df63cc31c7b4fda50cbe060"
+    },
+    {
+      "path": "docs/evidence/sprint-013/retry1-mobile-room-selection.png",
+      "classification": "repo-owned",
+      "sha256": "33a7617be070dd820d1cf84bd1dd492746cb995b7a61c460f1184947d62e1e27"
+    },
+    {
+      "path": "docs/evidence/sprint-013/retry1-partial-result.png",
+      "classification": "repo-owned",
+      "sha256": "4a62c8da53119681e1947b57c5c7a22f82eb4b2b79c031b27794e5df98dcc142"
+    },
+    {
+      "path": "docs/evidence/sprint-013/retry1-zoom200-equivalent.png",
+      "classification": "repo-owned",
+      "sha256": "7d73af8df16f54611265b5c7f06b6b2d6b31615c725455959b0792a76f900948"
+    },
+    {
+      "path": "docs/evidence/sprint-013/zoom-200-broken-response.png",
+      "classification": "repo-owned",
+      "sha256": "3fa56cad6c846d13bbcc9c2a60a57be3d2cb89071a77bebe0711fca4fb1a0ce8"
+    },
+    {
+      "path": "docs/evidence/sprint-014-patch-001/desktop-review.jpg",
+      "classification": "repo-owned",
+      "sha256": "2e750f0c843ae7144e539472a849ffe270aafc7dc627cb248612517ddfaa09ca"
+    },
+    {
+      "path": "docs/evidence/sprint-014-patch-001/desktop-secret.jpg",
+      "classification": "repo-owned",
+      "sha256": "14d30dc87fbf9e29ee23d4a4816f3529b4fce4b746a9397e9bebff635f5f3a12"
+    },
+    {
+      "path": "docs/evidence/sprint-014-patch-001/mobile-interval.jpg",
+      "classification": "repo-owned",
+      "sha256": "3438b8a5095f53824464826cca9682864721012629522a359c47ce4c377004c7"
+    },
+    {
+      "path": "docs/evidence/sprint-014-patch-001/mobile-token.jpg",
+      "classification": "repo-owned",
+      "sha256": "e87acdbc0a3eb3a9e0a3f12ef05117ad7952546abfe6dc179c707863fb10cf7d"
+    },
+    {
+      "path": "docs/evidence/sprint-014-patch-001/zoom200-equivalent.jpg",
+      "classification": "repo-owned",
+      "sha256": "223fb1e69f10f505c013c076df85f60825020cadb417e0bd0d88409abc3e71e9"
+    },
+    {
+      "path": "docs/evidence/sprint-014/evaluation-summary.md",
+      "classification": "repo-owned",
+      "sha256": "74b11e0b839cacefbe916005b5efdeb55e464be510bd2e32327bbcc9ece76b69"
+    },
+    {
+      "path": "docs/evidence/sprint-014/retry-1-summary.md",
+      "classification": "repo-owned",
+      "sha256": "498c707bb47f1bd7034087b527f99b9d4be55c09c3df7ef127522f58de4eb1c1"
+    },
+    {
+      "path": "docs/evidence/sprint-014/retry-2-live-gate.md",
+      "classification": "repo-owned",
+      "sha256": "d596e14eef3da36967bf31a33d3e45b5cc3ca8c337c880e63b7f2e9c2474c2af"
+    },
+    {
+      "path": "docs/evidence/sprint-014/retry1-wizard-desktop-current-settings.jpg",
+      "classification": "repo-owned",
+      "sha256": "ec9ab53082a4e9c34a87d3adc1ad9d61b4a1b173ba05bfd4d73b144d50bdef4c"
+    },
+    {
+      "path": "docs/evidence/sprint-014/retry1-wizard-mobile-room-selection.jpg",
+      "classification": "repo-owned",
+      "sha256": "11d1e7755d3fe71d0be6dc5d8e6c26513656adbc15e30268f117eb02dabe8e2e"
+    },
+    {
+      "path": "docs/evidence/sprint-014/wizard-desktop-consent-after.jpg",
+      "classification": "repo-owned",
+      "sha256": "4b7919cf3dfc29374be8902cfbbb9ed6e364c933ca46ce35eafc277364f20e67"
+    },
+    {
+      "path": "docs/evidence/sprint-014/wizard-desktop-consent-before.jpg",
+      "classification": "repo-owned",
+      "sha256": "f29745680421767c6f9cd42d619e459177fe7b8a810bee8aa9c1e94fac1980ca"
+    },
+    {
+      "path": "docs/evidence/sprint-014/wizard-desktop-github-permission-error.jpg",
+      "classification": "repo-owned",
+      "sha256": "c03cae42d4a612cceaa1b841fa0c6427b7fa5e0d8dcc5c0f0064289415a7d07c"
+    },
+    {
+      "path": "docs/evidence/sprint-014/wizard-mobile-github-permission-error.jpg",
+      "classification": "repo-owned",
+      "sha256": "d135b8dfa82eb6c4e940803d4d03b4078ef6adc4af2effc37bf4be17f4723a52"
+    },
+    {
+      "path": "docs/evidence/sprint-014/wizard-mobile-room-selection.jpg",
+      "classification": "repo-owned",
+      "sha256": "93b0053887b106fff4890efc5e11c59ecddc7f2e09b5daa8e453293f3ed9a835"
+    },
+    {
+      "path": "docs/evidence/sprint-019/browser-evidence.json",
+      "classification": "repo-owned",
+      "sha256": "d0acb1087bd2b47f20e1cee3f28417d5915c56e191bba547a242aa930256d2b8"
+    },
+    {
+      "path": "docs/evidence/sprint-019/chatwork-desktop-3h.png",
+      "classification": "repo-owned",
+      "sha256": "c525cca4e07744d7ef00b64385b8e5c045778f0a0708591e7d34de5a291b258e"
+    },
+    {
+      "path": "docs/evidence/sprint-019/evaluator-retry1/browser-evidence.json",
+      "classification": "repo-owned",
+      "sha256": "a32db076e2a0420b4ce0b427445e9951554d50e917cbe77a7525557aa60b894a"
+    },
+    {
+      "path": "docs/evidence/sprint-019/evaluator-retry1/callback-failure-return.png",
+      "classification": "repo-owned",
+      "sha256": "74734e5c04423d10b2e4e30ca33656546a1be4eae14e86d050ea078ebb4b4daa"
+    },
+    {
+      "path": "docs/evidence/sprint-019/evaluator-retry1/chatwork-desktop-3h.png",
+      "classification": "repo-owned",
+      "sha256": "997de3d0ef8ad752b3d7e6750970ba8682fc8b1ab75ffa748f3267645736f0d3"
+    },
+    {
+      "path": "docs/evidence/sprint-019/evaluator-retry1/cleanup-both-failure.png",
+      "classification": "repo-owned",
+      "sha256": "db46a3aa8f914ff8d73860bb75832f6e4af8d177b733cd7358fb84af3d41ed92"
+    },
+    {
+      "path": "docs/evidence/sprint-019/evaluator-retry1/cleanup-network-failure.png",
+      "classification": "repo-owned",
+      "sha256": "1c0862142474d268e5c7f121d27d2f1c8619988de2b5cdb52a7bc8f2b79bccbb"
+    },
+    {
+      "path": "docs/evidence/sprint-019/evaluator-retry1/google-chat-desktop-spaces.png",
+      "classification": "repo-owned",
+      "sha256": "0faa7e41265bc84ad01272f9cfecffadf4aec416cf25663c97e5b0741a1a6a6e"
+    },
+    {
+      "path": "docs/evidence/sprint-019/evaluator-retry1/google-chat-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "b8eab74d85f26c12058f619599779c1bb3bdfad8d07492126ca8452cdf92ceb2"
+    },
+    {
+      "path": "docs/evidence/sprint-019/evaluator-retry1/google-chat-normal-oauth-popup-blocked.png",
+      "classification": "repo-owned",
+      "sha256": "881a648c854223ee72bdcc8a4bb33d34a4de33d18e76c32b2c25f36c293e2c74"
+    },
+    {
+      "path": "docs/evidence/sprint-019/evaluator-retry1/google-chat-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "9083b689e6b2f765ecce8573e90624383bf8cdf4e062869ecdf2b288f3a0116a"
+    },
+    {
+      "path": "docs/evidence/sprint-019/evaluator-retry1/retry1-ui-evidence.json",
+      "classification": "repo-owned",
+      "sha256": "4a4a9708d79a11ef69e06f96e974ad6d54614c243494655c24b0a34815426a68"
+    },
+    {
+      "path": "docs/evidence/sprint-019/evaluator-retry1/zero-space-cleanup-failure.png",
+      "classification": "repo-owned",
+      "sha256": "05d9343e4902b8eefc0b9fb6f1e40bd84cbc69fdee06f383995f1b60800a6d7d"
+    },
+    {
+      "path": "docs/evidence/sprint-019/evaluator/chatwork-desktop-prepare.png",
+      "classification": "repo-owned",
+      "sha256": "8b87512068a1eb477f510bb39927e4b692de57b5d7d9c2b9964d81c874960b2a"
+    },
+    {
+      "path": "docs/evidence/sprint-019/evaluator/google-chat-cleanup-failure-misreported.png",
+      "classification": "repo-owned",
+      "sha256": "e2c522341c09227d586e8cf2f2dc4dc5e2c71e72915679c459562bc1ddad9684"
+    },
+    {
+      "path": "docs/evidence/sprint-019/evaluator/google-chat-desktop-prepare.png",
+      "classification": "repo-owned",
+      "sha256": "8b617426b9e74017311608d67ca28a51177ab3159058d7374821af0f6e0ff87b"
+    },
+    {
+      "path": "docs/evidence/sprint-019/evaluator/google-chat-mobile-prepare.png",
+      "classification": "repo-owned",
+      "sha256": "3366d2e658eee464c0fd768c6f63874b3402c7e0c84e05bdc34cc06fd4ecdf8c"
+    },
+    {
+      "path": "docs/evidence/sprint-019/evaluator/google-chat-zero-space-cleanup-misreported.png",
+      "classification": "repo-owned",
+      "sha256": "5c6dc4c46dc85a88e311b2870565f9aeed1986b4bbe2d5821ca78ffe119709ad"
+    },
+    {
+      "path": "docs/evidence/sprint-019/google-chat-desktop-inapp.jpg",
+      "classification": "repo-owned",
+      "sha256": "681ab4ccf1d52a32a178f90c376907f67094a321a7ed7a0e4a9e7e4a5d628956"
+    },
+    {
+      "path": "docs/evidence/sprint-019/google-chat-desktop-spaces.png",
+      "classification": "repo-owned",
+      "sha256": "0433eb4f54bc6db79ca6d8382edee0bd120599bf931626ed4313975fa967cbbf"
+    },
+    {
+      "path": "docs/evidence/sprint-019/google-chat-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "ef6f65e67a4a65e6589f96a2b3ca34f411d1d82001dbfc4bd3e274d86b4e1c60"
+    },
+    {
+      "path": "docs/evidence/sprint-019/google-chat-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "084c2bc054d008736a90ada9cede90d8c5c453cf604d22f686e648320b674669"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry1/browser-session1-dom.json",
+      "classification": "repo-owned",
+      "sha256": "1697758fabac177c6247726ce0a0b8d06394fcccd35a2917f42a64c7f54f7a97"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry1/chatwork-review-desktop.jpg",
+      "classification": "repo-owned",
+      "sha256": "a32747b58c56260d08f58671f41655caecd6bc9cb95c83bc49d067c66c39804e"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry1/evaluator-run.md",
+      "classification": "repo-owned",
+      "sha256": "62ad6bca0a03f578f2f71a66e490df060e15f22e270a92b8ad17f01914148d6d"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/browser-evidence.json",
+      "classification": "repo-owned",
+      "sha256": "da705ed9a1e8c4bc92acccb14e5009faf2d4c6f08fd4018073a756d9994e1a6f"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/chatwork-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "4b6cbd213f983c04bf9ec0ce8eff09f28f3b75b6d64a5fc2ce7beecfbccc7c08"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/chatwork-result-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "fc53d464e5fab00e29f4d8a9c5ceef7f28ed40d96b70bada1db58ab25cf74d55"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/chatwork-review-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "d512accd39502a0cd4ad0698885cbf041b2b9d6873603a86748783039a734c41"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/chatwork-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "b73d0314c50b7c4683d43a5e7f3de5df35cea6e96f2b0af13af560bc9f8bdac8"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/evaluator-run.md",
+      "classification": "repo-owned",
+      "sha256": "cb0d9e2f839f562b4137d230d231331a365dc59d64e9fbf7ecc2d3d42208e970"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/google-chat-discover-failure-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "a255a878435f873aa933fb97ea96887768b299fd6c5750e8f2a70eed44039bcb"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/google-chat-empty-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "dd0d80d4436bb0334f5b54d2fbd277cbccbddb05d8a33e04f6a427d252f3d316"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/google-chat-failure-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "deec221348b1827ae2844674c722b81cb9bbbd3edc52e6b044eac792e4017870"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/google-chat-manual-initial-result.png",
+      "classification": "repo-owned",
+      "sha256": "64a1573b553eb12b954f45d5c7d961b5e456cdd31ab428398f460f7401d49dc4"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/google-chat-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "6eaab7e1d424c9fe4ebfa3e6e6ca9a43a945cc07ecb6ee19f8a7c95e4725d1c5"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/google-chat-partial-browser-check.mjs",
+      "classification": "repo-owned",
+      "sha256": "34a6605a2c6d32cea414fb356eb7f268793a9f23c4cfa65aa2c4f1837ba571a4"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/google-chat-review-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "586231287bcb459f05f3b153a384391c77f495231a9cc454c6717c5c379bc7a3"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/google-chat-schedule-partial-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "b6b1b92553eb5a729a96b31de338816231604f18afe0196135f6c59514288092"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/google-chat-schedule-partial.json",
+      "classification": "repo-owned",
+      "sha256": "87a293f281fd026254f2352ddf0e6d41b4ba97ce31ec6ac604f2d44c346ae24f"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/google-chat-zero-manual-result.png",
+      "classification": "repo-owned",
+      "sha256": "e48a2b39c587d03cacb0b2d70cec602bbffadb2c5bfa468f50fa1fb37c9a2fd9"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/google-chat-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "8e48d20d76053d9a3c9879055bdaa4cacb06ba40424b6a4b45a14c6161c54a31"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2-final/google-cloud-guide-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "3c540da24c86ee6e70c12fa289904a0cb1da0da6bd1214be8069016041e544e5"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2/browser-evidence.json",
+      "classification": "repo-owned",
+      "sha256": "aae1f0f396951ead527bf5b5a4cc8b5c23feb4f3a7425dba32ccbe29566665d7"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2/chatwork-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "b0dae8f5596feea56ad1bc4e053dfc99e720c71700ffa600e8df59da7fc32372"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2/chatwork-result-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "1766fbb9376df5fcf3924d008a28827bc1b6e79c7a517a5867302b6acc335919"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2/chatwork-review-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "7dab0d6c9dfbf15c6df00587d058098ac1051b37ffa75481a40ee8999804ffe5"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2/chatwork-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "96d73e7d2b70752645d2420ef3785983665f0e0090fc67c8b429dc91616d9e82"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2/google-chat-discover-failure-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "ba9c9f3d45bb02dc36b9e5bfd56b2f9a0a4099975f6546e29638b3f30e965de3"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2/google-chat-empty-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "93150077a51e371928fc591f3b150c802763c0f683d95d38fbb3b850e777fb49"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2/google-chat-failure-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "aa00b182f88dbc3dc2227c16c0cac2f1f65b52b7dcef710c34d7b6584f93c20e"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2/google-chat-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "89314b235cadad1fa88de727f24ce817b47cb5d2bb696631838fe9e45478a8f5"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2/google-chat-review-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "5e19d207c999585d77fdf20f087b56c73444f504d7ede4dc05d722a5ccd252c1"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2/google-chat-zero-manual-result.png",
+      "classification": "repo-owned",
+      "sha256": "e48a2b39c587d03cacb0b2d70cec602bbffadb2c5bfa468f50fa1fb37c9a2fd9"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator-retry2/google-chat-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "f63420fe98a84c667e17a7cf6b50b1770d8d2fe57bd05ece486de5b9f07301ee"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/browser-evidence.json",
+      "classification": "repo-owned",
+      "sha256": "be9b4058f7bb2f0585a76132480e7f9f6414393ad25f467f11e0b6330ebdb6f2"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/chatwork-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "e1bfa25cc4117b766690699e77c3c3825922c3277fd0494c1bcd738ee07f2c6b"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/chatwork-result-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "73d976f16d1173b35116b2ecd8a838f92177f982e8acc3099742ec8f1547603b"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/chatwork-review-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "7dab0d6c9dfbf15c6df00587d058098ac1051b37ffa75481a40ee8999804ffe5"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/chatwork-session1-result-desktop.jpg",
+      "classification": "repo-owned",
+      "sha256": "dac335114c9703b0df18e36e6f0114e49e0ff4dec58359660d5d2819b266a8b4"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/chatwork-session1-review-desktop.jpg",
+      "classification": "repo-owned",
+      "sha256": "cb3ffacee642aad3b911fe739321abc5b16ce1d88cc5e932e90e01fa308a4f34"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/chatwork-session1-start-desktop.jpg",
+      "classification": "repo-owned",
+      "sha256": "50f640a2688fc865bf222767d94746207fbb6369ac23ea8cf252378555766b76"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/chatwork-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "70dd9d58a2e5783d4de682b318c7033159ab2d7af921008e4df9cb4d6630020f"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/evaluator-run.md",
+      "classification": "repo-owned",
+      "sha256": "0ca87fce33f13057761acb3095af489ae1f64d54b2997b1942fe2e8685e70b13"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/google-chat-empty-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "93150077a51e371928fc591f3b150c802763c0f683d95d38fbb3b850e777fb49"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/google-chat-failure-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "aa00b182f88dbc3dc2227c16c0cac2f1f65b52b7dcef710c34d7b6584f93c20e"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/google-chat-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "79f19ebe0cbb2dae697dd2e9b2c3acb4556a90ee40aa33507fad5195de8895e6"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/google-chat-review-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "5e19d207c999585d77fdf20f087b56c73444f504d7ede4dc05d722a5ccd252c1"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/google-chat-session1-discover-failure-desktop.jpg",
+      "classification": "repo-owned",
+      "sha256": "3a49142224de25accceef6d3b1551927280134dff0a34238137f61a3e3e21e30"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/google-chat-session1-review-desktop.jpg",
+      "classification": "repo-owned",
+      "sha256": "00de5f6f13c0e7eb24592d2d8071bdcdd5b9c91c2d62d0c6cb95cfaee7b7291c"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/google-chat-session1-start-desktop.jpg",
+      "classification": "repo-owned",
+      "sha256": "67ca5d2c886a917ea9491a9813e5c12eaa0a26547d95478638e731175b19d6c7"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/google-chat-session1-zero-manual-result-desktop.jpg",
+      "classification": "repo-owned",
+      "sha256": "55580462d9e188def8c66996813847aa686ed8984d719622ba71fbbcd2196f39"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/google-chat-zero-manual-result.png",
+      "classification": "repo-owned",
+      "sha256": "e48a2b39c587d03cacb0b2d70cec602bbffadb2c5bfa468f50fa1fb37c9a2fd9"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/evaluator/google-chat-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "40a98fccf4f12580f41a93b5aa9562e476c4ae004aa64692fc2427e70c4e3da9"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2-reopen/browser-evidence.json",
+      "classification": "repo-owned",
+      "sha256": "fbfef1994a7dbff852b881d136dbb0809932c0ff60cd2c74e38cf8dd0330e240"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2-reopen/chatwork-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "526c2bf128c6669da24fac90b9560ed2b607a4da8bb1dfceb893c543e18969d8"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2-reopen/chatwork-result-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "237c2a8c8f3a4391f29b9f9e5763a9e20c2c2ef8a92ba0aefbe25677de3a72e9"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2-reopen/chatwork-review-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "95993930ceee337de5f12185dedcdf1088b8be102910bf37b2f62d758d674722"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2-reopen/chatwork-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "93952627e0852152fb59f2191c6441b88bf73f8d9590330105449fe49af3e7c2"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2-reopen/google-chat-discover-failure-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "fe57806e59bbfb31ad9591c70e00862bc35ba1ebf38bacc3a6d1ba05f7ee3308"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2-reopen/google-chat-empty-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "9d44cb7cabdc79d9fb7cdf3aea677a7fb41729213f5785a26e0ede161c39639d"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2-reopen/google-chat-failure-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "7be72887c83c94620fc2b0bd7b25d336dabafc8d7fd270597cb5a93bee64e63e"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2-reopen/google-chat-manual-initial-result.png",
+      "classification": "repo-owned",
+      "sha256": "ecdf4478c107d7aa35370eea38e5a14469a248d46c70f273959e5550acd69dca"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2-reopen/google-chat-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "603acd32d8687dc84ae94d035826169b0223a8635c3260a2ba7b18bceabe0d5b"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2-reopen/google-chat-review-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "5ab6522fb4ca776a4cab982cc21ca5de97862f2dae409091269a4ea43554bdca"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2-reopen/google-chat-zero-manual-result.png",
+      "classification": "repo-owned",
+      "sha256": "6063fdf69b8858823be5fa2c7e8229d370dafd855253bbad2e9869e47177190d"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2-reopen/google-chat-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "edc8fb12bd8b929892ace61178b8aece67e671cded33b88780e05f2e2bc4c446"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2-reopen/google-cloud-guide-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "f33ad773e602a2fd053c9f31f88a01d2d993b52816f8b4276b95c08cff523ad1"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2/browser-evidence.json",
+      "classification": "repo-owned",
+      "sha256": "aae1f0f396951ead527bf5b5a4cc8b5c23feb4f3a7425dba32ccbe29566665d7"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2/chatwork-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "b1643422b9ec072112a5ef83b72118df25c6f8ab26fba54243af5747b87e02db"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2/chatwork-result-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "f164fb92a797b64dbc97703e2d9b84e60c2243bf91055a3085edb56df53c4b80"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2/chatwork-review-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "131370dada0241ae864c837f6bb01c72664ba274f4707df4640be07b7d5b72f8"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2/chatwork-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "0f3a88033c0e117b373fe850a05211026928318a13293a584e3c04532c1c5831"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2/google-chat-discover-failure-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "bc7043e4367263024fc0d69e373fdddcc403c03d92831b520e1544acdc40dccb"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2/google-chat-empty-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "f5ee7a6ab659adb451ecaec6b97fe2a4cdbaef8bd8eb628b22c2891bbb3028ab"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2/google-chat-failure-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "7f8741511a7bb4631daf6ff9427c6529635648f893577eeb13e40d49ba6e62e6"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2/google-chat-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "714e72d4ca3abbcf9f207521362e65e1f09a65b87e8ebe7f4221b2e554508c11"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2/google-chat-review-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "2d1dbc0486cd41e247ec20ea04dafe66e9f69e6099b771cc8a5ba65bb7e29ae9"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2/google-chat-zero-manual-result.png",
+      "classification": "repo-owned",
+      "sha256": "6063fdf69b8858823be5fa2c7e8229d370dafd855253bbad2e9869e47177190d"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator-retry2/google-chat-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "46fc40e386d240ee18c882a6b8367bded630f1b02b5e3ddbae7beffe26660728"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator/browser-evidence.json",
+      "classification": "repo-owned",
+      "sha256": "b313c2451441d37fd2c71d5d7a946c394f04b100784f2bd9ce19f03f15b4f4e7"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator/chatwork-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "b0dae8f5596feea56ad1bc4e053dfc99e720c71700ffa600e8df59da7fc32372"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator/chatwork-result-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "73d976f16d1173b35116b2ecd8a838f92177f982e8acc3099742ec8f1547603b"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator/chatwork-review-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "7dab0d6c9dfbf15c6df00587d058098ac1051b37ffa75481a40ee8999804ffe5"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator/chatwork-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "96d73e7d2b70752645d2420ef3785983665f0e0090fc67c8b429dc91616d9e82"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator/google-chat-discover-failure-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "ba9c9f3d45bb02dc36b9e5bfd56b2f9a0a4099975f6546e29638b3f30e965de3"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator/google-chat-empty-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "93150077a51e371928fc591f3b150c802763c0f683d95d38fbb3b850e777fb49"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator/google-chat-failure-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "aa00b182f88dbc3dc2227c16c0cac2f1f65b52b7dcef710c34d7b6584f93c20e"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator/google-chat-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "89314b235cadad1fa88de727f24ce817b47cb5d2bb696631838fe9e45478a8f5"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator/google-chat-review-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "5e19d207c999585d77fdf20f087b56c73444f504d7ede4dc05d722a5ccd252c1"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator/google-chat-zero-manual-result.png",
+      "classification": "repo-owned",
+      "sha256": "e48a2b39c587d03cacb0b2d70cec602bbffadb2c5bfa468f50fa1fb37c9a2fd9"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-001/generator/google-chat-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "f63420fe98a84c667e17a7cf6b50b1770d8d2fe57bd05ece486de5b9f07301ee"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator-retry1/evaluator-run.md",
+      "classification": "repo-owned",
+      "sha256": "a16fa7a5696bce397222bd0e9bde5f51a7d6c6006bcf918e6d0cfcc73f6cc291"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator-retry1/google-chat-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "666fd658231d997b48de3369077ef8c1f134844d15fd7762441dfc5b5fff6642"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator-retry1/independent-cloud-negative-test.mjs",
+      "classification": "repo-owned",
+      "sha256": "fd723a1b45cb67ad2ba7b9c0fc95510b876f86cd68396115d3f86f9dc25f6a32"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator-retry2-final/chatwork-entry-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "e5a301136c9d65b0204336281fd26995caa8dfb2e35a00c4e9af49d9c1ecddd4"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator-retry2-final/chatwork-entry-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "db59c7453283a612f29ef629b9b017e49a6f6114d306782ca802f4514b318014"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator-retry2-final/evaluator-run.md",
+      "classification": "repo-owned",
+      "sha256": "1c312e7bb74b07d9bf155b66fdeb4081a63055ec46ebf9fb627634e736f8b982"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator-retry2-final/google-chat-json-start-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "666fd658231d997b48de3369077ef8c1f134844d15fd7762441dfc5b5fff6642"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator-retry2-final/google-chat-json-start-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "9841ba5ace4d231e7e14352f8b8b41a1f4a555f551c407be346ced09b1870824"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator-retry2-final/independent-cloud-negative-test.mjs",
+      "classification": "repo-owned",
+      "sha256": "29afd9940d220b2a3f97b1f78ee9fc7ab0e83facca69534a017c344dfc70402f"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator/browser-evidence.json",
+      "classification": "repo-owned",
+      "sha256": "41f0b8b03120912ea29b4d1d3b39c2cbd68731f9a8cb9873f180b1018d09dbbe"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator/chatwork-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "4b6cbd213f983c04bf9ec0ce8eff09f28f3b75b6d64a5fc2ce7beecfbccc7c08"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator/chatwork-result-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "fc53d464e5fab00e29f4d8a9c5ceef7f28ed40d96b70bada1db58ab25cf74d55"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator/chatwork-review-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "d512accd39502a0cd4ad0698885cbf041b2b9d6873603a86748783039a734c41"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator/chatwork-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "b73d0314c50b7c4683d43a5e7f3de5df35cea6e96f2b0af13af560bc9f8bdac8"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator/evaluator-run.md",
+      "classification": "repo-owned",
+      "sha256": "3daa6d5d3c1a8e59636246884601ff37f68598e7695b8cd0536ea16ee95f7f79"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator/google-chat-discover-failure-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "a255a878435f873aa933fb97ea96887768b299fd6c5750e8f2a70eed44039bcb"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator/google-chat-empty-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "dd0d80d4436bb0334f5b54d2fbd277cbccbddb05d8a33e04f6a427d252f3d316"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator/google-chat-failure-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "deec221348b1827ae2844674c722b81cb9bbbd3edc52e6b044eac792e4017870"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator/google-chat-file-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "de624fbec0423bfc0e63f26baf299e5bc5a46c2a2c3f30e5395168904c8b463d"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator/google-chat-manual-initial-result.png",
+      "classification": "repo-owned",
+      "sha256": "64a1573b553eb12b954f45d5c7d961b5e456cdd31ab428398f460f7401d49dc4"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator/google-chat-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "6eaab7e1d424c9fe4ebfa3e6e6ca9a43a945cc07ecb6ee19f8a7c95e4725d1c5"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator/google-chat-review-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "586231287bcb459f05f3b153a384391c77f495231a9cc454c6717c5c379bc7a3"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator/google-chat-zero-manual-result.png",
+      "classification": "repo-owned",
+      "sha256": "e48a2b39c587d03cacb0b2d70cec602bbffadb2c5bfa468f50fa1fb37c9a2fd9"
+    },
+    {
+      "path": "docs/evidence/sprint-020-patch-002/evaluator/google-chat-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "8e48d20d76053d9a3c9879055bdaa4cacb06ba40424b6a4b45a14c6161c54a31"
+    },
+    {
+      "path": "docs/evidence/sprint-020/browser-evidence.json",
+      "classification": "repo-owned",
+      "sha256": "0d8132c9dbf28c51bf6bb5a37fc33927c1a7f07e54ec96f8d11d642e9c368102"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-live-gate/cleanup-empty-selection-blocked.png",
+      "classification": "repo-owned",
+      "sha256": "b9564c28432b96c3dd4c9a11d1d862cbec0ad48f1c87690ec046ade4cfb47e9b"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-live-gate/fix/browser-evidence.json",
+      "classification": "repo-owned",
+      "sha256": "914b1247090ec8213ac87ff540b30fca896e4c7534d349d32a6cd70f962733e0"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-live-gate/fix/google-chat-settings-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "1e8801abc0c4e1a05aa551f83dd685d9f217edbfaa0b4ea6fabd37679ecb66b8"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-live-gate/fix/google-chat-settings-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "fdedb42c3ea760bd2e8985f31c9d988fea2decd442534f4229e296c109f50534"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-live-gate/fix/google-chat-settings-result.png",
+      "classification": "repo-owned",
+      "sha256": "1d0b0b241ff02219a3fbf98032b8d90bbdeee48a30adeff1749950a896b819f0"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-live-gate/fix/google-chat-settings-zero-manual-result.png",
+      "classification": "repo-owned",
+      "sha256": "d687412b907fca3530c73ebfb610edea6c72c3ba0e066f95e76fd7c583087580"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-live-gate/fix/google-chat-settings-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "4232976d4fcae704f27f69328c21d527bdc6cd80b1e65e9a5758fbba0be7185b"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-live-gate/fix2-live-cleanup-summary.json",
+      "classification": "repo-owned",
+      "sha256": "ea0c0c17b4438404600199141a8d840f9de4276bd7b3c4d9053b6c3e6c306468"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-live-gate/scan-action-log.mjs",
+      "classification": "repo-owned",
+      "sha256": "029d5858fe9f9a9226f72e9d7f375a8fb03407d004a8ac635160f13b2edf74e3"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-live-gate/scan-public-repo.mjs",
+      "classification": "repo-owned",
+      "sha256": "9a16e91587a911d87a699cbe6375690549d814541fe799e25d43ce1bbcc7f38c"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-live-gate/wizard-confirm-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "7d5af4dcb5fda8181b64bd85dfd480d37b7d1b66aaee680d2985bc321a65c09f"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-live-gate/wizard-confirm-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "8588e6aa7cbecae4c096d178b2998e1387b8da17c1f80c79f6bf3b4b58c09889"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-live-gate/wizard-confirm-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "72dbcf9b0102e32dbb86c2ca7c7bd2680b3267281e0e922a69c4a677946680c0"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-live-gate/wizard-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "916f7ae6bac7e0900508a01f4a28ea6ea7706675bc328d47ca67968ae55fb73a"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-live-gate/wizard-result-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "4659fcc39c006692693a6eb9a2578406e2dc5e2b7270fe8476dad312ad34c391"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-retry1/browser-evidence.json",
+      "classification": "repo-owned",
+      "sha256": "0d8132c9dbf28c51bf6bb5a37fc33927c1a7f07e54ec96f8d11d642e9c368102"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-retry1/google-chat-settings-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "1e8801abc0c4e1a05aa551f83dd685d9f217edbfaa0b4ea6fabd37679ecb66b8"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-retry1/google-chat-settings-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "f3d1a21310d4483e382466a9ec7797bad52b8a3908ec9128bf16b9b4be352920"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-retry1/google-chat-settings-result.png",
+      "classification": "repo-owned",
+      "sha256": "1d0b0b241ff02219a3fbf98032b8d90bbdeee48a30adeff1749950a896b819f0"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-retry1/google-chat-settings-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "d6f5b4bb187bcc51fda8a8f0b0494f15edf70893dca1ca6bbfc20b7491545e67"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator-retry1/run-time-boundary-check.mjs",
+      "classification": "repo-owned",
+      "sha256": "43f039f39f824f0b03cb3b4420f33b46145d3d915e1a3fe1c15f4b103050e065"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator/adversarial-check.mjs",
+      "classification": "repo-owned",
+      "sha256": "00d06fd974de9556a9ff8a5193b3bd8b3c9370eb10b0759debb1f4dfa13cd762"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator/browser-evidence.json",
+      "classification": "repo-owned",
+      "sha256": "ea7becd6c5a231f59319cc733cb77563d0622a0b938f54b742b22e6e21d90da6"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator/interval-3h-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "f15b1d548a56b17be2148c49ad104941d4d9f99cd4a307632824e6ab60205e55"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator/settings-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "a4b2530b75760bd3fa29473545704dd667d2f324e0f2ad9aa69547a22b25b4ce"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator/settings-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "81c3b77e05005364e5df3449675d7ed97c747cc86ce839277ef1cb4cdc628117"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator/settings-result-manual.png",
+      "classification": "repo-owned",
+      "sha256": "cdde20d169d3d2ae74ff0740d4e08f65f70bba827724faab6c16c8b5ff2ae395"
+    },
+    {
+      "path": "docs/evidence/sprint-020/evaluator/settings-zoom200-equivalent.png",
+      "classification": "repo-owned",
+      "sha256": "29a6c9d65eba972d236dc7a62ac93bdc2448b9a5a9043bacfaca423c5066e789"
+    },
+    {
+      "path": "docs/evidence/sprint-020/google-chat-settings-desktop.png",
+      "classification": "repo-owned",
+      "sha256": "9cad0700066e97f0ecff68fbb27e0f916dfd107cb1ce51d32ec86a9b1c1449f2"
+    },
+    {
+      "path": "docs/evidence/sprint-020/google-chat-settings-mobile.png",
+      "classification": "repo-owned",
+      "sha256": "64bff79a019ddacc698d591f16d6503e24510c7d88f6d7d2ad0cf15f2234a792"
+    },
+    {
+      "path": "docs/evidence/sprint-020/google-chat-settings-result.png",
+      "classification": "repo-owned",
+      "sha256": "1d51fef1be1940ffaffabdcd14023914a7be2d92a201404db28db4ee51a097dc"
+    },
+    {
+      "path": "docs/evidence/sprint-020/google-chat-settings-zoom200.png",
+      "classification": "repo-owned",
+      "sha256": "eaa3361bc6f5cf40306b8ae75c6de9f5114d42c010392ae4391599f42dbb3fb2"
+    },
+    {
+      "path": "docs/evidence/sprint-032-patch-002/chatwork-200pct-05-chatwork-select-rooms.png",
+      "classification": "repo-owned",
+      "sha256": "8e1ab5b9670cb78fe47d200494c27dd6ae937ed99e7d623cc8fd244c8e3762da"
+    },
+    {
+      "path": "docs/evidence/sprint-032-patch-002/chatwork-desktop-01-chatwork-prepare-connection.png",
+      "classification": "repo-owned",
+      "sha256": "953720e9b5c780247e8c58bf70a7e3ce03443ab760e891f4581f389aade4a51d"
+    },
+    {
+      "path": "docs/evidence/sprint-032-patch-002/chatwork-desktop-02-chatwork-register-connection.png",
+      "classification": "repo-owned",
+      "sha256": "a7f655395fb8d144121e066b17ab7cff0bf7435402c11f9cb89ecd4bfc7a0cc4"
+    },
+    {
+      "path": "docs/evidence/sprint-032-patch-002/chatwork-desktop-05-chatwork-select-rooms.png",
+      "classification": "repo-owned",
+      "sha256": "67d5d0f086b58933a3970a29cb20240726be29b67616e7a929908dbb931487dd"
+    },
+    {
+      "path": "docs/evidence/sprint-032-patch-002/chatwork-desktop-08-chatwork-initial-result-empty.png",
+      "classification": "repo-owned",
+      "sha256": "348375333be7fd9be3907396962973f5ce8d03af0b99a6b15c8d742fe45c781c"
+    },
+    {
+      "path": "docs/evidence/sprint-032-patch-002/chatwork-mobile-04-chatwork-discover.png",
+      "classification": "repo-owned",
+      "sha256": "f44381ccbca417c889b69f41fdbb0c8570f90e62e099c74a5e2b27ceda1cb637"
+    },
+    {
+      "path": "docs/evidence/sprint-032-patch-002/chatwork-mobile-05-chatwork-select-rooms.png",
+      "classification": "repo-owned",
+      "sha256": "6dfd671f315b0b6fffa4cb978ef85a664bee30ca8408eb1f88a16aed9586b50a"
+    },
+    {
+      "path": "docs/evidence/sprint-032-patch-002/google-chat-200pct-03-google-chat-select-spaces.png",
+      "classification": "repo-owned",
+      "sha256": "e922f274cc15565dd060e846eb2abaa918f17571473dbf4ac898ea206310a1de"
+    },
+    {
+      "path": "docs/evidence/sprint-032-patch-002/google-chat-desktop-01-google-chat-prepare-file.png",
+      "classification": "repo-owned",
+      "sha256": "677440856a131defa2cf11c9f5520cac7a76b6b77baf6f1e89183bfbb0e5d09f"
+    },
+    {
+      "path": "docs/evidence/sprint-032-patch-002/google-chat-desktop-03-google-chat-select-spaces.png",
+      "classification": "repo-owned",
+      "sha256": "abf5ebd8f576b9db808d6fadd6a4f477c35253e0061fa1aab66eb715d3822a2b"
+    },
+    {
+      "path": "docs/evidence/sprint-032-patch-002/google-chat-mobile-01-google-chat-prepare-file.png",
+      "classification": "repo-owned",
+      "sha256": "8d975b1ddd204727802c523854e4dd80c31b7e4bd1566a203f0d545924f6d4c4"
+    },
+    {
+      "path": "docs/feedback/sprint-001-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "ddbdeb27dd53c2a9f6ca0ee53e2a0d6d1403c499629f64ede057cfc058330c2f"
+    },
+    {
+      "path": "docs/feedback/sprint-001-patch-002.md",
+      "classification": "repo-owned",
+      "sha256": "e0dafbe1f88b0e9dfe6667e903f48569973fd5d44d65d426ca95c6bc7aef56ae"
+    },
+    {
+      "path": "docs/feedback/sprint-001.md",
+      "classification": "repo-owned",
+      "sha256": "ffb7931c2d5469f6b103351d69abb1c81107f477a25a157c1318028923043aef"
+    },
+    {
+      "path": "docs/feedback/sprint-002-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "fb0e6c75bf5b58aa1f449ef86a6d7d27e616557195a90423aaf094427330b8ba"
+    },
+    {
+      "path": "docs/feedback/sprint-002.md",
+      "classification": "repo-owned",
+      "sha256": "5b7f7a2fe65fbc237692d3ca14524c9146ca4bab3dc6e9f01ca4eeed71324318"
+    },
+    {
+      "path": "docs/feedback/sprint-003-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "b89d6885edc69f444705c4225157dec86f9fe3c20e8baf817115f407aa9924a5"
+    },
+    {
+      "path": "docs/feedback/sprint-003.md",
+      "classification": "repo-owned",
+      "sha256": "f79bc22d32e3795b7b0a4fb44b86ed7d96e3cd24c4c8cde950599c7c18845b20"
+    },
+    {
+      "path": "docs/feedback/sprint-004.md",
+      "classification": "repo-owned",
+      "sha256": "e9a6692185959c539a962938533b889a61d0cf0e760f9c5fecc4937f45f194f3"
+    },
+    {
+      "path": "docs/feedback/sprint-005.md",
+      "classification": "repo-owned",
+      "sha256": "58b7b5428446e299e8ddcd1d5c6524f77fe7631742da5c73d3a74abc5c88edc4"
+    },
+    {
+      "path": "docs/feedback/sprint-006.md",
+      "classification": "repo-owned",
+      "sha256": "befbc9ddcd7ecf017dfe5f1b0521ebe61900480fc1872bf4c03734f5dad7d50e"
+    },
+    {
+      "path": "docs/feedback/sprint-008.md",
+      "classification": "repo-owned",
+      "sha256": "c84bf23aa378da895e82905bb77f74cb799c0b14e3554d8c5f719461767a190b"
+    },
+    {
+      "path": "docs/feedback/sprint-009.md",
+      "classification": "repo-owned",
+      "sha256": "5f42324c2d8eb277e20d7ca53507718f4f33a84e927c4a441e3b47f7945af1db"
+    },
+    {
+      "path": "docs/feedback/sprint-010.md",
+      "classification": "repo-owned",
+      "sha256": "a4dc8edaf3355d7d33143ee994e63df33cf8ad8eab5322e35f0e976e1b5d5ca9"
+    },
+    {
+      "path": "docs/feedback/sprint-011.md",
+      "classification": "repo-owned",
+      "sha256": "66c8f534cea9b10c3c1842ddf810706467c3e49173b0af4236f34f93299bff69"
+    },
+    {
+      "path": "docs/feedback/sprint-012-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "0d4a8d6a42df484343833d745d08416d1c57765bd900af638c95412d6b09da71"
+    },
+    {
+      "path": "docs/feedback/sprint-012.md",
+      "classification": "repo-owned",
+      "sha256": "4a2bfdfcb2eb786f05417a8c8b667edaa1e1c3e68c2c36261e9e1c507be0de29"
+    },
+    {
+      "path": "docs/feedback/sprint-013.md",
+      "classification": "repo-owned",
+      "sha256": "5cd8cd99553d7bbc75009785d36237844ee080a217bcc1999e359c8cd4702719"
+    },
+    {
+      "path": "docs/feedback/sprint-014-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "3781519a3e559bc402d4f6a0ef8b42619c77644043d1d7bdada768c6df9a528f"
+    },
+    {
+      "path": "docs/feedback/sprint-014.md",
+      "classification": "repo-owned",
+      "sha256": "1ee7e8171164c81d9c40a02ba97b6f7ae10904115b945d941a8521095f3ed279"
+    },
+    {
+      "path": "docs/feedback/sprint-015.md",
+      "classification": "repo-owned",
+      "sha256": "c2720eebe44e7acd35bc4266ef6186589144deba6217872e5ae54c24802ea234"
+    },
+    {
+      "path": "docs/feedback/sprint-016.md",
+      "classification": "repo-owned",
+      "sha256": "4e2cd74b4a5e7294e523df6565e34ed5b34ef9e812c2db1d427184112e55d338"
+    },
+    {
+      "path": "docs/feedback/sprint-017.md",
+      "classification": "repo-owned",
+      "sha256": "da5dc64cf3d3fc0f803f35acbcd8d3af778560685e60a7f50f8811dba5743342"
+    },
+    {
+      "path": "docs/feedback/sprint-018.md",
+      "classification": "repo-owned",
+      "sha256": "6a02444db50375eacbdc435c867c00cc15c423ca8d6504ecc38728a99528ee7c"
+    },
+    {
+      "path": "docs/feedback/sprint-019.md",
+      "classification": "repo-owned",
+      "sha256": "3830a8074bfc21d10581c04ff0f39fafc274e5f92ab9346bd21b2d6037bd80e3"
+    },
+    {
+      "path": "docs/feedback/sprint-020-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "ce4bdb2d9113aa811310019695f6e8e2cf648d7c70ffa115ab243ebf52695ff2"
+    },
+    {
+      "path": "docs/feedback/sprint-020-patch-002.md",
+      "classification": "repo-owned",
+      "sha256": "a8bb198821e3dd88ebf330d85e701549e338846dbe4cacbcf29fbe4f0a754c1e"
+    },
+    {
+      "path": "docs/feedback/sprint-020.md",
+      "classification": "repo-owned",
+      "sha256": "1d1bad69a6cefa4f81204e96de4cdfd2f932b791bededf6071722ec7038937b2"
+    },
+    {
+      "path": "docs/feedback/sprint-021.md",
+      "classification": "repo-owned",
+      "sha256": "e510da1352b9006a7b6529e3fd03b0af600f532fb1d0731bc21a0d4126eecefd"
+    },
+    {
+      "path": "docs/feedback/sprint-022.md",
+      "classification": "repo-owned",
+      "sha256": "0d1d7fc9545b70c849f66d8b6828057f752a49221932ff538b8cf9748398891c"
+    },
+    {
+      "path": "docs/feedback/sprint-023.md",
+      "classification": "repo-owned",
+      "sha256": "2dfb3ac959094afc6496d5729a064e3a87cfdc49a3b4ae9081c3f1c6b6291def"
+    },
+    {
+      "path": "docs/feedback/sprint-024.md",
+      "classification": "repo-owned",
+      "sha256": "86ab9e12670b5a9b011fd1e3c7d89792f0c247a6bb8d548ee5cd143a2e552730"
+    },
+    {
+      "path": "docs/feedback/sprint-025.md",
+      "classification": "repo-owned",
+      "sha256": "3b97c24fecacc47800520af5f932bb0e5f6dc04a4489dd32d5c84cd5cec1f207"
+    },
+    {
+      "path": "docs/feedback/sprint-026.md",
+      "classification": "repo-owned",
+      "sha256": "fe461d83d60882a5a04bb354ba9ddd3ea91896262d55c14a85bdbab533b0ff8a"
+    },
+    {
+      "path": "docs/feedback/sprint-027.md",
+      "classification": "repo-owned",
+      "sha256": "7b80a9da8ec42d102f4310a951cebbba6c5bf132076ecec978d1a5f684b5a85e"
+    },
+    {
+      "path": "docs/feedback/sprint-028.md",
+      "classification": "repo-owned",
+      "sha256": "f7f5ac64aafcb7781f4efc027de80aab4477d9ca5d10ee8bbdf42dc1e2830a79"
+    },
+    {
+      "path": "docs/feedback/sprint-029.md",
+      "classification": "repo-owned",
+      "sha256": "311c1babe5fbb1d81ed893b34f7682ee9d5c5a2c90e7fedb46d50a603b312696"
+    },
+    {
+      "path": "docs/feedback/sprint-030.md",
+      "classification": "repo-owned",
+      "sha256": "b1824dff0213c43a9648b17a86d86c23e3f74245f1396df354a4742e1f630093"
+    },
+    {
+      "path": "docs/feedback/sprint-031.md",
+      "classification": "repo-owned",
+      "sha256": "4e577f7f41ed9419e856318d885b5f6f5b6a831e4bb09f841979a1b8758986d4"
+    },
+    {
+      "path": "docs/feedback/sprint-032-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "d5982264af4633989dc096c1225cdf6f5a88c2c13ce10cb7f6ea44b3d24a438c"
+    },
+    {
+      "path": "docs/feedback/sprint-032-patch-002.md",
+      "classification": "repo-owned",
+      "sha256": "c9920dfdf27cad994050ce683de9b47f6596266d12a504b06ac3f93be8b42738"
+    },
+    {
+      "path": "docs/feedback/sprint-032.md",
+      "classification": "repo-owned",
+      "sha256": "8393843ade372ecbcb1c6703f51d528e01708c274f74f2582a199c049b7e34f1"
+    },
+    {
+      "path": "docs/guide/README.md",
+      "classification": "repo-owned",
+      "sha256": "f9ee14bc17d6f2f64a0f134f5c9e57c51f307d5f72df16e5fdb30ea7e37dfc64"
+    },
+    {
+      "path": "docs/guide/connectors.md",
+      "classification": "repo-owned",
+      "sha256": "6f751684b28b2e73e447cf43044a432fb3c413733b184513da9c38153a30d640"
+    },
+    {
+      "path": "docs/guide/features.md",
+      "classification": "repo-owned",
+      "sha256": "adad651d97192b1e907d6e0e35df87480d9825e655263505eca71c9cc6a48deb"
+    },
+    {
+      "path": "docs/guide/getting-started.md",
+      "classification": "repo-owned",
+      "sha256": "ad5484205c0197157920e4e6711b15ff92627b1dbcde5e195a7643c7f90685c0"
+    },
+    {
+      "path": "docs/guide/updates.md",
+      "classification": "repo-owned",
+      "sha256": "b3cd4ac23fe03d36cb81ab7a5f7cd8afc246752a9aaa38610740be2d3d4609f5"
+    },
+    {
+      "path": "docs/harness-guidance.md",
+      "classification": "repo-owned",
+      "sha256": "926989bf92384b3df21e420f0926a8727f9ba364fab37831443dcad35e24c155"
+    },
+    {
+      "path": "docs/progress/sprint-001-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "83cb910758113e466d33f51b99e6f98ad714dc729fcc053381c04581bf5cad5e"
+    },
+    {
+      "path": "docs/progress/sprint-001-patch-002.md",
+      "classification": "repo-owned",
+      "sha256": "43e0a5cb74f9986ebb14169b052278e74dd1754eb05240ba33726cb235f694fa"
+    },
+    {
+      "path": "docs/progress/sprint-001.md",
+      "classification": "repo-owned",
+      "sha256": "ff6acf1cbe4b17a9a28be73f1fc7c48cabd7f1f55770aec044082401ae8a518f"
+    },
+    {
+      "path": "docs/progress/sprint-002-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "85df17452d1cf0fc69eefe2d8b23eefff5c3f099878c8dea973e59c06e75bb4f"
+    },
+    {
+      "path": "docs/progress/sprint-002.md",
+      "classification": "repo-owned",
+      "sha256": "f62a78842c8964f4aa4ee2eee926c4d1661162117caeb1a2ecd2d79f2f160ff7"
+    },
+    {
+      "path": "docs/progress/sprint-003-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "1df657c99892dc6e332ef4c63c16be164cd4ad402806538880edc41ccc2db892"
+    },
+    {
+      "path": "docs/progress/sprint-003.md",
+      "classification": "repo-owned",
+      "sha256": "4634ea098ce7c4259bee3d5b65d7be185528ba92c6f4f74ada0f115acafb8791"
+    },
+    {
+      "path": "docs/progress/sprint-004.md",
+      "classification": "repo-owned",
+      "sha256": "cd88365da31e12824c80200bef4b7e70ee7c8b9bcffc3ad26b3a1ec9fd8386ad"
+    },
+    {
+      "path": "docs/progress/sprint-005.md",
+      "classification": "repo-owned",
+      "sha256": "ffa70376dd715c194b87ad5e8d17a8e75c274ac5c95d012ba2c49adade65b429"
+    },
+    {
+      "path": "docs/progress/sprint-006.md",
+      "classification": "repo-owned",
+      "sha256": "2f18ce9c3e9d36a16ceba3f60088f4e9848d9147a3552871fb82b5b923b0f1e6"
+    },
+    {
+      "path": "docs/progress/sprint-008.md",
+      "classification": "repo-owned",
+      "sha256": "7b303c45f543a2a761c767b05a3bfbe74d093d2885e8493b5b412c1b1bf7f396"
+    },
+    {
+      "path": "docs/progress/sprint-009.md",
+      "classification": "repo-owned",
+      "sha256": "0652078d3a0bc504cc341d76c801e4a8069582a4199a51e76df1d01fc22307fc"
+    },
+    {
+      "path": "docs/progress/sprint-010.md",
+      "classification": "repo-owned",
+      "sha256": "61e496326eb5e4e2674042eaf4e8677ad304be437241d2b3192cd57b93b8f7e8"
+    },
+    {
+      "path": "docs/progress/sprint-011.md",
+      "classification": "repo-owned",
+      "sha256": "369f7020ae3030babb2c07a420654664bc077db96d0fe3ed941cd35b7a907769"
+    },
+    {
+      "path": "docs/progress/sprint-012-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "979589eff132c82425d877ad1f71c3c7e27f25f704d85a66651d2f1ffc1cd164"
+    },
+    {
+      "path": "docs/progress/sprint-012.md",
+      "classification": "repo-owned",
+      "sha256": "e36e31f065637c21c82ccd099ea14aa7dd471f644117976674f5e8125af95d7e"
+    },
+    {
+      "path": "docs/progress/sprint-013.md",
+      "classification": "repo-owned",
+      "sha256": "c0805558f63b9768dd04a041117f3da6e9426d6a67984832d708760639775efe"
+    },
+    {
+      "path": "docs/progress/sprint-014-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "fd601e3b483bb289640730a4ccb046bc8ac2f0a33381bb6659d29bdbd4cc75c5"
+    },
+    {
+      "path": "docs/progress/sprint-014.md",
+      "classification": "repo-owned",
+      "sha256": "fb068c25b35e444df8c8e7982c01303849891280f320704bab65196ecd25a44c"
+    },
+    {
+      "path": "docs/progress/sprint-015.md",
+      "classification": "repo-owned",
+      "sha256": "46d37da3a5bf4e6cfd01cc2239b39d9585b7adc798fb2366b87ebd54f42431ec"
+    },
+    {
+      "path": "docs/progress/sprint-016.md",
+      "classification": "repo-owned",
+      "sha256": "46966194f44d9229cadd61c0d4d2d5ee8d3d04c57b64df47573bd8732eefa1a0"
+    },
+    {
+      "path": "docs/progress/sprint-017.md",
+      "classification": "repo-owned",
+      "sha256": "db365bc2d40688432d7cecf47228cbae6a1d5d1090ba90cbbf64169325547043"
+    },
+    {
+      "path": "docs/progress/sprint-018.md",
+      "classification": "repo-owned",
+      "sha256": "cf96c28fd88e2751522add64356ecc43ffb5088c4deb2976fa19ededc4152ef2"
+    },
+    {
+      "path": "docs/progress/sprint-019.md",
+      "classification": "repo-owned",
+      "sha256": "afb242efe8a184ab4cd6dc4f3f00ed886d92e76feb78142207f4c3ddf2bd99db"
+    },
+    {
+      "path": "docs/progress/sprint-020-patch-001-copy-inventory.md",
+      "classification": "repo-owned",
+      "sha256": "badf7dc3267e14ad96ab5c12b32d0021d976fcb8f5efd57b0f7b038461970899"
+    },
+    {
+      "path": "docs/progress/sprint-020-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "7380097ad5a5f8f73fdd0d02edca9387d9af4752f93f2c5c303d1d766dc3d9f8"
+    },
+    {
+      "path": "docs/progress/sprint-020-patch-002.md",
+      "classification": "repo-owned",
+      "sha256": "6244688c57f41d7a3c7b5268bcd045324ed8a72bfe600fe03b2b528397eb149a"
+    },
+    {
+      "path": "docs/progress/sprint-020.md",
+      "classification": "repo-owned",
+      "sha256": "1cc47f2ed463e8fcb920942612cfecfc419037840c5eda2ea3a70365d34c48e6"
+    },
+    {
+      "path": "docs/progress/sprint-021.md",
+      "classification": "repo-owned",
+      "sha256": "17a67c688e8a7ad7906447b15fc3588e52d7e8cfc985562d90a793205862c36a"
+    },
+    {
+      "path": "docs/progress/sprint-022.md",
+      "classification": "repo-owned",
+      "sha256": "8dee8ed618b0b8ace5e3c46662651f542430dfa72df37a220bb82309b9ee6653"
+    },
+    {
+      "path": "docs/progress/sprint-023.md",
+      "classification": "repo-owned",
+      "sha256": "655d406e77b0479249a0153a6c629036df8e006ba0fd693e9de6b157ca755475"
+    },
+    {
+      "path": "docs/progress/sprint-024.md",
+      "classification": "repo-owned",
+      "sha256": "91aa956529b42ad48aaff0aa5bf1790d029dc86795d67e0ca2216238f4e3b54a"
+    },
+    {
+      "path": "docs/progress/sprint-025.md",
+      "classification": "repo-owned",
+      "sha256": "f78ace23e43279ac7395f8e8792c802e36cdb248e0cd5138608d353842e8caf7"
+    },
+    {
+      "path": "docs/progress/sprint-026.md",
+      "classification": "repo-owned",
+      "sha256": "e9af3f0e1b14dd3499ce0db706c35d837028fe84c6b7a3b7394b76c65c68491a"
+    },
+    {
+      "path": "docs/progress/sprint-027.md",
+      "classification": "repo-owned",
+      "sha256": "11764eef7d959856e766b17c5b9be332c7493e633e97ff253802e5a3ed750a3f"
+    },
+    {
+      "path": "docs/progress/sprint-028.md",
+      "classification": "repo-owned",
+      "sha256": "3e293225779ddc201c2ab7d721d6359109c9916173a848816214e079bbae1433"
+    },
+    {
+      "path": "docs/progress/sprint-029.md",
+      "classification": "repo-owned",
+      "sha256": "8a021792fe8b171b7aef854e72c086dfb85a948e178b986133bb882500eff55e"
+    },
+    {
+      "path": "docs/progress/sprint-030.md",
+      "classification": "repo-owned",
+      "sha256": "c4772e86f0f0ebcd321ef0342ff3e6dac81885a2dd9ba3df578f065f22057b24"
+    },
+    {
+      "path": "docs/progress/sprint-031.md",
+      "classification": "repo-owned",
+      "sha256": "acfec76b1b3ba26d7ddbe6d57569978449005f975f0f0647b1b9277bb2ccddb6"
+    },
+    {
+      "path": "docs/progress/sprint-032-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "95051e91235b9f0bde66b3fe52bfcc0fa9ba028a5d2fc0e051665c25b1da5a1e"
+    },
+    {
+      "path": "docs/progress/sprint-032-patch-002.md",
+      "classification": "repo-owned",
+      "sha256": "d68a7aa5bb6c2323745413e3dfbbab2406920c34f83b0d06ba0499648bfc51da"
+    },
+    {
+      "path": "docs/progress/sprint-032.md",
+      "classification": "repo-owned",
+      "sha256": "65e3efd537573c5f44029e62e905fe878917e96bbe1f7dea7444d9b26371ac36"
+    },
+    {
+      "path": "docs/proposal-2026-07-15-realignment.md",
+      "classification": "repo-owned",
+      "sha256": "90831aba6e681c88a0fe23d1eb166313761cec4902c19d3402beb28ecbea2699"
+    },
+    {
+      "path": "docs/spec.md",
+      "classification": "repo-owned",
+      "sha256": "5cc983affbc64db95c9932efd281fc5b20a6064f7f457edfc1fe746287a8dab0"
+    },
+    {
+      "path": "docs/spec/constraints.md",
+      "classification": "repo-owned",
+      "sha256": "ab262324a168d472cb19a5f49bce7a55ba375fa90520ff7fb8fc69ecc0082731"
+    },
+    {
+      "path": "docs/spec/domain.md",
+      "classification": "repo-owned",
+      "sha256": "d7f7afe9761c038ef35a365057a85b4cdeaaca5aafa25f0648a8dad9dfaaf525"
+    },
+    {
+      "path": "docs/spec/editions.md",
+      "classification": "repo-owned",
+      "sha256": "fe86ccb16d410a8ef8be46a5f392394ee34a2de9e2be5537a4bf2407d022b3bd"
+    },
+    {
+      "path": "docs/spec/features.md",
+      "classification": "repo-owned",
+      "sha256": "c89668a3293a5bfdbfdc4d888f92d1555aae3569860adc966c37756eede210b1"
+    },
+    {
+      "path": "docs/spec/product.md",
+      "classification": "repo-owned",
+      "sha256": "84dc9c81c4d5264546a4dbc6e3a793165f460f578bf029faac23a2a3f4c36ee7"
+    },
+    {
+      "path": "docs/spec/rubric.md",
+      "classification": "repo-owned",
+      "sha256": "7e6fec57f0501780c901cbd717e5b2864e3b077e62e365471bd045677ee1f165"
+    },
+    {
+      "path": "docs/spec/ui.md",
+      "classification": "repo-owned",
+      "sha256": "15f6872f55f838d1977a0f8adbe4bbc0dab4e5fff2bfe2b6a96af53035c7339b"
+    },
+    {
+      "path": "docs/sprints/sprint-001-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "2603a44d87d33bec2551387aaab8418a7f057d772f4d78e66521270567d85056"
+    },
+    {
+      "path": "docs/sprints/sprint-001-patch-002.md",
+      "classification": "repo-owned",
+      "sha256": "45d6390111d82d05a135f7f75d83a7c2bae2a65670f97de32e505fbf58904ecf"
+    },
+    {
+      "path": "docs/sprints/sprint-001.md",
+      "classification": "repo-owned",
+      "sha256": "eda997a98407a775e5631fb96ab3e4daf7b181a1b788aa90d7fb41466300e564"
+    },
+    {
+      "path": "docs/sprints/sprint-002-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "c9742f18ec8802b006cf1e4165f8d93b726ccf2ced10a77c1e9fd7b39690081d"
+    },
+    {
+      "path": "docs/sprints/sprint-002.md",
+      "classification": "repo-owned",
+      "sha256": "10584f5f4dbaa6d7171f806e54942fe7f86d73763e935c06dfb3758127646ffb"
+    },
+    {
+      "path": "docs/sprints/sprint-003-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "b9c857da4b9d7edbd2677b67445df7425e05f3fd79f5c1b22280a5254a91b01a"
+    },
+    {
+      "path": "docs/sprints/sprint-003.md",
+      "classification": "repo-owned",
+      "sha256": "58d1b9fe83e73b29232f36c27bf65dbacad97c16dae4f74cf0eee1124813b645"
+    },
+    {
+      "path": "docs/sprints/sprint-004.md",
+      "classification": "repo-owned",
+      "sha256": "fd884db967809ef8e4ee0aabc7a3f70126e46da268a0538f6553c5b8fa9dd390"
+    },
+    {
+      "path": "docs/sprints/sprint-005.md",
+      "classification": "repo-owned",
+      "sha256": "a496b57bf8300aee27ad20fd134d6d53d77c710f829ced7d570c271e6714e93e"
+    },
+    {
+      "path": "docs/sprints/sprint-006.md",
+      "classification": "repo-owned",
+      "sha256": "e50338efb210543de7bc2a52a09f4f445361c8bc5616335333883ba93e9b2441"
+    },
+    {
+      "path": "docs/sprints/sprint-008.md",
+      "classification": "repo-owned",
+      "sha256": "b1868bc3ea373c496799ba108cf6c3a406fc86bc9d9a5f6d0f03eb02966ab364"
+    },
+    {
+      "path": "docs/sprints/sprint-009.md",
+      "classification": "repo-owned",
+      "sha256": "4c0d279bc4387b6d7931e138f229d31b080b1d99dcdca01a6bf91c94bf284a8d"
+    },
+    {
+      "path": "docs/sprints/sprint-010.md",
+      "classification": "repo-owned",
+      "sha256": "fc46f5f39437daad044e228624f214c166460456b8d91b82a03bf61c7d95c6bc"
+    },
+    {
+      "path": "docs/sprints/sprint-011.md",
+      "classification": "repo-owned",
+      "sha256": "9cddf63ea1eb992d400b78d74e6d89ea55e4e4fb0bb3e64f5e24e8dc3e14c14b"
+    },
+    {
+      "path": "docs/sprints/sprint-012-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "a5a37353675fcaf061a6729498f171b8827589e72f094aa1308a3f513393d968"
+    },
+    {
+      "path": "docs/sprints/sprint-012.md",
+      "classification": "repo-owned",
+      "sha256": "b2302d51c4db6073d9513627db902ed0a38dba962136bac39ad87e127df536a7"
+    },
+    {
+      "path": "docs/sprints/sprint-013.md",
+      "classification": "repo-owned",
+      "sha256": "cc8c74a8d482fed7e7bcd4a28bae3d9602c088e0fcfe04814397931d91de8f63"
+    },
+    {
+      "path": "docs/sprints/sprint-014-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "306945d93fce9c79582264a3c13db3c61a868d24f321370a4ac30688f47394cf"
+    },
+    {
+      "path": "docs/sprints/sprint-014.md",
+      "classification": "repo-owned",
+      "sha256": "d6f3b2ce2c25824fa180f681750d672ff1dbf49b4c92304464c89c8660099886"
+    },
+    {
+      "path": "docs/sprints/sprint-015.md",
+      "classification": "repo-owned",
+      "sha256": "cd4a90d7c879fdfed557c372d524aed7cc00bffdfd6f0ca740f5a121d67411fd"
+    },
+    {
+      "path": "docs/sprints/sprint-016.md",
+      "classification": "repo-owned",
+      "sha256": "729dd0dd1e6cdb7287e2e58ec805928d0dc6e1edc114415b319f8ae7b480e751"
+    },
+    {
+      "path": "docs/sprints/sprint-017.md",
+      "classification": "repo-owned",
+      "sha256": "ad933692fe2ea94febf21cd2404761fc735515e8bf839e242f75d39bd6ce03cc"
+    },
+    {
+      "path": "docs/sprints/sprint-018.md",
+      "classification": "repo-owned",
+      "sha256": "af38f14c94d9b346753ae64ba21d5707402a105e77967ef93c6034fa4d4ea2cd"
+    },
+    {
+      "path": "docs/sprints/sprint-019.md",
+      "classification": "repo-owned",
+      "sha256": "7ca1335bc3706cd22f2b57cb6faee9c6f50b4e16721402f5718405f14736ec9c"
+    },
+    {
+      "path": "docs/sprints/sprint-020-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "de9c507eb9158081b6f71d79a218b0a70d13fc646b323f7e547f6a8340d46b96"
+    },
+    {
+      "path": "docs/sprints/sprint-020-patch-002.md",
+      "classification": "repo-owned",
+      "sha256": "ffcbd3fe6eb131fd587cc82f868dffedcc456fff84a4f038aafb2f4079b817ec"
+    },
+    {
+      "path": "docs/sprints/sprint-020.md",
+      "classification": "repo-owned",
+      "sha256": "58314b6c04db3fcbfbfe0263c5e41f3298869d73fe06e61699a6a1ff4f079c85"
+    },
+    {
+      "path": "docs/sprints/sprint-021.md",
+      "classification": "repo-owned",
+      "sha256": "36af3b4a0359465acd6e59c4675a543a20b6d662dd698cc6db8a3339c8f3a7fb"
+    },
+    {
+      "path": "docs/sprints/sprint-022.md",
+      "classification": "repo-owned",
+      "sha256": "3e4c11867aba107e9d25799feb76d60df39da732a8749c2cef189a6af45dd367"
+    },
+    {
+      "path": "docs/sprints/sprint-023.md",
+      "classification": "repo-owned",
+      "sha256": "a672f517669b1cfcb6b18044ac0253073bca0ca101a0e9e7ad1e1691d5841b1c"
+    },
+    {
+      "path": "docs/sprints/sprint-024.md",
+      "classification": "repo-owned",
+      "sha256": "7b66a7a17f560bd984814308008580b831d6eadedd0c388d189f46ded0ce9138"
+    },
+    {
+      "path": "docs/sprints/sprint-025.md",
+      "classification": "repo-owned",
+      "sha256": "2ef44773d1fce97cf0f6d4cf90dc4fbea918a17238710abc1ecce242cafa2aa9"
+    },
+    {
+      "path": "docs/sprints/sprint-026.md",
+      "classification": "repo-owned",
+      "sha256": "93eef50b6be17d6fe5447f46909c4ea37a9a790fe0bac5278df597794bf646d9"
+    },
+    {
+      "path": "docs/sprints/sprint-027.md",
+      "classification": "repo-owned",
+      "sha256": "278854a711fd9bd4d50f0652f379a73f35212f261b96eb3f428de083d467c4f4"
+    },
+    {
+      "path": "docs/sprints/sprint-028.md",
+      "classification": "repo-owned",
+      "sha256": "c31f148d7eae2efe32d977eaba9bdb34475b4cd8b05a38716ed9ea39c4738418"
+    },
+    {
+      "path": "docs/sprints/sprint-029.md",
+      "classification": "repo-owned",
+      "sha256": "fcee89b5e39dc369f40342e0b9a4277fef772ef60d89b4e2597873b4d7676600"
+    },
+    {
+      "path": "docs/sprints/sprint-030.md",
+      "classification": "repo-owned",
+      "sha256": "670e6671f1ff853feb7632e72afc0175497805714945412e975f01eeb4b2e42c"
+    },
+    {
+      "path": "docs/sprints/sprint-031.md",
+      "classification": "repo-owned",
+      "sha256": "7b4405a88541ba733826a82bc7364cdc8cae5340d461c5ea68f695f76571f299"
+    },
+    {
+      "path": "docs/sprints/sprint-032-patch-001.md",
+      "classification": "repo-owned",
+      "sha256": "b6a863d80616577d82d0d76730068f6dcf79fba15aae4998b10cb3a009b8e892"
+    },
+    {
+      "path": "docs/sprints/sprint-032-patch-002.md",
+      "classification": "repo-owned",
+      "sha256": "cbae96b041d767776e6904ec33f7937b9a53ad7cbdc98a6478e21adc52625ded"
+    },
+    {
+      "path": "docs/sprints/sprint-032.md",
+      "classification": "repo-owned",
+      "sha256": "280d7469fb8b1241cbbb16f36cd19dd86908d2a64b7799742fadc3323679f9e3"
+    },
+    {
+      "path": "docs/sprints/sprint-033.md",
+      "classification": "repo-owned",
+      "sha256": "ab0c9616adf50da6f2f357523fc7216c8183f8ebce764249df47a73f9f78b687"
+    },
+    {
+      "path": "docs/sprints/sprint-034.md",
+      "classification": "repo-owned",
+      "sha256": "6013bda379d6d3a11790652d9b2a5752d600d603f207c52ec20c0a4c35aeaf45"
+    },
+    {
+      "path": "docs/sprints/sprint-035.md",
+      "classification": "repo-owned",
+      "sha256": "b4d0b83925f73870b676c92800ae475b99560264d359063ce27152b311aa1d18"
+    },
+    {
+      "path": "docs/sprints/state.md",
+      "classification": "repo-owned",
+      "sha256": "e124c5d23af5bea0f0a60133374208dfd58af9d88fb9430b99cfcd1e4909b4b4"
+    },
+    {
+      "path": "plugins/secretary/.claude-plugin/plugin.json",
+      "classification": "metadata-overlay",
+      "sha256": "4623dd9bff28ed75f9351106c1928c1e5f73dcd8966312679d0c0f900628a6f4"
+    },
+    {
+      "path": "plugins/secretary/.codex-plugin/plugin.json",
+      "classification": "metadata-overlay",
+      "sha256": "9d95c9d09f6f5ab93e0e7f0fdd1b49cedfcce8ac8f244501a1e9e32b8554a38e"
+    },
+    {
+      "path": "plugins/secretary/.mcp.json",
+      "classification": "common",
+      "sha256": "429e064045a1f31290d6d504c43f32d20367e8db9d795fd788268937307d9bf8"
+    },
+    {
+      "path": "plugins/secretary/CHANGELOG.md",
+      "classification": "common",
+      "sha256": "943a505e3a2e2d45323461d5209eb7ec71107adc20cf21527c66ccd4f1fd014d"
+    },
+    {
+      "path": "plugins/secretary/edition.json",
+      "classification": "metadata-overlay",
+      "sha256": "35b619730385aa959888332f8df6b6bc933b0d5d8d451d3e1f305f3ea8af213f"
+    },
+    {
+      "path": "plugins/secretary/host-inventory.json",
+      "classification": "common",
+      "sha256": "46727ec6c26fdc839ec99122f60ac575cdea583178dd64abdffa799e962ab926"
+    },
+    {
+      "path": "plugins/secretary/migrations/0.2.0-to-0.3.0.json",
+      "classification": "common",
+      "sha256": "c35a3ace1151343644e9611d4b54a88f16bcd46b2aa007b2d3e7b6ee5a02b194"
+    },
+    {
+      "path": "plugins/secretary/migrations/0.3.0-to-0.4.0.json",
+      "classification": "common",
+      "sha256": "cf663387f52e7f568948857f6284d88b9f0be7eb4e5aa1ef74ea0d5700502fd9"
+    },
+    {
+      "path": "plugins/secretary/migrations/0.4.0-to-0.5.0.json",
+      "classification": "common",
+      "sha256": "ff1f56ef4cb5a1635428bb8a0f6c46cbc89f65f8063701635b08036aa2691f5d"
+    },
+    {
+      "path": "plugins/secretary/migrations/0.5.0-to-0.6.0.json",
+      "classification": "common",
+      "sha256": "1b4bdc39ba202e8f13e1ba8cba6d462e14df55c5c0e2c33df1a0d0df210f7d61"
+    },
+    {
+      "path": "plugins/secretary/migrations/0.6.0-to-0.7.0.json",
+      "classification": "common",
+      "sha256": "16c531f8ddc7dd5263a2d946d40cf2e2dd126ebd872ddc856973602697327a30"
+    },
+    {
+      "path": "plugins/secretary/migrations/0.7.0-to-0.8.0.json",
+      "classification": "common",
+      "sha256": "43e476603629b830cdfe1fad30fb3ef7153dafa9fcf12c08531ea66fc51f7c8c"
+    },
+    {
+      "path": "plugins/secretary/migrations/assets/update-entry-pointer.md",
+      "classification": "common",
+      "sha256": "7713c0c95b626fd05c06bdaf169d50a8d008f4080b351bf73dc030d1d775a62a"
+    },
+    {
+      "path": "plugins/secretary/migrations/assets/update-safety-section.md",
+      "classification": "common",
+      "sha256": "1f8182506c76f1a3372097aec2ec74059ac4e5aca596ba06708c8c12f64b2e53"
+    },
+    {
+      "path": "plugins/secretary/rules/common-language.md",
+      "classification": "common",
+      "sha256": "8e263e9f636704852830a3ce379d9d1a83e509d082f7af8a1d8ac4a3e5abd357"
+    },
+    {
+      "path": "plugins/secretary/rules/copy/agentic.json",
+      "classification": "upstream-only",
+      "sha256": "5e8a80c40402f33fdcdab52d6457e856d0b0049ddd380e0016505c5be66b2a47"
+    },
+    {
+      "path": "plugins/secretary/rules/copy/yasashii.json",
+      "classification": "common",
+      "sha256": "628142e5e46d26440f72c8ae04aaa5a2c728a459be8e328bd8a30bad8bc2f909"
+    },
+    {
+      "path": "plugins/secretary/rules/evidence.md",
+      "classification": "common",
+      "sha256": "dfb032a9e53b843eb1c671a8b67bc3665513f611943fe4bfd40a2d15a4e06200"
+    },
+    {
+      "path": "plugins/secretary/rules/plain-language.md",
+      "classification": "anchor-overlay",
+      "sha256": "d3962460e78d22206deeecbf15e08af6e61c1646a5a0eaabd7d79b89239e9902"
+    },
+    {
+      "path": "plugins/secretary/rules/rule-manifest.json",
+      "classification": "metadata-overlay",
+      "sha256": "ae326beb869470b526c8d36c6fc93538a66add7b615cda063d380a37b1ca231f"
+    },
+    {
+      "path": "plugins/secretary/rules/safety.md",
+      "classification": "common",
+      "sha256": "fa098672a314a66f377cbe7ce4d2ee612aee4d3b6c4777f7873c27a319944362"
+    },
+    {
+      "path": "plugins/secretary/rules/styles/agentic.md",
+      "classification": "upstream-only",
+      "sha256": "777b825bb990c97b552fdd2b1141e3ad09b1cc2f2665ced9ae07e13f9146785b"
+    },
+    {
+      "path": "plugins/secretary/rules/styles/yasashii.md",
+      "classification": "anchor-overlay",
+      "sha256": "21b38314cf3044e78cf5a82c07712c678e4729117969037df3a0dec1811a12b9"
+    },
+    {
+      "path": "plugins/secretary/scripts/edition-guard.mjs",
+      "classification": "common",
+      "sha256": "f487008cb1b6b56b8f050710b792854eb970b94c8402073668b5ed5dc4858925"
+    },
+    {
+      "path": "plugins/secretary/scripts/lib/actions-run.mjs",
+      "classification": "common",
+      "sha256": "7396a47d7b2a0dc782346bd94914a38f53b1c32f9dde042c0c641725159705e6"
+    },
+    {
+      "path": "plugins/secretary/scripts/lib/edition-guard.mjs",
+      "classification": "common",
+      "sha256": "4bf779578ede9e2c4779514e6ad31853b8c443d049da9e6f64afcb4640c23d05"
+    },
+    {
+      "path": "plugins/secretary/scripts/lib/external-ops.mjs",
+      "classification": "common",
+      "sha256": "c1435280422edf404b8c7de45dfc07c8d4d67b7b0d0f9c497120bc89d35f01ce"
+    },
+    {
+      "path": "plugins/secretary/scripts/lib/external-runner.mjs",
+      "classification": "common",
+      "sha256": "ff1953cd48a55e77d1707f9f589b3309c701529c31e2cb0536a5052d75c3073d"
+    },
+    {
+      "path": "plugins/secretary/scripts/lib/journal.sh",
+      "classification": "common",
+      "sha256": "e66a725b2bc3041407d43b8ba0250e462f24ab8cb5dc7d022863201ac3a9f7ec"
+    },
+    {
+      "path": "plugins/secretary/scripts/lib/memory-archive.sh",
+      "classification": "common",
+      "sha256": "cabf8f0d89c4a201095acbf7ae3a16441a153a1f3ca47ec666c2ac424c22b0c0"
+    },
+    {
+      "path": "plugins/secretary/scripts/lib/memory-index.sh",
+      "classification": "common",
+      "sha256": "c94f51460191e25b7c55c9dab40eeb03f45858be21e09fcb5a0298ab056c1506"
+    },
+    {
+      "path": "plugins/secretary/scripts/lib/path-guard.sh",
+      "classification": "common",
+      "sha256": "88637709e15233ed6c36772d98f535e4d7ceaed900c86b217146825e1486d29e"
+    },
+    {
+      "path": "plugins/secretary/scripts/lib/safe-fs.mjs",
+      "classification": "common",
+      "sha256": "8f36afe0d42bc03ca3150fefa35ae77f7f4bbf4c2e060f7130aaff147ea93db9"
+    },
+    {
+      "path": "plugins/secretary/scripts/lib/safe-git.mjs",
+      "classification": "common",
+      "sha256": "6db9cf49483cbfc6b8877e5e13ce43b084028416c04efe1836b9d6563beef6f2"
+    },
+    {
+      "path": "plugins/secretary/scripts/lib/timeline.sh",
+      "classification": "common",
+      "sha256": "1ebf5846724c329c47d8f41016c54cc008972071df27900f97a3c83b639a1ff7"
+    },
+    {
+      "path": "plugins/secretary/scripts/lib/weekly.sh",
+      "classification": "common",
+      "sha256": "7c51ae31bbc527239215fde1a5194fd6eced1714b60d57846024e3328c8bba2a"
+    },
+    {
+      "path": "plugins/secretary/scripts/lib/wizard-product-identity.mjs",
+      "classification": "common",
+      "sha256": "cb8e245e24e3e57de07334974bf57771784451d04867baac7559b0edd6430cb0"
+    },
+    {
+      "path": "plugins/secretary/scripts/lib/wizard-session.mjs",
+      "classification": "common",
+      "sha256": "f8065ece81be0941ae8a6d4f364590d32f15275d53438852c67c2c774d75e7a2"
+    },
+    {
+      "path": "plugins/secretary/scripts/project-tools.mjs",
+      "classification": "common",
+      "sha256": "c0d49d6601583a978fcd3ee8ba16a030a06fd23673f2d372054728856fef2027"
+    },
+    {
+      "path": "plugins/secretary/scripts/resolve-plugin-root.mjs",
+      "classification": "common",
+      "sha256": "2b2ad03bc337373deded23a6fe0ccccd9e6b58355f0c31a3eed74ad246b645c1"
+    },
+    {
+      "path": "plugins/secretary/scripts/safe-external.mjs",
+      "classification": "common",
+      "sha256": "f23468b185610e5102682f6ef11bf06f668634d29a8117e4094bd1c7e09c1bb9"
+    },
+    {
+      "path": "plugins/secretary/scripts/safe-git-commit.mjs",
+      "classification": "common",
+      "sha256": "e417f9170d94754aa42598b2f6753d68a0068bfd4a844cf08585621deb5b8f35"
+    },
+    {
+      "path": "plugins/secretary/scripts/update-apply.mjs",
+      "classification": "common",
+      "sha256": "55dc1a7d3fd5996be3c5b12066f7ad6adcfca86cbbe1041e66ec563960025ece"
+    },
+    {
+      "path": "plugins/secretary/scripts/update-diagnose.mjs",
+      "classification": "common",
+      "sha256": "0a36a5a1c330e80de55463bc5c49466926b6a87ad9faa020eddda93267f31a27"
+    },
+    {
+      "path": "plugins/secretary/scripts/update-ledger.mjs",
+      "classification": "common",
+      "sha256": "8791e83a107afcb524d4625dc4f5b21a8773ba2290952aba55e691562691b739"
+    },
+    {
+      "path": "plugins/secretary/scripts/workspace-repo.mjs",
+      "classification": "common",
+      "sha256": "7b21b5b7ce831fff8692918c5a34c198f658bbcb0fda01b8ec2f7e8e0de6608a"
+    },
+    {
+      "path": "plugins/secretary/scripts/workspace-tools.sh",
+      "classification": "common",
+      "sha256": "ac45c01ded203663b7e0210989ebc7b3b392972478df278005b83f00fa0ea07c"
+    },
+    {
+      "path": "plugins/secretary/skills/build/SKILL.md",
+      "classification": "anchor-overlay",
+      "sha256": "c00de40d122a5146547fdcdd4a9e477eee55c7bd3221ee686bdeb816f63f1001"
+    },
+    {
+      "path": "plugins/secretary/skills/chatwork/SKILL.md",
+      "classification": "common",
+      "sha256": "be773dbfb68ad995927d3b1cca48280d8c239418d2c6c8e46299fdc49ce4cd02"
+    },
+    {
+      "path": "plugins/secretary/skills/chatwork/assets/wizard/app.js",
+      "classification": "common",
+      "sha256": "4b0d5350569516044fd5cd89c62d7b9a734a10dc009db455dc40bfe143e070a1"
+    },
+    {
+      "path": "plugins/secretary/skills/chatwork/assets/wizard/common.js",
+      "classification": "common",
+      "sha256": "beda14d03d611af725c46ac1e3d9f4fad9af924aef30d2db69dfe118ccc2cb41"
+    },
+    {
+      "path": "plugins/secretary/skills/chatwork/assets/wizard/index.html",
+      "classification": "common",
+      "sha256": "f12f2c2a24cddc4156360b20b639776d887b89679c4e45045aa43aed04964d61"
+    },
+    {
+      "path": "plugins/secretary/skills/chatwork/assets/wizard/result-model.js",
+      "classification": "common",
+      "sha256": "9adffbc1a8b94213cc7ee7b756dd0db68b4f7b96212b5a10af24b1a489710e0d"
+    },
+    {
+      "path": "plugins/secretary/skills/chatwork/assets/wizard/style.css",
+      "classification": "common",
+      "sha256": "37172c51374e94fc92d0c7d0aac48434eaa06a22e2a83bc30f6bc790ea30c207"
+    },
+    {
+      "path": "plugins/secretary/skills/chatwork/scripts/config-transaction.mjs",
+      "classification": "common",
+      "sha256": "b4c93202c6b0877ab7563060d346b9e1c408f24c88e3ebb5db9fcde02f167ad3"
+    },
+    {
+      "path": "plugins/secretary/skills/chatwork/scripts/schedule.mjs",
+      "classification": "common",
+      "sha256": "93b7d9a677f2e0063af60b86ae5b4a2f080cc8437251357a52c199eeb1a2ca1b"
+    },
+    {
+      "path": "plugins/secretary/skills/chatwork/scripts/search-flow.mjs",
+      "classification": "common",
+      "sha256": "fc31e24b1d5278dc5078e664949f27a8c35ca5471c6b3a0427184a9f122cb28c"
+    },
+    {
+      "path": "plugins/secretary/skills/chatwork/scripts/search.mjs",
+      "classification": "common",
+      "sha256": "3fd56fe4fca2fd742f2c1fa9f6304fd57941b57b8ef1e0a9ea4bd83c16cd820e"
+    },
+    {
+      "path": "plugins/secretary/skills/chatwork/scripts/wizard-server.mjs",
+      "classification": "common",
+      "sha256": "b9e93e64397913ef6cb527eecb4de6657ccd17ee1a79e8eba0830e79fb127b6d"
+    },
+    {
+      "path": "plugins/secretary/skills/connections/SKILL.md",
+      "classification": "common",
+      "sha256": "77885d780506773b3cad5dd8417b8506dcdfbf376a5e6b2a23ecdbad5754153f"
+    },
+    {
+      "path": "plugins/secretary/skills/daily/SKILL.md",
+      "classification": "common",
+      "sha256": "369fc8b0802039d5b8b98fe50bde4d27ba1b7acfabd88924ff5e0507ffd7d99b"
+    },
+    {
+      "path": "plugins/secretary/skills/google-chat/SKILL.md",
+      "classification": "common",
+      "sha256": "1eb2dd83cd0529b5a6b37ad2b9a08f9cc67973018d9c69530430ba8f0fadcfdf"
+    },
+    {
+      "path": "plugins/secretary/skills/google-chat/assets/wizard/app.js",
+      "classification": "common",
+      "sha256": "de6d6a95e46910e4f1e52bbc8df60d4bb5f4beda3b56a6e1a19bbf5b3d6e90d1"
+    },
+    {
+      "path": "plugins/secretary/skills/google-chat/assets/wizard/cleanup.mjs",
+      "classification": "common",
+      "sha256": "c0ed4be1f78fcdc68136c14d627489804af680181262b594e05e9498169fcad8"
+    },
+    {
+      "path": "plugins/secretary/skills/google-chat/scripts/client.mjs",
+      "classification": "common",
+      "sha256": "1e9c42047dffb34218c74ef5cd2f25dbf1fdeb25e796cf49598f93da964ade41"
+    },
+    {
+      "path": "plugins/secretary/skills/google-chat/scripts/cloud-setup.mjs",
+      "classification": "common",
+      "sha256": "c6df697d66723f8febed8b2615cdf8683817f14fd218850abb2a6a867b4ca8c4"
+    },
+    {
+      "path": "plugins/secretary/skills/google-chat/scripts/config-transaction.mjs",
+      "classification": "common",
+      "sha256": "209631e21bdc2770bfdbe3ef432e483007dc9397db8d0f78f493249b5fdafc78"
+    },
+    {
+      "path": "plugins/secretary/skills/google-chat/scripts/continuous-sync.mjs",
+      "classification": "common",
+      "sha256": "4566e155c9bde729e57db68aa6f13a4e7242441434dc4faf5cc22d87bb6ff137"
+    },
+    {
+      "path": "plugins/secretary/skills/google-chat/scripts/history.mjs",
+      "classification": "common",
+      "sha256": "e445103a4b60b38388d78bc4a61d83326d4d8cd89073f9b5f285c66774b9b54c"
+    },
+    {
+      "path": "plugins/secretary/skills/google-chat/scripts/oauth-session.mjs",
+      "classification": "common",
+      "sha256": "15d35113b325dfa10f279367038898c27c2524b8fb7bdfe5b93320ee75111a23"
+    },
+    {
+      "path": "plugins/secretary/skills/google-chat/scripts/refresh-token.mjs",
+      "classification": "common",
+      "sha256": "e15d9d64ca17a721dad2b667e1e00964d7be668ec3a84b5b81142a36220629ed"
+    },
+    {
+      "path": "plugins/secretary/skills/google-chat/scripts/runtime-safety.mjs",
+      "classification": "common",
+      "sha256": "c3a428d59b32dcc582ff360ad993c589aa1634a6a6ec03e69790a6ff4ed5d6a3"
+    },
+    {
+      "path": "plugins/secretary/skills/google-chat/scripts/schedule.mjs",
+      "classification": "common",
+      "sha256": "1c4360595a0ac70fd73437074f5b94ee796102ff71d21fdc37a4391103aa16df"
+    },
+    {
+      "path": "plugins/secretary/skills/google-chat/scripts/search-flow.mjs",
+      "classification": "common",
+      "sha256": "fddc617ad52a21181d7cc86733602986c0c676a9dddd744008b2d460a49e2a94"
+    },
+    {
+      "path": "plugins/secretary/skills/google-chat/scripts/search.mjs",
+      "classification": "common",
+      "sha256": "e18d354f4b8ae57bb04481ae0f1a0c815033deebf75cead38403189cb173a9a4"
+    },
+    {
+      "path": "plugins/secretary/skills/google-chat/scripts/sync.mjs",
+      "classification": "common",
+      "sha256": "01cb043774e6f83d92cdb000930d1587bd9a7352a9eee7128eeed4394c7cde3a"
+    },
+    {
+      "path": "plugins/secretary/skills/google-chat/scripts/wizard-server.mjs",
+      "classification": "common",
+      "sha256": "aa450f841564045d36e1862f39d4c49e2da5d75ac143a7e76d6096f899df1294"
+    },
+    {
+      "path": "plugins/secretary/skills/memory-care/SKILL.md",
+      "classification": "common",
+      "sha256": "71e0968627d02bc1b65e3564426879c2903c26fe2b6b054d2324393cc30d48c0"
+    },
+    {
+      "path": "plugins/secretary/skills/memory-care/scripts/memory-tools.sh",
+      "classification": "common",
+      "sha256": "126313c7b968b1c20bda83b716c80024f65e6a877f593015ec80c7adfeb08f6d"
+    },
+    {
+      "path": "plugins/secretary/skills/onboarding/SKILL.md",
+      "classification": "common",
+      "sha256": "df4764575b0971e5e4a8c363da3630a8f23b5ca0298f37951f781a663f0e0f94"
+    },
+    {
+      "path": "plugins/secretary/skills/projects/SKILL.md",
+      "classification": "anchor-overlay",
+      "sha256": "09bcdb9c6261222b41fac2b7ff7d8a9d397bc28545c0e5d7249958251cd3c9ef"
+    },
+    {
+      "path": "plugins/secretary/skills/secretary/SKILL.md",
+      "classification": "anchor-overlay",
+      "sha256": "90e76bb13646b2406f3636d0126990812bd3286118b758331381111be204524c"
+    },
+    {
+      "path": "plugins/secretary/skills/settings/SKILL.md",
+      "classification": "anchor-overlay",
+      "sha256": "70efb85f8707aac4a49fa75f20dcad77404b60b92f61bc4bd516df4b1bb49add"
+    },
+    {
+      "path": "plugins/secretary/skills/setup-google/SKILL.md",
+      "classification": "common",
+      "sha256": "786ca55dd05881af114d2dd7e6b995d8d3959260722482c3bf93ba75cd8af830"
+    },
+    {
+      "path": "plugins/secretary/skills/setup-microsoft/SKILL.md",
+      "classification": "common",
+      "sha256": "a376122064be3183ff46440ee8a261727c6fb51626718e28d7f2e02477735b90"
+    },
+    {
+      "path": "plugins/secretary/skills/setup-notion/SKILL.md",
+      "classification": "common",
+      "sha256": "eb5eb0aa58f07f1a6751b2ad41212a4dd9103e3a8de37aa22dcce6bdc16fb7ec"
+    },
+    {
+      "path": "plugins/secretary/skills/update/SKILL.md",
+      "classification": "anchor-overlay",
+      "sha256": "58d20bb6ca59fd32a3c657b14d7a26418c22a6c9f749b86b04c2e4da7711c079"
+    },
+    {
+      "path": "plugins/secretary/skills/weekly/SKILL.md",
+      "classification": "common",
+      "sha256": "bfacc2b8f2236a26c277ba3b47dd9eb24f1b1a11af21ffd4991aa53b3ac8e03e"
+    },
+    {
+      "path": "plugins/secretary/templates/AGENTS.md",
+      "classification": "common",
+      "sha256": "0e613e03e15ae54da6660a4f694aafb66d3a0f9e37238909bf6d649c532efff6"
+    },
+    {
+      "path": "plugins/secretary/templates/CLAUDE.md",
+      "classification": "common",
+      "sha256": "406d6aa02a57a485cf7195cee4c10d6a5260213831cf9e31eb41bee392848b72"
+    },
+    {
+      "path": "plugins/secretary/templates/docs/.gitkeep",
+      "classification": "common",
+      "sha256": "ebc6631bbc5db58e1072d9857ad21771531d7e513e9afb8e0ed923221a742524"
+    },
+    {
+      "path": "plugins/secretary/templates/inbox/.gitkeep",
+      "classification": "common",
+      "sha256": "6e3f04d836d112539434feca377e0fd51d2d76c0dcbf790bb14b774f3848824c"
+    },
+    {
+      "path": "plugins/secretary/templates/memory/MEMORY.md",
+      "classification": "common",
+      "sha256": "44008470667f92bf2e522eed03c462da9dc314958eea1fbb9221ff8c8ac05ecc"
+    },
+    {
+      "path": "plugins/secretary/templates/memory/archive/journal/.gitkeep",
+      "classification": "common",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "plugins/secretary/templates/memory/decisions/_first-decision.md",
+      "classification": "common",
+      "sha256": "d2d12b5c3e09186f17fb4925a8c4afc0f456fef4d2df782cbc9f685d10ef9210"
+    },
+    {
+      "path": "plugins/secretary/templates/memory/journal/.gitkeep",
+      "classification": "common",
+      "sha256": "af305b0d6acfa74a1a8c064361c618a29d8fc17e5e4e33556f1e2ded3f5cd756"
+    },
+    {
+      "path": "plugins/secretary/templates/memory/preferences.md",
+      "classification": "common",
+      "sha256": "4c031ce7649542af5b93930b3b6e6eea0c756cc10eaeb9885ab36d38ced3189d"
+    },
+    {
+      "path": "plugins/secretary/templates/memory/topics/.gitkeep",
+      "classification": "common",
+      "sha256": "478de413f57dc1d252ee509ef0cbe3237dc92a8ef4d073a737d96ca4c4126348"
+    },
+    {
+      "path": "plugins/secretary/templates/projects/.gitkeep",
+      "classification": "common",
+      "sha256": "d46c81969649f556afa3c06a6cd9c88568c3d6f0cc09ea927668e4f4efeffd53"
+    },
+    {
+      "path": "plugins/secretary/templates/tones/formal.md",
+      "classification": "common",
+      "sha256": "5674181ce8600aa5ba8d358dcd3bf318b3ef8b59ba263b7ea5da297c4a0db6b2"
+    },
+    {
+      "path": "plugins/secretary/templates/tones/friendly.md",
+      "classification": "common",
+      "sha256": "15c4239df903b2949c062556145257992722226c91e6d7cd083591f8f7d53c97"
+    },
+    {
+      "path": "plugins/secretary/templates/tones/standard.md",
+      "classification": "common",
+      "sha256": "3e269afc21175740a410ddb15ddb0ddd19fcbfd28e7ca6f66fa997ec460a1061"
+    },
+    {
+      "path": "plugins/secretary/workspace-templates/.github/workflows/chatwork-sync.yml",
+      "classification": "common",
+      "sha256": "3d2efc9da4e0d45a6718007bb4e5755dbdb1944ea8366bb09278523ad609cd1f"
+    },
+    {
+      "path": "plugins/secretary/workspace-templates/chatwork/config.json",
+      "classification": "common",
+      "sha256": "753746695933f1e44b904bf7064aab82f6f2e1bddb98b5edcc90db5a7810d9dd"
+    },
+    {
+      "path": "plugins/secretary/workspace-templates/chatwork/history/.gitkeep",
+      "classification": "common",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "plugins/secretary/workspace-templates/chatwork/rooms.json",
+      "classification": "common",
+      "sha256": "e28af5ce8d9ec428c352477b6ed770944674e8919db60c79d68fea9cc6bc723d"
+    },
+    {
+      "path": "plugins/secretary/workspace-templates/chatwork/scripts/chatwork-sync.mjs",
+      "classification": "common",
+      "sha256": "65edc2a8da13f3ac6d79a4c99545b65cc2b6736b0650877b4b1f6537a157a7d8"
+    },
+    {
+      "path": "plugins/secretary/workspace-templates/chatwork/scripts/runtime-safety.mjs",
+      "classification": "common",
+      "sha256": "c3a428d59b32dcc582ff360ad993c589aa1634a6a6ec03e69790a6ff4ed5d6a3"
+    },
+    {
+      "path": "plugins/secretary/workspace-templates/chatwork/state/.gitkeep",
+      "classification": "common",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "plugins/yasashii-secretary/CHANGELOG.md",
+      "classification": "common",
+      "sha256": "943a505e3a2e2d45323461d5209eb7ec71107adc20cf21527c66ccd4f1fd014d"
+    },
+    {
+      "path": "scripts/agentic-archive-gate.mjs",
+      "classification": "upstream-only",
+      "sha256": "de62a6ebe2e0981dcb8d6d5490f9508aad5ee7197dca78836a1cb87a9dfa838c"
+    },
+    {
+      "path": "scripts/agentic-codex-install-plan.mjs",
+      "classification": "upstream-only",
+      "sha256": "0b94eb53bc29129a2fa890425f2a97b5c91b1a6266a4940dfca8790daf2ab504"
+    },
+    {
+      "path": "scripts/agentic-codex-plugin-test.mjs",
+      "classification": "upstream-only",
+      "sha256": "12981c9d804096f6c75bcc25dd779cc96752b6f6833b790b5d97fe3ee05a79e3"
+    },
+    {
+      "path": "scripts/agentic-host-gate.mjs",
+      "classification": "upstream-only",
+      "sha256": "2e9a643a6e8bfe29fd10491fbcb35af956e8b2b56e61c5e8a67ea4435d800e9a"
+    },
+    {
+      "path": "scripts/agentic-live-host-gate.mjs",
+      "classification": "upstream-only",
+      "sha256": "0468e4152b08c0f32e5f707d64f4629852f22a5548bfe140f4aaf6dda0267041"
+    },
+    {
+      "path": "scripts/agentic-readability-test.mjs",
+      "classification": "upstream-only",
+      "sha256": "576cadc05f113290445113e336089e6958d078ba269377e4ef0e621a05abbede"
+    },
+    {
+      "path": "scripts/agentic-regression.sh",
+      "classification": "upstream-only",
+      "sha256": "9a97ef25e69a60ec29091dcadae435b8ed0756e0752dd5829fdd59c63f925722"
+    },
+    {
+      "path": "scripts/archive-release-gate.mjs",
+      "classification": "repo-owned",
+      "sha256": "8602f4fc89ca793b507b7d63b1e26e1c8c65bc940f6654fbf13bcd17ac052c7b"
+    },
+    {
+      "path": "scripts/check-distribution-channel.py",
+      "classification": "common",
+      "sha256": "6836e172b73825e9cd428f5faf78714a304fea345ffec4b69b43dd3b6f7e0bb5"
+    },
+    {
+      "path": "scripts/check-harness-compat-online.mjs",
+      "classification": "common",
+      "sha256": "f80a3111f1395a9253c8f8750880239778500c6a30d33138790ad350c4f2f927"
+    },
+    {
+      "path": "scripts/check-release-integrity.py",
+      "classification": "repo-owned",
+      "sha256": "d565a63a1f2601cd4c0697d6371903e10d9efadacf3c624a32f848c818e45155"
+    },
+    {
+      "path": "scripts/check-report-schema.py",
+      "classification": "common",
+      "sha256": "710dac0949e99d73286cdd5648fd4844bbcbf0330aa7516bf2ed0a55f159be4f"
+    },
+    {
+      "path": "scripts/check-yasashii-harness-online.sh",
+      "classification": "common",
+      "sha256": "8892897034feb905ba903e8dac5e6494f6f9b581986c4021eaa18504bd667af4"
+    },
+    {
+      "path": "scripts/check-yasashii-harness-reference.py",
+      "classification": "common",
+      "sha256": "dfbc1978139af64f20aac05ffffda65fbbc3b53cf7809f00308c59a8781ecef4"
+    },
+    {
+      "path": "scripts/create-sprint-020-patch-001-google-chat-test-client.mjs",
+      "classification": "common",
+      "sha256": "3a92e7c5111bdbf92c0391cf973d019ed618f80e7f62fcce611b7dc0a2731db3"
+    },
+    {
+      "path": "scripts/fixtures/chatwork-wizard/chatwork/config.json",
+      "classification": "common",
+      "sha256": "685af020c8181e51c70118433074c5419d559e25478778d7f19de3e8947c404d"
+    },
+    {
+      "path": "scripts/fixtures/chatwork-wizard/chatwork/history/102.json",
+      "classification": "common",
+      "sha256": "87ec132be04da1fd4d59062bce701dcfc3c87596d7a5e273fce0b73547634437"
+    },
+    {
+      "path": "scripts/fixtures/chatwork-wizard/chatwork/rooms.json",
+      "classification": "common",
+      "sha256": "e7b2c707b7e1d12d8b4690ca5a247a5c2607f87eaf5cb8b99590d00d84f1098b"
+    },
+    {
+      "path": "scripts/fixtures/chatwork-wizard/chatwork/state/sync.json",
+      "classification": "common",
+      "sha256": "33f7e8a1ef1ec59284d19dfaca945caefaaa320a45a87b22f1360718206c3eb8"
+    },
+    {
+      "path": "scripts/fixtures/google-chat-wizard/google-chat.json",
+      "classification": "common",
+      "sha256": "6281e15aa0f5cf6993e162991c2d9ba88c281d9c2e2b2a5599ddeabb7a2785e4"
+    },
+    {
+      "path": "scripts/fixtures/sprint-029/yasashii-copy-baseline.json",
+      "classification": "common",
+      "sha256": "b5d3ddabc556fa884f88cd13fb56ce1d24ec8a4af821a77e990d443d8a960769"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-001/bad-compression.md",
+      "classification": "common",
+      "sha256": "8123996c683abcc14d23f1343386e9b7f3e34d69193221acaa5151b06d5a4467"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-001/conversation-surface-inventory.json",
+      "classification": "common",
+      "sha256": "9557a6f7713609dadbca12d31055afa43e37cf1a4d75f760194b495109e36bd8"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-001/conversations/completion-report.bad.md",
+      "classification": "common",
+      "sha256": "4a98d1377dcd391d3d1ed22a17a3104c5e245d3de153bb121b5c35e5364af467"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-001/conversations/completion-report.good.md",
+      "classification": "common",
+      "sha256": "87cefd49001b1c4e6fec02f3d03dce3c77a88f6aa38574d844eae3903aeb300a"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-001/conversations/completion-report.out-of-order.bad.md",
+      "classification": "common",
+      "sha256": "bc4bbb0fece91fa4cfe779e314fb4653ea9d4f6cdc6aaecff778b5e35c60747b"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-001/conversations/completion-report.unlabeled.bad.md",
+      "classification": "common",
+      "sha256": "2b4ff7ac5636025c454ee361c6fd8d9cd5aa2c03ff7d0a96ae1bb55e42afc33a"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-001/conversations/complex-question.bad.md",
+      "classification": "common",
+      "sha256": "3416ff0920230ee9eeaa7a291a54cc5f32943fc6653bed92d31a5f909a1e3fe5"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-001/conversations/complex-question.good.md",
+      "classification": "common",
+      "sha256": "04bddcff2fec670c4485c451643b3a7e2ac208e5b97961b9e82fd18c347815fe"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-001/conversations/diagnosis.bad.md",
+      "classification": "common",
+      "sha256": "10d4e3808e14aacc1489bc635108f99e857eab82b077a6a45f74fd9fb50e9654"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-001/conversations/diagnosis.good.md",
+      "classification": "common",
+      "sha256": "b31ed2110cb104061b56603e35224013218ea960da28ef7e93dc3d8c9a1eb675"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-001/conversations/partial-failure.bad.md",
+      "classification": "common",
+      "sha256": "585bb1cdfd33681666927eaf97cad497fa53590ea0bf22e49e98ec5d7c9bbba6"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-001/conversations/partial-failure.good.md",
+      "classification": "common",
+      "sha256": "66b9499eedbc2eae7f04759448a053163d6ba6c8bd13373b0bae32d83031acdb"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-001/conversations/search-results.bad.md",
+      "classification": "common",
+      "sha256": "84c10d26b9017a6c961927901ebed9ba2a14b3335ac85cadbe30f9c5e918d7e9"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-001/conversations/search-results.good.md",
+      "classification": "common",
+      "sha256": "fee49c27cb92b281fafea7aa7deba793b3f9cd7d817d4d4606726c1fa9370835"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-001/conversations/short-answer.bad.md",
+      "classification": "common",
+      "sha256": "dadcf6d212ae0dea9bc50b34540cb16c1638e60701c6a117baca4b70edeae2e6"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-001/conversations/short-answer.good.md",
+      "classification": "common",
+      "sha256": "8ca239f0cb7bd8914bb13082577fd58fcd3dc042a9a3d7d920802ded36179cd1"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-002/serializer-mislocated.md",
+      "classification": "common",
+      "sha256": "b4b099ca86fe8eadad6b797ed33e21cd52f41c28960307f9ed73096cd861fb68"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-002/serializer-missing-rule.md",
+      "classification": "common",
+      "sha256": "38ae135bc28f4f6b95bb8994560ff0263b1eac8c00290b2ff144ca46902ae8c8"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-002/wizard-progress-gap.js",
+      "classification": "common",
+      "sha256": "4bed6463e72d6ef9bfab298a4b5a3d9754a2786ca9e619be7253318dc4e1fa06"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-002/wizard-progress-generic-step.js",
+      "classification": "common",
+      "sha256": "562721e62bb11f218ec68c0824508ec4ff5f7abd73aa6e0a3fc8854241a53bf9"
+    },
+    {
+      "path": "scripts/fixtures/sprint-032-patch-002/wizard-progress-mismatch.js",
+      "classification": "common",
+      "sha256": "03e235a6effd08779fdb4bf8f70e7c1632f3b1b10e149ae9c2bc4a15972b6b48"
+    },
+    {
+      "path": "scripts/fixtures/yasashii-harness/claude-marketplace-good.json",
+      "classification": "common",
+      "sha256": "801040c1f47e85e945b1a83cf7a591391544bca456910967801e13413103e07f"
+    },
+    {
+      "path": "scripts/fixtures/yasashii-harness/claude-marketplace-mismatch.json",
+      "classification": "common",
+      "sha256": "2add8e92aa2d548e29344b8f0de25653bf375bc5d36f3f4b0ccf63585154d0a1"
+    },
+    {
+      "path": "scripts/fixtures/yasashii-harness/claude-plugin-good.json",
+      "classification": "common",
+      "sha256": "0d49d79d02a2642bc698dd0fc96a827103f7a5e17b709bfad0d4e8b8792695f9"
+    },
+    {
+      "path": "scripts/fixtures/yasashii-harness/codex-marketplace-good.json",
+      "classification": "common",
+      "sha256": "af1807ee0a821c9aa66ba5f3437dac526346d9f1848e68a9cada8372ee1e485d"
+    },
+    {
+      "path": "scripts/fixtures/yasashii-harness/codex-plugin-good.json",
+      "classification": "common",
+      "sha256": "0d49d79d02a2642bc698dd0fc96a827103f7a5e17b709bfad0d4e8b8792695f9"
+    },
+    {
+      "path": "scripts/fixtures/yasashii-harness/metadata-overrides-good.json",
+      "classification": "common",
+      "sha256": "08cf99cb8bfdebf5d8a8ada1412d72f0adc72c138cb7efac6408402978c9f760"
+    },
+    {
+      "path": "scripts/fixtures/yasashii-harness/repo-404.json",
+      "classification": "common",
+      "sha256": "2ec3d3b2dd836615f50cd227ae2f2d9b8961501547fd60a331264770b9c3ede2"
+    },
+    {
+      "path": "scripts/fixtures/yasashii-harness/repo-good.json",
+      "classification": "common",
+      "sha256": "8710235c862d5ac83e237da40226b3dd549f6519304a414ffa0ef6be69c80559"
+    },
+    {
+      "path": "scripts/lib/agentic-hosts.mjs",
+      "classification": "upstream-only",
+      "sha256": "2325d9955384bae51cfba6212f6a9ef469dcf45edeb677d1e3c7c8437d6cbabf"
+    },
+    {
+      "path": "scripts/lib/harness-compat.mjs",
+      "classification": "common",
+      "sha256": "7d766224d8c03cd9eea8d56c901718742ee46b5a8a096a51a295bc967944efac"
+    },
+    {
+      "path": "scripts/lib/sprint-032-patch-001-conversation.mjs",
+      "classification": "common",
+      "sha256": "291bee7218945169bcad327c9c144f1d376d838efcf56a6b11dea33cb826a7ae"
+    },
+    {
+      "path": "scripts/lib/sprint-032-patch-002-hosts.mjs",
+      "classification": "common",
+      "sha256": "095fa226dafd22792615bd452542892b68da54ea636eb3c0e0e9f9e0d1611153"
+    },
+    {
+      "path": "scripts/master-release-gate.mjs",
+      "classification": "common",
+      "sha256": "d35a04e9807bea0ac6b78665d2f92728c18f96e6586a59362880dae2f4c2d878"
+    },
+    {
+      "path": "scripts/master-release-gate.sh",
+      "classification": "common",
+      "sha256": "446d589e413adc78d16c9cf534c75077f91da54ea57b8d414a27134e30fc8b3b"
+    },
+    {
+      "path": "scripts/regression-check.sh",
+      "classification": "anchor-overlay",
+      "sha256": "c5216a8f562428d89e74d2dda0b75b9af5f7ae4203a7634a4f512a8c54ea0999"
+    },
+    {
+      "path": "scripts/sprint-009-regression.sh",
+      "classification": "common",
+      "sha256": "8a0b2bce121dce4207fc7faef98550616bdac56d5a477489610dae672d84f9fb"
+    },
+    {
+      "path": "scripts/sprint-010-regression.sh",
+      "classification": "common",
+      "sha256": "f373f8aae6ca8ead91cdd9899dcd2926239964d2b0df3ec93bd761b1ec024e34"
+    },
+    {
+      "path": "scripts/sprint-011-live-dialogue.sh",
+      "classification": "common",
+      "sha256": "598c02901cfdb732749694b475b9f2d94e48e40f6538d08d8721eaa991ccc7d7"
+    },
+    {
+      "path": "scripts/sprint-011-regression.sh",
+      "classification": "anchor-overlay",
+      "sha256": "b58767c03e1b576931e973f2222efa59a9acfa1b4431d157e21dbbe025916729"
+    },
+    {
+      "path": "scripts/sprint-012-patch-001-live-dialogue.sh",
+      "classification": "common",
+      "sha256": "eea9ae03fda4c2e87447d051e8cfc618fafa238bb4f00625b37c8f3c9cf6f748"
+    },
+    {
+      "path": "scripts/sprint-012-patch-001-regression.sh",
+      "classification": "common",
+      "sha256": "c457f13f66c5ec29642047fb705955db0ce88d1f217d0213aff9de021a6597d8"
+    },
+    {
+      "path": "scripts/sprint-012-regression.sh",
+      "classification": "common",
+      "sha256": "2337698517c71fb5c225ba76e7f12306dd5fcb032835a1059838d11a04c0a9f2"
+    },
+    {
+      "path": "scripts/sprint-013-chatwork-test.mjs",
+      "classification": "common",
+      "sha256": "527ae8cd588ecd2b6b9af4b947d7dc18ffe39f6cbffd9623a0a2ff5a5f7cbbed"
+    },
+    {
+      "path": "scripts/sprint-013-regression.sh",
+      "classification": "common",
+      "sha256": "efb8405f7846e5c967c7a70ec9189762ea8225ac39349b64884bdc164426fd67"
+    },
+    {
+      "path": "scripts/sprint-014-browser-check.mjs",
+      "classification": "common",
+      "sha256": "f243daaf5fe87f9b7b37af621c32efcae643a00f8f06fe69ba10bc7e3ce3e829"
+    },
+    {
+      "path": "scripts/sprint-014-chatwork-test.mjs",
+      "classification": "common",
+      "sha256": "93d94e0e119af2a103a721348ebc6709830cb26cc122060ba67f6f4d744c2ee2"
+    },
+    {
+      "path": "scripts/sprint-014-regression.sh",
+      "classification": "common",
+      "sha256": "e528d73a84ec9da1d36ca158c3d47f7d0305271329124ab24338752e72473eb6"
+    },
+    {
+      "path": "scripts/sprint-015-regression.sh",
+      "classification": "common",
+      "sha256": "c032652b3b38cc5c7912b56408e1ded06c74144f4518d513cc6eb8b41e80f30e"
+    },
+    {
+      "path": "scripts/sprint-016-regression.sh",
+      "classification": "common",
+      "sha256": "e67d288625621388627cc77d02e73b13a55f4016ce400c8ea35709e82132f80d"
+    },
+    {
+      "path": "scripts/sprint-017-regression.sh",
+      "classification": "common",
+      "sha256": "e2934cbb90be8db123dc253e5069a1ca454ab9a9d5a17412ec109d791cc5f9fa"
+    },
+    {
+      "path": "scripts/sprint-018-regression.sh",
+      "classification": "common",
+      "sha256": "16a518b5136dedae160d8e6ff2376b2a2054104782ddd4625d3ff204503371a8"
+    },
+    {
+      "path": "scripts/sprint-019-browser-check.mjs",
+      "classification": "common",
+      "sha256": "836f35c7917a4aa8a47ba71b86633aa86f14f7ad5fa3d623d70e846f7befc234"
+    },
+    {
+      "path": "scripts/sprint-019-google-chat-test.mjs",
+      "classification": "common",
+      "sha256": "2664d52077341484ca90e9cc0b7a2795b9691c91ac6a348df52b5120e9eef788"
+    },
+    {
+      "path": "scripts/sprint-019-regression.sh",
+      "classification": "common",
+      "sha256": "0e5b0f2b60cffac1ae0d708dd16578653bfdb03dd7a78f999e3770bd4bbd6090"
+    },
+    {
+      "path": "scripts/sprint-020-adversarial-test.mjs",
+      "classification": "common",
+      "sha256": "ef1305f457660cfdb85c16152799b29cf945058714fccb10675396b2a9bf4568"
+    },
+    {
+      "path": "scripts/sprint-020-browser-check.mjs",
+      "classification": "common",
+      "sha256": "134c17f58aa2b30e419ed7923e61aec10f2258453387da3e114f708c9dab85d7"
+    },
+    {
+      "path": "scripts/sprint-020-google-chat-test.mjs",
+      "classification": "common",
+      "sha256": "af1678e97a90a612b214d7c77fce8e1ece604eb32b537a7f2ef132042e1628c3"
+    },
+    {
+      "path": "scripts/sprint-020-patch-001-browser-check.mjs",
+      "classification": "common",
+      "sha256": "452d1d1c75bff4e616e84eab7c26800303d7eb7395f5efdab8a41618fd0e2368"
+    },
+    {
+      "path": "scripts/sprint-020-patch-001-chatwork-result-test.mjs",
+      "classification": "common",
+      "sha256": "420bdb6b147e90d8ed2248528b9adb2c2f8a3143adbfbd04421eed830eeac249"
+    },
+    {
+      "path": "scripts/sprint-020-patch-001-copy-test.mjs",
+      "classification": "common",
+      "sha256": "76b01821e56ac617d226c13b84f40bb01e07eae93374c7708455aa7145c4b232"
+    },
+    {
+      "path": "scripts/sprint-020-patch-001-regression.sh",
+      "classification": "common",
+      "sha256": "ccd347829642b6a47f81302b32b14b4d27b6f9bbe0325da07f77b4206909abfc"
+    },
+    {
+      "path": "scripts/sprint-020-patch-002-cloud-setup-test.mjs",
+      "classification": "common",
+      "sha256": "de90b1fffcceb709e096efaa88d1f9a7149735dc004f97e7d60901cd43b31fd5"
+    },
+    {
+      "path": "scripts/sprint-020-patch-002-regression.sh",
+      "classification": "common",
+      "sha256": "ccbb1c1b91dd3067bd296e83c77c38ba8338cfa68a09336b2d154d81183a8efa"
+    },
+    {
+      "path": "scripts/sprint-020-regression.sh",
+      "classification": "common",
+      "sha256": "d70894511e51f08565ba3c9b8a3ebe73f867ccfaf4c42a12eed0e0ed54bffe4b"
+    },
+    {
+      "path": "scripts/sprint-021-git-safety-test.mjs",
+      "classification": "common",
+      "sha256": "de4da4ec450993498070fa33aa2c7da2e9597c29a42765cbe2f5e1d27cf117cd"
+    },
+    {
+      "path": "scripts/sprint-021-regression.sh",
+      "classification": "common",
+      "sha256": "1dc8acc33515a7c9b0e96847c2d316c09babf12d134bf217d2c8539ce23113b1"
+    },
+    {
+      "path": "scripts/sprint-022-regression.sh",
+      "classification": "common",
+      "sha256": "8aa6d5eb13d5d5c3d1e02b0bd17005c7e83e91440228da413ab37e734c0c288c"
+    },
+    {
+      "path": "scripts/sprint-022-safety-test.mjs",
+      "classification": "common",
+      "sha256": "3a3a2f4d79e167b47c05c450fb015b7b149a97cae85ab8f7774c0f86066b517d"
+    },
+    {
+      "path": "scripts/sprint-023-browser-check.mjs",
+      "classification": "common",
+      "sha256": "def9338e33e9307b094c9a788d81f7e72df7eebb325b35f32100a2d988ad236a"
+    },
+    {
+      "path": "scripts/sprint-023-regression.sh",
+      "classification": "common",
+      "sha256": "160685a292bce247abf70f72147e9f5750ee8c7557459e6777803ca221bade63"
+    },
+    {
+      "path": "scripts/sprint-023-security-test.mjs",
+      "classification": "common",
+      "sha256": "490e7e79181abc000365373735a120e3397d3930cf1a2fcea70d0b68d75b8868"
+    },
+    {
+      "path": "scripts/sprint-024-data-causality-test.mjs",
+      "classification": "common",
+      "sha256": "07ed927928fef130c583472978308f60a605e46aaf66ed9647d2f92db6c3077e"
+    },
+    {
+      "path": "scripts/sprint-024-regression.sh",
+      "classification": "common",
+      "sha256": "fb26f0cc385608a27053f6ef2a9d51db4afe52cf218320bcc6d2ba9cf178a270"
+    },
+    {
+      "path": "scripts/sprint-025-regression.sh",
+      "classification": "anchor-overlay",
+      "sha256": "9ad4f16c04d269a11da69c85021aa8d818cfa4f224caee2c6d0be54b8876388e"
+    },
+    {
+      "path": "scripts/sprint-026-regression.sh",
+      "classification": "common",
+      "sha256": "33b0007f8628aca3e94db3ee460a679bf0ec5129a39186882502de1cfb3036ee"
+    },
+    {
+      "path": "scripts/sprint-026-release-gate-test.mjs",
+      "classification": "common",
+      "sha256": "63e319bcc1d2bbbeade757ba9e900adfc976f77c75ea11cd56384337dda03bb3"
+    },
+    {
+      "path": "scripts/sprint-027-browser-check.mjs",
+      "classification": "common",
+      "sha256": "d96edf554d4265174b45440b130e0b9525f889c8a4ea9ce8a769ee4f3ecbc5f9"
+    },
+    {
+      "path": "scripts/sprint-027-browser-expression-test.mjs",
+      "classification": "common",
+      "sha256": "0d5b83f58184329c51c421b2ae6238e2c2a48735ad21da9f7b6cc9ea01678b28"
+    },
+    {
+      "path": "scripts/sprint-027-browser-expression.mjs",
+      "classification": "common",
+      "sha256": "ad77e43321a49c8d8241795948e99a1c215e77691e0886ad23ceeeda9460befb"
+    },
+    {
+      "path": "scripts/sprint-027-copy-test.mjs",
+      "classification": "common",
+      "sha256": "7a2cfbf9d057c75fdcc57a7c4f4150a3a94ecb99a734372e1c90a83975c31fe6"
+    },
+    {
+      "path": "scripts/sprint-027-regression.sh",
+      "classification": "common",
+      "sha256": "c9d90ac9274807f3a293ad4680c2add14bde448b9f90c298c0df03df62d65d72"
+    },
+    {
+      "path": "scripts/sprint-029-regression.sh",
+      "classification": "common",
+      "sha256": "993407b051bad9631f52b4937eeefdccc707af1b0cd459698505d66701e3fb83"
+    },
+    {
+      "path": "scripts/sprint-029-rule-boundary-test.mjs",
+      "classification": "anchor-overlay",
+      "sha256": "422ad8bc5ca186731ea8d81bb59f541715e6327edc9fc4d930e80f379103b34c"
+    },
+    {
+      "path": "scripts/sprint-030-edition-guard-test.mjs",
+      "classification": "common",
+      "sha256": "b5cd79f7c31b35b8efc8eb9f2ea4f0ad4231081838f80f1d9f91bbd9e9d5632c"
+    },
+    {
+      "path": "scripts/sprint-030-regression.sh",
+      "classification": "common",
+      "sha256": "5fd556f5539adaa3d72f5fcccbcfd984424e02a546f238b3e1754fabce9582bc"
+    },
+    {
+      "path": "scripts/sprint-030-update-config-test.mjs",
+      "classification": "common",
+      "sha256": "2cef106a11731a2a56670eea47e5f9ef77f055feddee04fb833638f5945621f4"
+    },
+    {
+      "path": "scripts/sprint-031-google-chat-file-input-browser.mjs",
+      "classification": "common",
+      "sha256": "d7d6d8de671197bcd8045aa6b2da294ace55f23a93c597690a59831928852065"
+    },
+    {
+      "path": "scripts/sprint-031-plugin-path-test.mjs",
+      "classification": "common",
+      "sha256": "c9d87676af3795c7ac91e9444454dd743b190771180ad65de8d06019941c948d"
+    },
+    {
+      "path": "scripts/sprint-031-regression.sh",
+      "classification": "common",
+      "sha256": "96672992edcb1a6285900d47ab34b17da6c4a8b756f4070528429c99438b0576"
+    },
+    {
+      "path": "scripts/sprint-032-patch-001-chatwork-browser.mjs",
+      "classification": "common",
+      "sha256": "b7031527cfaca262fe800ca55044b723238ba81445e91349f6c5a02d35b796e7"
+    },
+    {
+      "path": "scripts/sprint-032-patch-001-conversation-smoke.mjs",
+      "classification": "common",
+      "sha256": "cf86f489d60158df0b70f0045585367dccf8fb1d26eb87aa3b641cbbf071dd1b"
+    },
+    {
+      "path": "scripts/sprint-032-patch-001-readability-test.mjs",
+      "classification": "common",
+      "sha256": "81dac09ead1feaec3e9ef7bafdbd6d141e61b3b353429bbdfeb7a6a583cf6013"
+    },
+    {
+      "path": "scripts/sprint-032-patch-001-regression.sh",
+      "classification": "common",
+      "sha256": "5b125981fa95e296a7abe37c9227fbccd1ddb4e1c27a2299e55ec628cfbe470c"
+    },
+    {
+      "path": "scripts/sprint-032-patch-002-live-gate.sh",
+      "classification": "common",
+      "sha256": "1f127eb69a8b05a3232a0814ab9d64f78d7dbab78131d67b9b3208452f8b9e86"
+    },
+    {
+      "path": "scripts/sprint-032-patch-002-regression.sh",
+      "classification": "common",
+      "sha256": "299ab99f08d35fade810cf26ecb069c83c3701b4ed1809e8145802c993c64df0"
+    },
+    {
+      "path": "scripts/sprint-032-patch-002-test.mjs",
+      "classification": "common",
+      "sha256": "7f676535b83295ded3dc4337281ef78835bf06975fb7d988f41ffa8154875477"
+    },
+    {
+      "path": "scripts/sprint-032-regression.sh",
+      "classification": "common",
+      "sha256": "fb0c5d16cb5526abdd00d718a98a35ace5f127bfb576305d68318555845e0aef"
+    },
+    {
+      "path": "scripts/sprint-032-update-gate-test.mjs",
+      "classification": "common",
+      "sha256": "8cf1111c9e10b70920d44b8e7d6ab1ebc4ee5bdf5826cd4e9c300d9f9e6c69dd"
+    },
+    {
+      "path": "scripts/sprint-033-test.mjs",
+      "classification": "upstream-only",
+      "sha256": "bd7da21d29c2954ded2caf416ce5d095645db081aa42d120e24daa72f4c7f5b0"
+    },
+    {
+      "path": "scripts/sprint-035-test.mjs",
+      "classification": "common",
+      "sha256": "0676f41653b076464d670b6afb36efa7c37baf5c64e389576ead6cd6ebd8b73a"
+    },
+    {
+      "path": "scripts/start-sprint-013-wizard-fixture.sh",
+      "classification": "common",
+      "sha256": "1eb591087e0c3917e437668c04be0032d0e5fd4df891442572dc9a53869c1403"
+    },
+    {
+      "path": "scripts/start-sprint-014-wizard-fixture.sh",
+      "classification": "common",
+      "sha256": "385872b0f3d1357f1466687537e9e2038da76f70ecf69b89d684c4a2b87ba110"
+    },
+    {
+      "path": "scripts/start-sprint-020-patch-001-google-chat-fixture.mjs",
+      "classification": "common",
+      "sha256": "67bd81f2469dcfeaf27fd4b336bbdaed51bbce61e0d5f522506c228a704f56f1"
+    },
+    {
+      "path": "scripts/start-sprint-020-wizard-fixture.mjs",
+      "classification": "common",
+      "sha256": "cc89a14e15bed32fefe1984d0bab7d840229e970f1b08871ed5dd56beddc9619"
+    }
+  ]
+}

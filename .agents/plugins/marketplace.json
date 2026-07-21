@@ -1,0 +1,20 @@
+{
+  "name": "yasashii-secretary",
+  "interface": {
+    "displayName": "Yasashii Secretary"
+  },
+  "plugins": [
+    {
+      "name": "yasashii-secretary",
+      "source": {
+        "source": "local",
+        "path": "./plugins/secretary"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

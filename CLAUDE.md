@@ -12,7 +12,7 @@ Claude Codeを使う一般の非エンジニア向けAI秘書プラグイン
 
 ## リポジトリ境界
 
-- 秘書本体の配布物は `plugins/yasashii-secretary/`。
+- 秘書本体の配布物は `plugins/secretary/`。
 - 開発ハーネスは別リポジトリ `mtaiseeei/yasashii-harness` が正本。本体には `harness/` や Planner / Generator / Evaluator のagentsを同梱しない。
 - `/Users/taisei/workspace/agentic-harness` と `~/workspace/agentic-harness` は、**読み取りを含む全面接触禁止**。
   編集、存在確認、一覧、status / HEAD / branch / remote 確認、checkout / switch、commit、生成物作成、
@@ -33,6 +33,10 @@ Claude Codeを使う一般の非エンジニア向けAI秘書プラグイン
 - 子Agent作成前の `Unknown model` または不正effortだけをlaunch rejectionとしてresolverへ戻す。
   `unknown field` はその適用経路が使えないことを意味する。resolver出力だけでは実起動の証拠にならず、
   child host metadataが指定値と一致した場合だけ `launch-verified` とする。Terraや `codex exec` へ自動fallbackしない。
+- Harness 0.5.0では、`Lineage Dispatches` は10、同一Sprintの `Spec-Issue Count` は2で停止する。
+  `verification-scope-issue` は検証基盤だけの問題としてユーザーへ選択肢を返し、product findingと分ける。
+  契約済み証拠をsafe harborとして、変更面だけ増分再評価し、同一candidateの有効な証拠を条件付きで再利用する。
+  active Sprintの基準変更はユーザー承認が必要で、`done-by-user-decision` は未達を残した明示受入にだけ使う。
 
 ## 報告
 

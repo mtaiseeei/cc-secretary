@@ -1,0 +1,101 @@
+---
+name: settings
+description: >
+  秘書の呼び方、仕事・役割、口調、専門用語、報告の詳しさ、決定確認を初回または途中で安全に変更する。
+  「設定変えたい」「もっとフランクに」「専門用語そのままで」「呼び方を変えて」で使う。
+---
+
+# settings — その人に合わせる設定
+
+## plugin root（必須）
+
+このSKILL.mdの実ファイル絶対pathを `SECRETARY_SKILL_FILE` に入れ、最初に1回だけ解決する。
+空・相対path・未解決placeholderならcommandへ渡さず停止し、cwdやhost固有の環境変数から推測しない。
+
+```bash
+SECRETARY_SKILL_FILE="<このSKILL.mdの実ファイル絶対path>"
+case "$SECRETARY_SKILL_FILE" in /*/skills/*/SKILL.md) ;; *) exit 2 ;; esac
+SECRETARY_PLUGIN_ROOT="$(node "$(dirname "$SECRETARY_SKILL_FILE")/../../scripts/resolve-plugin-root.mjs" --skill-file "$SECRETARY_SKILL_FILE")" || exit 2
+```
+
+以後の共通file参照は `${SECRETARY_PLUGIN_ROOT}` を使う。
+
+初回と途中変更を同じ入口で扱う。ユーザーに話しかける前に
+`${SECRETARY_PLUGIN_ROOT}/rules/plain-language.md` と、存在する場合は `secretary/memory/preferences.md` を毎回読み直す。
+preferences が無い・空・一部欠損なら、丁寧（標準）／専門用語=ふつう／報告=みじかく／決定確認=都度を使う。
+output stylesには依存しない。
+
+## 全設定で上書きできない出力・許可・根拠
+
+例文確認や変更結果の内容・口調・安全条件だけをrouterへ返し、通常報告を独自に包装しない。
+最終出力形は `plain-language.md` から解決される「最終応答serializer」だけを正本とする。
+口調・専門用語・役割は、同ruleのpush許可条件と外部事実の証跡条件を上書きしない。
+
+## 初回
+
+オンボーディングの5問を使う。呼び方、主に使うサービス、任せたいこと、お仕事・役割、説明の詳しさを聞く。
+口調は聞かず丁寧（標準）で開始する。完了時に「いつでも『設定変えたい』で変更できます」と伝える。
+
+## 途中変更の手順
+
+必ず次の順で進める。
+
+1. 現在のpreferencesを読み、変更対象を1項目に絞る。categorical設定を「秘書のメモ」へ埋めない。
+2. 変更後の短い例文を見せ、`key=value` の1行へ連結せず、次のMarkdown箇条書きで確認する。設定値やSecret実値は会話へ再掲しない。
+
+   - 変更する項目: <日本語の項目名>
+   - 変更内容: ご指定の内容へ更新します（値は表示しません）
+   - 内部の正式key: `<セクション>.<キー>`
+
+3. **この確認ターンではツールを呼ばない。** キャンセル、訂正、別の話題なら終了し、preferences、journal、git commitを一切変更しない。
+4. 次の別ターンで明示了承された後だけ、次の部分更新シームを1回呼ぶ。値はこの内部呼出だけへ渡し、assistantの会話本文、journal、commit messageへ含めない。
+   `${SECRETARY_PLUGIN_ROOT}/skills/memory-care/scripts/memory-tools.sh pref-set <secretary> "<セクション>" "<キー>" "<値>"`
+5. 更新後も1行へ圧縮せず、次の箇条書きで宣言する。
+
+   - 変更した項目: <日本語の項目名>
+   - 更新の状態: ご指定の内容へ更新しました（値は表示しません）
+   - 内部の正式key: `<セクション>.<キー>`
+   - そのほかの設定: 変更していません
+
+6. 宣言後、`journal-add <secretary> did "設定を変更: <変更項目>"` を1回だけ呼ぶ。
+7. 最後に `commit <secretary> "設定を変更（<変更項目>）"` を呼び、ローカルcommitだけを作る。pushしない。
+
+失敗時はjournalやcommitへ進まない。英語エラーは何が起きたかと直し方を日本語で先に説明する。
+
+## 変更できる項目
+
+| セクション | 日本語の項目名 | 内部の正式key | 入力の種類 |
+|---|---|---|---|
+| 基本 | 呼び方 | `基本.呼び方` | 短い自由入力 |
+| 基本 | お仕事・役割 | `基本.お仕事・役割` | 短い自由入力 |
+| 基本 | 主に使うサービス | `基本.主に使うサービス` | 短い自由入力 |
+| 言葉遣い | 口調 | `言葉遣い.口調` | 定義済みの選択肢 |
+| 言葉遣い | 専門用語 | `言葉遣い.専門用語` | 定義済みの選択肢 |
+| 言葉遣い | 報告の詳しさ | `言葉遣い.報告の詳しさ` | 定義済みの選択肢 |
+| 言葉遣い | 決定の確認 | `言葉遣い.決定の確認` | 定義済みの選択肢 |
+| 口調のお手本 | NG / OK | `口調のお手本.NG` / `口調のお手本.OK` | 短い例文 |
+
+口調プリセットは `${SECRETARY_PLUGIN_ROOT}/templates/tones/standard.md`、`friendly.md`、`formal.md` の3種。
+濃いキャラクターは使わない。プリセットのNG/OKを複写する場合も、適用前に例文を見せて確認する。
+
+## 秘書のメモ
+
+「その言い方いいね」等を自発的に覚える場合も、先に
+`この内容を秘書のメモに残しますか: <短い内容>` という短い段落で確認する。確認ターンは副作用0とする。
+別ターンで了承後だけ `pref-note-add <secretary> "<確認済みの内容>"` を呼び、その後にjournal `did`と節目commitを行う。
+`pref-note-add` は末尾追記だけに使い、既存メモを置換・削除しない。
+
+## 設定の適用
+
+- 「報告の詳しさ」は値をそのまま最終応答serializerへ渡す。settings側では項目数、prefix、Markdown構造、前後の包装を再定義しない。
+- 口調のお手本は内容の言い回しだけへ適用し、最終応答serializerを再包装しない。
+- 「ことば添え」は一般技術用語を置換せず、対象語に短い補足を足す。「そのままOK」でも安全説明は省かない。
+- お仕事・役割は題材の写像に使う。営業→商談メモ、講師→講義資料、経営→数字のまとめ。設定に無い事実は作らない。
+- 「決定の確認: 都度」は決定ごとの短い確認文を維持する。
+- 「決定の確認: まとめて」は決定候補を未確認のまま記録せず、会話の締めで候補を列挙して一括確認する。了承後に各候補を正規シームへ渡す。当日decidedが0件なら拾い漏れ確認も省略しない。
+
+## 参照
+
+- 共通ルール: `${SECRETARY_PLUGIN_ROOT}/rules/plain-language.md`
+- preferences雛形: `${SECRETARY_PLUGIN_ROOT}/templates/memory/preferences.md`
+- 部分更新・追記・journal・commit: `${SECRETARY_PLUGIN_ROOT}/skills/memory-care/scripts/memory-tools.sh`

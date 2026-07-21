@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "defaultUpstreamClassification": "common",
+  "metadataOverlay": [
+    ".agents/plugins/marketplace.json",
+    ".claude-plugin/marketplace.json",
+    "plugins/secretary/.claude-plugin/plugin.json",
+    "plugins/secretary/.codex-plugin/plugin.json",
+    "plugins/secretary/edition.json",
+    "plugins/secretary/rules/rule-manifest.json"
+  ],
+  "anchorOverlay": [
+    "plugins/secretary/rules/plain-language.md",
+    "plugins/secretary/rules/styles/yasashii.md",
+    "plugins/secretary/skills/build/SKILL.md",
+    "plugins/secretary/skills/projects/SKILL.md",
+    "plugins/secretary/skills/secretary/SKILL.md",
+    "plugins/secretary/skills/settings/SKILL.md",
+    "plugins/secretary/skills/update/SKILL.md",
+    "scripts/regression-check.sh",
+    "scripts/sprint-011-regression.sh",
+    "scripts/sprint-025-regression.sh",
+    "scripts/sprint-029-rule-boundary-test.mjs"
+  ],
+  "upstreamOnly": [
+    ".agents/**",
+    "adapters/**",
+    "plugins/secretary/.codex-plugin/**",
+    "plugins/secretary/rules/copy/agentic.json",
+    "plugins/secretary/rules/styles/agentic.md",
+    "scripts/agentic-*",
+    "scripts/lib/agentic-hosts.mjs",
+    "scripts/sprint-033-test.mjs",
+    "scripts/archive-release-gate.mjs",
+    "scripts/check-release-integrity.py"
+  ]
+}

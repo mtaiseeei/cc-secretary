@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Portable release gate for the 0.7.0 distribution.
+ * Portable release gate for the current 0.8.0 release candidate.
  *
  * The gate deliberately keeps the checkout-only and archive-compatible paths
  * separate.  A suite that cannot run without Git is recorded as skipped in an
@@ -9,7 +9,7 @@
  */
 
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -41,6 +41,24 @@ function parseArgs(argv) {
 
 function now() { return new Date().toISOString(); }
 
+// live conversation gate（実plugin sessionの会話出力の回帰確認）はこのgateから分離されている。
+// このgateのoffline判定は実会話を要求しないが、live gateの状態は明示行として表示し、
+// 未実行（incomplete）を総合表示で隠さない。offline PASS・構文チェックを実会話回帰の
+// 保証として数えない。状態の正本は scripts/sprint-032-patch-002-live-gate.sh の記録。
+function liveConversationGateStatus() {
+  const tmpBase = process.env.TMPDIR && process.env.TMPDIR.startsWith("/private/tmp")
+    ? process.env.TMPDIR
+    : "/private/tmp";
+  const statusPath = join(tmpBase, "sprint-032-patch-002-live-gate-latest.json");
+  try {
+    const parsed = JSON.parse(readFileSync(statusPath, "utf8"));
+    if (["pass", "fail", "incomplete"].includes(parsed.status)) {
+      return { status: parsed.status, recordedAt: parsed.recordedAt ?? null, source: statusPath, countedInThisGate: false };
+    }
+  } catch { /* 記録なし＝未実行（incomplete） */ }
+  return { status: "incomplete", recordedAt: null, source: null, countedInThisGate: false };
+}
+
 function gitCheckout(root) {
   return existsSync(join(root, ".git"));
 }
@@ -58,6 +76,12 @@ function defaultInventory(root, mode) {
       { id: "sprint-023-git-diff", excluded: true, reason: "archive has no Git checkout; diff assertion is checkout-only", archive: false },
       { id: "sprint-024-git-diff", excluded: true, reason: "archive has no Git checkout; diff assertion is checkout-only", archive: false },
       { id: "sprint-027-focus-copy", command: "bash", args: [script("sprint-027-regression.sh")], archive: true },
+      { id: "sprint-029-rule-boundary", command: "bash", args: [script("sprint-029-regression.sh")], archive: true },
+      { id: "sprint-030-edition-guard", command: "bash", args: [script("sprint-030-regression.sh")], archive: true },
+      { id: "sprint-031-plugin-path", command: "bash", args: [script("sprint-031-regression.sh")], archive: true },
+      { id: "sprint-032-release-preparation", excluded: true, reason: "published 0.7.0 history and its known scanner blocker are checkout-only evidence", archive: false },
+      { id: "sprint-032-patch-001-readability", command: "bash", args: [script("sprint-032-patch-001-regression.sh")], archive: true },
+      { id: "sprint-032-patch-002-conversation-safety", command: "bash", args: [script("sprint-032-patch-002-regression.sh")], archive: true },
     ];
   }
   // The existing regression-check is the long-lived master suite.  The two
@@ -68,6 +92,12 @@ function defaultInventory(root, mode) {
     { id: "sprint-015-projects", command: "bash", args: [script("sprint-015-regression.sh")], archive: false },
     { id: "sprint-020-patch-002-cloud", command: "bash", args: [script("sprint-020-patch-002-regression.sh")], archive: false },
     { id: "sprint-027-focus-copy", command: "bash", args: [script("sprint-027-regression.sh")], archive: false },
+    { id: "sprint-029-rule-boundary", command: "bash", args: [script("sprint-029-regression.sh")], archive: false },
+    { id: "sprint-030-edition-guard", command: "bash", args: [script("sprint-030-regression.sh")], archive: false },
+    { id: "sprint-031-plugin-path", command: "bash", args: [script("sprint-031-regression.sh")], archive: false },
+    { id: "sprint-032-release-preparation", command: "bash", args: [script("sprint-032-regression.sh")], archive: false },
+    { id: "sprint-032-patch-001-readability", command: "bash", args: [script("sprint-032-patch-001-regression.sh")], archive: false },
+    { id: "sprint-032-patch-002-conversation-safety", command: "bash", args: [script("sprint-032-patch-002-regression.sh")], archive: false },
     { id: "master-regression-check", command: "bash", args: [script("regression-check.sh"), modeArg], archive: false },
   ];
 }
@@ -177,16 +207,16 @@ function archiveAssertions(root) {
   const check = (id, ok, reason = "") => checks.push({ id, ok: Boolean(ok), reason });
   check("archive has no .git", !gitCheckout(root), "Git archive mode must not run against a checkout");
   const marketPath = join(root, ".claude-plugin", "marketplace.json");
-  const pluginPath = join(root, "plugins", "yasashii-secretary", ".claude-plugin", "plugin.json");
+  const pluginPath = join(root, "plugins", "secretary", ".claude-plugin", "plugin.json");
   try {
     const market = JSON.parse(readFileSync(marketPath, "utf8"));
     const plugin = JSON.parse(readFileSync(pluginPath, "utf8"));
     const entry = market.plugins?.[0] || {};
-    check("marketplace version 0.7.0", entry.version === "0.7.0");
-    check("plugin version 0.7.0", plugin.version === "0.7.0");
+    check("marketplace version 0.8.0", entry.version === "0.8.0");
+    check("plugin version 0.8.0", plugin.version === "0.8.0");
     check("author and MIT metadata", JSON.stringify(entry.author) === JSON.stringify({ name: "mtaiseeei" }) && JSON.stringify(plugin.author) === JSON.stringify({ name: "mtaiseeei" }) && entry.license === "MIT" && plugin.license === "MIT");
     check("single fork credit", entry.forkedFrom === "https://github.com/Shin-sibainu/cc-company");
-    check("plugin source exists", entry.source === "./plugins/yasashii-secretary" && existsSync(join(root, entry.source.slice(2))));
+    check("plugin source exists", entry.source === "./plugins/secretary" && existsSync(join(root, entry.source.slice(2))));
   } catch (error) {
     check("distribution manifests parse", false, error.message);
   }
@@ -205,7 +235,13 @@ function archiveAssertions(root) {
       validator.error?.message || output || `exit=${validator.status}`,
     );
   }
-  check("CHANGELOG exists", existsSync(join(root, "plugins", "yasashii-secretary", "CHANGELOG.md")));
+  const canonicalChangelog = join(root, "plugins", "secretary", "CHANGELOG.md");
+  const legacyRoot = join(root, "plugins", "yasashii-secretary");
+  const legacyChangelog = join(legacyRoot, "CHANGELOG.md");
+  check("canonical CHANGELOG exists", existsSync(canonicalChangelog));
+  check("legacy path contains only CHANGELOG", existsSync(legacyChangelog) && readdirSync(legacyRoot).join("\0") === "CHANGELOG.md");
+  check("canonical and legacy CHANGELOG bytes match", existsSync(canonicalChangelog) && existsSync(legacyChangelog) && readFileSync(canonicalChangelog).equals(readFileSync(legacyChangelog)));
+  check("0.7.0 to 0.8.0 migration exists", existsSync(join(root, "plugins", "secretary", "migrations", "0.7.0-to-0.8.0.json")));
   return checks;
 }
 
@@ -232,9 +268,12 @@ async function main() {
   const excluded = results.filter((result) => result.status === "excluded");
   const failed = required.filter((result) => result.status !== "pass");
   const archiveFailed = archiveChecks.filter((check) => !check.ok);
+  const liveGate = liveConversationGateStatus();
   const report = {
     schemaVersion: 1, mode: args.mode, root, checkout, startedAt, endedAt: now(),
     inventory: results.map(({ stdout, stderr, ...result }) => result),
+    // 分離されたlive conversation gateの状態。このgateの合否には数えない（第三状態のまま可視化）。
+    liveConversationGate: liveGate,
     archiveChecks, totals: {
       suites: results.length, required: required.length, passed: required.filter((result) => result.status === "pass").length,
       failed: failed.length, skipped: skipped.length, excluded: excluded.length, assertions: required.reduce((sum, result) => sum + result.assertions, 0),
@@ -243,7 +282,8 @@ async function main() {
     status: failed.length === 0 && archiveFailed.length === 0 ? "pass" : "fail",
   };
   if (args.json) writeFileSync(args.json, `${JSON.stringify(report, null, 2)}\n`);
-  console.log(`\nRELEASE_GATE mode=${args.mode} status=${report.status} suites=${report.totals.suites} required=${report.totals.required} passed=${report.totals.passed} failed=${report.totals.failed} skipped=${report.totals.skipped} assertions=${report.totals.assertions} pass=${report.totals.pass} fail=${report.totals.fail}`);
+  console.log(`\nLIVE_CONVERSATION_GATE status=${liveGate.status}${liveGate.recordedAt ? ` recordedAt=${liveGate.recordedAt}` : ""} separate=true note=実会話回帰はこのgateの合否に含めない（offline判定・構文チェックは実会話の回帰保証ではない）。実行は bash scripts/sprint-032-patch-002-live-gate.sh`);
+  console.log(`RELEASE_GATE mode=${args.mode} status=${report.status} suites=${report.totals.suites} required=${report.totals.required} passed=${report.totals.passed} failed=${report.totals.failed} skipped=${report.totals.skipped} assertions=${report.totals.assertions} pass=${report.totals.pass} fail=${report.totals.fail}`);
   process.exitCode = report.status === "pass" ? 0 : 1;
 }
 
