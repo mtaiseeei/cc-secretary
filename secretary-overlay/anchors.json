@@ -44,6 +44,24 @@
       "replacement": "# 1. やさしいハーネスの配布元を登録する\n/plugin marketplace add mtaiseeei/yasashii-harness\n\n# 2. harness プラグインを入れる\n/plugin install harness@yasashii-harness"
     },
     {
+      "id": "build-claude-id-copy",
+      "path": "plugins/secretary/skills/build/SKILL.md",
+      "match": "Claude CodeではMarketplace `agentic-harness`、install ID `harness@agentic-harness` を使います。",
+      "replacement": "Claude CodeではMarketplace `yasashii-harness`、install ID `harness@yasashii-harness` を使います。"
+    },
+    {
+      "id": "build-codex-install-block",
+      "path": "plugins/secretary/skills/build/SKILL.md",
+      "match": "codex plugin marketplace add mtaiseeei/agentic-harness\n\n# 2. harness プラグインを入れる\ncodex plugin add harness@agentic-harness-local",
+      "replacement": "codex plugin marketplace add mtaiseeei/yasashii-harness\n\n# 2. harness プラグインを入れる\ncodex plugin add harness@yasashii-harness"
+    },
+    {
+      "id": "build-codex-id-copy",
+      "path": "plugins/secretary/skills/build/SKILL.md",
+      "match": "CodexではMarketplace `agentic-harness-local`、install ID `harness@agentic-harness-local` を使います。",
+      "replacement": "CodexではMarketplace `yasashii-harness`、install ID `harness@yasashii-harness` を使います。"
+    },
+    {
       "id": "build-progress-copy",
       "path": "plugins/secretary/skills/build/SKILL.md",
       "match": "進行はPlanner → Generator → Evaluatorのどこにいるかを示します。Generatorの自己評価だけで完了にせず、\nEvaluatorの合格と状態記録まで行います。役割分離、評価閾値、回帰ゼロ許容は緩めません。",
@@ -52,14 +70,14 @@
     {
       "id": "build-reference-label",
       "path": "plugins/secretary/skills/build/SKILL.md",
-      "match": "- Agentic Harness: `https://github.com/mtaiseeei/agentic-harness`",
-      "replacement": "- やさしいハーネス: `https://github.com/mtaiseeei/yasashii-harness`"
+      "match": "- Agentic Harness 0.5.0: `https://github.com/mtaiseeei/agentic-harness`",
+      "replacement": "- やさしいハーネス 0.5.0: `https://github.com/mtaiseeei/yasashii-harness`"
     },
     {
       "id": "projects-harness",
       "path": "plugins/secretary/skills/projects/SKILL.md",
-      "match": "`harness@agentic-harness`",
-      "replacement": "`harness@yasashii-harness`"
+      "match": "Agentic版ではClaude Codeが `harness@agentic-harness` の `/harness`、Codexが\n`harness@agentic-harness-local` の `$using-harness` または `$harness-loop` を使う。",
+      "replacement": "Yasashii版ではClaude Codeが `harness@yasashii-harness` の `/harness`、Codexも\n`harness@yasashii-harness` の `$using-harness` または `$harness-loop` を使う。"
     },
     {
       "id": "secretary-heading",
@@ -76,8 +94,8 @@
     {
       "id": "settings-confirmation-display",
       "path": "plugins/secretary/skills/settings/SKILL.md",
-      "match": "2. 変更後の短い例文を見せ、最後に `この設定で反映しますか: <変更項目>=<値>` と確認する。\n3. **この確認ターンではツールを呼ばない。** キャンセル、訂正、別の話題なら終了し、preferences、journal、git commitを一切変更しない。\n4. 次の別ターンで明示了承された後だけ、次の部分更新シームを1回呼ぶ。\n   `${CLAUDE_PLUGIN_ROOT}/skills/memory-care/scripts/memory-tools.sh pref-set <secretary> \"<セクション>\" \"<キー>\" \"<値>\"`\n5. `こう覚えました: <変更項目>=<値>` と宣言する。他項目を変えていないことも短く伝える。\n6. 宣言後、`journal-add <secretary> did \"設定を変更: <変更項目>=<値>\"` を1回だけ呼ぶ。\n7. 最後に `commit <secretary> \"設定を変更（<変更項目>: <値>）\"` を呼び、ローカルcommitだけを作る。pushしない。",
-      "replacement": "2. 変更後の短い例文を見せ、`key=value` の1行へ連結せず、次のMarkdown箇条書きで確認する。設定値やSecret実値は会話へ再掲しない。\n\n   - 変更する項目: <日本語の項目名>\n   - 変更内容: ご指定の内容へ更新します（値は表示しません）\n   - 内部の正式key: `<セクション>.<キー>`\n\n3. **この確認ターンではツールを呼ばない。** キャンセル、訂正、別の話題なら終了し、preferences、journal、git commitを一切変更しない。\n4. 次の別ターンで明示了承された後だけ、次の部分更新シームを1回呼ぶ。値はこの内部呼出だけへ渡し、assistantの会話本文、journal、commit messageへ含めない。\n   `${CLAUDE_PLUGIN_ROOT}/skills/memory-care/scripts/memory-tools.sh pref-set <secretary> \"<セクション>\" \"<キー>\" \"<値>\"`\n5. 更新後も1行へ圧縮せず、次の箇条書きで宣言する。\n\n   - 変更した項目: <日本語の項目名>\n   - 結果: ご指定の内容へ更新しました（値は表示しません）\n   - 内部の正式key: `<セクション>.<キー>`\n   - そのほかの設定: 変更していません\n\n6. 宣言後、`journal-add <secretary> did \"設定を変更: <変更項目>\"` を1回だけ呼ぶ。\n7. 最後に `commit <secretary> \"設定を変更（<変更項目>）\"` を呼び、ローカルcommitだけを作る。pushしない。"
+      "match": "2. 変更後の短い例文を見せ、最後に `この設定で反映しますか: <変更項目>=<値>` と確認する。\n3. **この確認ターンではツールを呼ばない。** キャンセル、訂正、別の話題なら終了し、preferences、journal、git commitを一切変更しない。\n4. 次の別ターンで明示了承された後だけ、次の部分更新シームを1回呼ぶ。\n   `${SECRETARY_PLUGIN_ROOT}/skills/memory-care/scripts/memory-tools.sh pref-set <secretary> \"<セクション>\" \"<キー>\" \"<値>\"`\n5. `こう覚えました: <変更項目>=<値>` と宣言する。他項目を変えていないことも短く伝える。\n6. 宣言後、`journal-add <secretary> did \"設定を変更: <変更項目>=<値>\"` を1回だけ呼ぶ。\n7. 最後に `commit <secretary> \"設定を変更（<変更項目>: <値>）\"` を呼び、ローカルcommitだけを作る。pushしない。",
+      "replacement": "2. 変更後の短い例文を見せ、`key=value` の1行へ連結せず、次のMarkdown箇条書きで確認する。設定値やSecret実値は会話へ再掲しない。\n\n   - 変更する項目: <日本語の項目名>\n   - 変更内容: ご指定の内容へ更新します（値は表示しません）\n   - 内部の正式key: `<セクション>.<キー>`\n\n3. **この確認ターンではツールを呼ばない。** キャンセル、訂正、別の話題なら終了し、preferences、journal、git commitを一切変更しない。\n4. 次の別ターンで明示了承された後だけ、次の部分更新シームを1回呼ぶ。値はこの内部呼出だけへ渡し、assistantの会話本文、journal、commit messageへ含めない。\n   `${SECRETARY_PLUGIN_ROOT}/skills/memory-care/scripts/memory-tools.sh pref-set <secretary> \"<セクション>\" \"<キー>\" \"<値>\"`\n5. 更新後も1行へ圧縮せず、次の箇条書きで宣言する。\n\n   - 変更した項目: <日本語の項目名>\n   - 結果: ご指定の内容へ更新しました（値は表示しません）\n   - 内部の正式key: `<セクション>.<キー>`\n   - そのほかの設定: 変更していません\n\n6. 宣言後、`journal-add <secretary> did \"設定を変更: <変更項目>\"` を1回だけ呼ぶ。\n7. 最後に `commit <secretary> \"設定を変更（<変更項目>）\"` を呼び、ローカルcommitだけを作る。pushしない。"
     },
     {
       "id": "settings-key-table",

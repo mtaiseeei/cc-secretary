@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "baseCommit": "467043802ea030b67d092d86761caffa84675d61",
+  "baseCommit": "f1fddea77db823c2b1826ac11c1d3eedf6770cf9",
   "files": [
     {
       "path": ".agents/plugins/marketplace.json",
-      "classification": "upstream-only",
+      "classification": "metadata-overlay",
       "sha256": "394ab3ba0b4ea96ea48cf0eeaf9637e25b5388096c89889d45fedd2c0e4f85b0"
     },
     {
@@ -20,17 +20,17 @@
     {
       "path": ".harness/config.toml",
       "classification": "repo-owned",
-      "sha256": "e30644aca11eaedb1ab8552b41cd337a7154817fc611d3af2ccc8fefcd5e7949"
+      "sha256": "bd6a3bb19633857d743048a579590f14781c1c66138e2032d73b14b1471c3290"
     },
     {
       "path": "AGENTS.md",
       "classification": "repo-owned",
-      "sha256": "a667d4d7bad1224619ed3c25d20bfbf4c714d54593dd54c2ba3311463fe2ef4c"
+      "sha256": "dd4343eb57b108bc54f867f458040d3315060da4ccf3df476106323401f7b5da"
     },
     {
       "path": "CLAUDE.md",
       "classification": "repo-owned",
-      "sha256": "bb68c13e6c55c3a9e6b674ac8a36b29d71fbc1c4e7be3294a8b6fc51acd9da10"
+      "sha256": "c3a54954910197d467bdd9aaf5bd21de47871fdac2a50ef6c697569b033452f6"
     },
     {
       "path": "LICENSE",
@@ -40,12 +40,12 @@
     {
       "path": "README.md",
       "classification": "repo-owned",
-      "sha256": "c1ed8b687ca8662a07a5e9e1a7cdfcd24190bffecc42e2d1a987ccfafbc017b6"
+      "sha256": "3ce8027c5be58c83fc36857b86eae59d4c2daa54fc41723e5055ddcd400df5ac"
     },
     {
       "path": "adapters/agentic-overlay.json",
       "classification": "upstream-only",
-      "sha256": "577c7f07032970774454f88fca10b250acb6221e4890393c9923e989f5598170"
+      "sha256": "3ab62ce47335ec2b1aedfa61fa8d70fdbdb761feb749f2aa9bf470d8a0e3e7b3"
     },
     {
       "path": "adapters/claude-code-cli/README.md",
@@ -55,7 +55,7 @@
     {
       "path": "adapters/claude-code-cli/adapter.json",
       "classification": "upstream-only",
-      "sha256": "e7081fda1f8d9f32c4bf2b486ff3f492733803374f99452eebafaa38ac00b6b6"
+      "sha256": "46b573b5c2b5f2c18c495ea0c138ba2509858ac2ac616be6c5d076c88561b9d3"
     },
     {
       "path": "adapters/claude-code-desktop-app/README.md",
@@ -65,7 +65,7 @@
     {
       "path": "adapters/claude-code-desktop-app/adapter.json",
       "classification": "upstream-only",
-      "sha256": "ff1ad09c3ff0fb0b92e86893867355f2d8b3c9c704f6aabfcc7c5bffc898daa6"
+      "sha256": "29d9b6a0ac3aeb421fe98f6137b979e0e3dd189ed4b89af1569fb4095e5323bd"
     },
     {
       "path": "adapters/codex-app/README.md",
@@ -75,7 +75,7 @@
     {
       "path": "adapters/codex-app/adapter.json",
       "classification": "upstream-only",
-      "sha256": "59a04a7ab4b71b3a25d27439d4d3a6b278990f8441aa04b26cb2d9c7552b22d1"
+      "sha256": "3fe3fa69f8030a434f8dfbca31046f8350525407328cff1b0caa5d81ce1524c1"
     },
     {
       "path": "adapters/codex-cli/README.md",
@@ -85,12 +85,12 @@
     {
       "path": "adapters/codex-cli/adapter.json",
       "classification": "upstream-only",
-      "sha256": "7dd2407ed27151af279277c7c637830f39fcf823a6e0d4209aa1d7d0829354e4"
+      "sha256": "3fc822366604e728911a5f6826eb81eb8c99d42ce663a046018aa6bb6375ae78"
     },
     {
       "path": "adapters/codex-common/AGENTS.md",
       "classification": "upstream-only",
-      "sha256": "505c98bbe4f91929ec7a2e30c87e97eade3e2c57dc81e2b0e75fd4b30844ab05"
+      "sha256": "6587cba03540d6357345a6ec9fa89d53e5de9e6e367a5e92d08ab0649a127648"
     },
     {
       "path": "adapters/codex-common/config.toml.example",
@@ -100,7 +100,7 @@
     {
       "path": "adapters/host-matrix.json",
       "classification": "upstream-only",
-      "sha256": "7baacef508e39c2ddf2eb63f6d4110c5ccf5dfcf3b5406c590950839ae6515ed"
+      "sha256": "8013c6932458c73e89906178fab326841804ad6fce1bd2ebbfa71882c3a45aec"
     },
     {
       "path": "adapters/neutral-base.json",
@@ -1390,7 +1390,7 @@
     {
       "path": "docs/harness-guidance.md",
       "classification": "repo-owned",
-      "sha256": "d46a2b872fe138fb9986acce92c81fb123b641bdbbea5404722072e1902876fa"
+      "sha256": "926989bf92384b3df21e420f0926a8727f9ba364fab37831443dcad35e24c155"
     },
     {
       "path": "docs/progress/sprint-001-patch-001.md",
@@ -1879,7 +1879,7 @@
     },
     {
       "path": "plugins/secretary/.codex-plugin/plugin.json",
-      "classification": "upstream-only",
+      "classification": "metadata-overlay",
       "sha256": "9d95c9d09f6f5ab93e0e7f0fdd1b49cedfcce8ac8f244501a1e9e32b8554a38e"
     },
     {
@@ -1895,7 +1895,12 @@
     {
       "path": "plugins/secretary/edition.json",
       "classification": "metadata-overlay",
-      "sha256": "c13a48147839c406423e8e8d73fbab8e5367db8c24db5ef616c09d1fa003b4c2"
+      "sha256": "35b619730385aa959888332f8df6b6bc933b0d5d8d451d3e1f305f3ea8af213f"
+    },
+    {
+      "path": "plugins/secretary/host-inventory.json",
+      "classification": "common",
+      "sha256": "46727ec6c26fdc839ec99122f60ac575cdea583178dd64abdffa799e962ab926"
     },
     {
       "path": "plugins/secretary/migrations/0.2.0-to-0.3.0.json",
@@ -2060,7 +2065,12 @@
     {
       "path": "plugins/secretary/scripts/project-tools.mjs",
       "classification": "common",
-      "sha256": "e35dfb3f38ceddc055a40ead7f2154ca1e6916230d5d5d81c834cb184d2cc715"
+      "sha256": "c0d49d6601583a978fcd3ee8ba16a030a06fd23673f2d372054728856fef2027"
+    },
+    {
+      "path": "plugins/secretary/scripts/resolve-plugin-root.mjs",
+      "classification": "common",
+      "sha256": "2b2ad03bc337373deded23a6fe0ccccd9e6b58355f0c31a3eed74ad246b645c1"
     },
     {
       "path": "plugins/secretary/scripts/safe-external.mjs",
@@ -2100,12 +2110,12 @@
     {
       "path": "plugins/secretary/skills/build/SKILL.md",
       "classification": "anchor-overlay",
-      "sha256": "06890abf7336874d86ece9e7187e0667b0aec4b632b2089c4d46db3814b5af16"
+      "sha256": "c00de40d122a5146547fdcdd4a9e477eee55c7bd3221ee686bdeb816f63f1001"
     },
     {
       "path": "plugins/secretary/skills/chatwork/SKILL.md",
       "classification": "common",
-      "sha256": "a13ca1141ace7951faeab8fa68c5deb9d870a1b7f65daa002affa36571d3c106"
+      "sha256": "be773dbfb68ad995927d3b1cca48280d8c239418d2c6c8e46299fdc49ce4cd02"
     },
     {
       "path": "plugins/secretary/skills/chatwork/assets/wizard/app.js",
@@ -2160,17 +2170,17 @@
     {
       "path": "plugins/secretary/skills/connections/SKILL.md",
       "classification": "common",
-      "sha256": "2e6c07231f652fa050b3a8acab7678d1ada1559e5ddc7ea014e8a14bc4404e15"
+      "sha256": "77885d780506773b3cad5dd8417b8506dcdfbf376a5e6b2a23ecdbad5754153f"
     },
     {
       "path": "plugins/secretary/skills/daily/SKILL.md",
       "classification": "common",
-      "sha256": "8cf5e631f8668f31cc50c5f64416462688a601ed2a0170ee1d1103afd036b23a"
+      "sha256": "369fc8b0802039d5b8b98fe50bde4d27ba1b7acfabd88924ff5e0507ffd7d99b"
     },
     {
       "path": "plugins/secretary/skills/google-chat/SKILL.md",
       "classification": "common",
-      "sha256": "8f2a6147ca0238da2500144a9586f619f6bfa7650227ab5eb99b85ce96669442"
+      "sha256": "1eb2dd83cd0529b5a6b37ad2b9a08f9cc67973018d9c69530430ba8f0fadcfdf"
     },
     {
       "path": "plugins/secretary/skills/google-chat/assets/wizard/app.js",
@@ -2250,7 +2260,7 @@
     {
       "path": "plugins/secretary/skills/memory-care/SKILL.md",
       "classification": "common",
-      "sha256": "3be464d8517de70024dcc9161e6c9debf4a8cbe6f1a10e87c7b66288d0cc70f3"
+      "sha256": "71e0968627d02bc1b65e3564426879c2903c26fe2b6b054d2324393cc30d48c0"
     },
     {
       "path": "plugins/secretary/skills/memory-care/scripts/memory-tools.sh",
@@ -2260,47 +2270,47 @@
     {
       "path": "plugins/secretary/skills/onboarding/SKILL.md",
       "classification": "common",
-      "sha256": "93c7f8532b128a50201f955d1f649ab8523b1664742d8b40b10b81b48c34ac26"
+      "sha256": "df4764575b0971e5e4a8c363da3630a8f23b5ca0298f37951f781a663f0e0f94"
     },
     {
       "path": "plugins/secretary/skills/projects/SKILL.md",
       "classification": "anchor-overlay",
-      "sha256": "688fa5f2d9bac45ce8f4c312d059017f221b4eca27db86b758fed527b5075f43"
+      "sha256": "09bcdb9c6261222b41fac2b7ff7d8a9d397bc28545c0e5d7249958251cd3c9ef"
     },
     {
       "path": "plugins/secretary/skills/secretary/SKILL.md",
       "classification": "anchor-overlay",
-      "sha256": "74cdc117f67514d39563ee3b925795af31e8cc0c2b468e61f639c9d44f37dd38"
+      "sha256": "90e76bb13646b2406f3636d0126990812bd3286118b758331381111be204524c"
     },
     {
       "path": "plugins/secretary/skills/settings/SKILL.md",
       "classification": "anchor-overlay",
-      "sha256": "c95628214f963aa7f4104a8ab61b0b85c29a64d223347efd859953a90b638df8"
+      "sha256": "70efb85f8707aac4a49fa75f20dcad77404b60b92f61bc4bd516df4b1bb49add"
     },
     {
       "path": "plugins/secretary/skills/setup-google/SKILL.md",
       "classification": "common",
-      "sha256": "2f494ba5508ff84eadbd53151c004fb16319ef2e002316ad8789e9826ee0028e"
+      "sha256": "8c616008274e5af603c6ccf8512f5215e2e823b938b6846c65c4f2475ef431ce"
     },
     {
       "path": "plugins/secretary/skills/setup-microsoft/SKILL.md",
       "classification": "common",
-      "sha256": "fa2ecf983bf6764b1f53585c4fe9470286a20bdf2a3a258e6046733db107ee22"
+      "sha256": "96cddaa034a8355ee0392123a40561b62ea6fd2eb77a0867ee5b8a9dee2af124"
     },
     {
       "path": "plugins/secretary/skills/setup-notion/SKILL.md",
       "classification": "common",
-      "sha256": "6df42a74bd1d3ec5c4fa6b2ab81b50f3a49d6abac8ca4c86cac5184059540618"
+      "sha256": "1dbfe11e37fc5feb51fc403be2c9158ff715ef26afe464466c19b45b59e20c3e"
     },
     {
       "path": "plugins/secretary/skills/update/SKILL.md",
       "classification": "anchor-overlay",
-      "sha256": "ad363da2fe5299d1f9a8923d673c98a8fc2506f37249602acce46d7b79eacd51"
+      "sha256": "45ecb287129ded2b57670954da77ffb2b9f47ac9809c98ce1e5bbd48bc488678"
     },
     {
       "path": "plugins/secretary/skills/weekly/SKILL.md",
       "classification": "common",
-      "sha256": "d6ac36a91e8937f561aedaa3c04e31f4eeb778962f22a3135b19add1538cc1ad"
+      "sha256": "bfacc2b8f2236a26c277ba3b47dd9eb24f1b1a11af21ffd4991aa53b3ac8e03e"
     },
     {
       "path": "plugins/secretary/templates/AGENTS.md",
@@ -2456,6 +2466,11 @@
       "path": "scripts/check-distribution-channel.py",
       "classification": "common",
       "sha256": "6836e172b73825e9cd428f5faf78714a304fea345ffec4b69b43dd3b6f7e0bb5"
+    },
+    {
+      "path": "scripts/check-harness-compat-online.mjs",
+      "classification": "common",
+      "sha256": "f80a3111f1395a9253c8f8750880239778500c6a30d33138790ad350c4f2f927"
     },
     {
       "path": "scripts/check-release-integrity.py",
@@ -2663,6 +2678,11 @@
       "sha256": "2325d9955384bae51cfba6212f6a9ef469dcf45edeb677d1e3c7c8437d6cbabf"
     },
     {
+      "path": "scripts/lib/harness-compat.mjs",
+      "classification": "common",
+      "sha256": "7d766224d8c03cd9eea8d56c901718742ee46b5a8a096a51a295bc967944efac"
+    },
+    {
       "path": "scripts/lib/sprint-032-patch-001-conversation.mjs",
       "classification": "common",
       "sha256": "291bee7218945169bcad327c9c144f1d376d838efcf56a6b11dea33cb826a7ae"
@@ -2685,7 +2705,7 @@
     {
       "path": "scripts/regression-check.sh",
       "classification": "anchor-overlay",
-      "sha256": "75fd9938cb9687e5a2ac5fad71914ff34d56dca96018fa413fb01c575fc9ab2a"
+      "sha256": "c5216a8f562428d89e74d2dda0b75b9af5f7ae4203a7634a4f512a8c54ea0999"
     },
     {
       "path": "scripts/sprint-009-regression.sh",
@@ -3006,6 +3026,11 @@
       "path": "scripts/sprint-033-test.mjs",
       "classification": "upstream-only",
       "sha256": "bd7da21d29c2954ded2caf416ce5d095645db081aa42d120e24daa72f4c7f5b0"
+    },
+    {
+      "path": "scripts/sprint-035-test.mjs",
+      "classification": "common",
+      "sha256": "d8063d5391e50b651e6e6ecfb230fb360b80735ae602534fe1881c4f288c1277"
     },
     {
       "path": "scripts/start-sprint-013-wizard-fixture.sh",

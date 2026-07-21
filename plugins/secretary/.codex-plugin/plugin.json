@@ -1,0 +1,38 @@
+{
+  "name": "yasashii-secretary",
+  "version": "0.8.0",
+  "description": "非エンジニア向けAI秘書。記憶、通常のプロジェクト、選択したChatwork／Google Chat履歴を安全に管理します。",
+  "author": {
+    "name": "mtaiseeei",
+    "url": "https://github.com/mtaiseeei"
+  },
+  "homepage": "https://github.com/mtaiseeei/yasashii-secretary",
+  "repository": "https://github.com/mtaiseeei/yasashii-secretary",
+  "license": "MIT",
+  "keywords": [
+    "secretary",
+    "assistant",
+    "non-engineer",
+    "memory",
+    "productivity"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Yasashii Secretary",
+    "shortDescription": "日々の仕事を整理する非エンジニア向けAI秘書",
+    "longDescription": "記憶、一般プロジェクト、選択したChatworkルームとGoogle Chatスペースを、共通の安全境界を守りながら1つのprivate workspaceで管理します。",
+    "developerName": "mtaiseeei",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/mtaiseeei/yasashii-secretary",
+    "defaultPrompt": [
+      "今日やることを整理して。",
+      "このエラーで何が起きているか、次に何をすればよいか教えて。",
+      "この作業結果を分かりやすくまとめて。"
+    ],
+    "brandColor": "#16A34A"
+  }
+}

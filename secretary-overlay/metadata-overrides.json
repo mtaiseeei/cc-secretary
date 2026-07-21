@@ -1,6 +1,11 @@
 {
   "schemaVersion": 1,
   "files": {
+    ".agents/plugins/marketplace.json": [
+      { "op": "set", "pointer": "/name", "value": "yasashii-secretary" },
+      { "op": "set", "pointer": "/interface/displayName", "value": "Yasashii Secretary" },
+      { "op": "set", "pointer": "/plugins/0/name", "value": "yasashii-secretary" }
+    ],
     ".claude-plugin/marketplace.json": [
       { "op": "set", "pointer": "/name", "value": "yasashii-secretary" },
       { "op": "set", "pointer": "/metadata/description", "value": "非エンジニア向けのAI秘書プラグイン。秘書、通常のプロジェクト、選択したChatwork／Google Chat履歴を1つのprivate GitHub repoで管理する。" },
@@ -14,6 +19,19 @@
       { "op": "set", "pointer": "/homepage", "value": "https://github.com/mtaiseeei/yasashii-secretary" },
       { "op": "set", "pointer": "/repository", "value": "https://github.com/mtaiseeei/yasashii-secretary" }
     ],
+    "plugins/secretary/.codex-plugin/plugin.json": [
+      { "op": "set", "pointer": "/name", "value": "yasashii-secretary" },
+      { "op": "set", "pointer": "/description", "value": "非エンジニア向けAI秘書。記憶、通常のプロジェクト、選択したChatwork／Google Chat履歴を安全に管理します。" },
+      { "op": "set", "pointer": "/homepage", "value": "https://github.com/mtaiseeei/yasashii-secretary" },
+      { "op": "set", "pointer": "/repository", "value": "https://github.com/mtaiseeei/yasashii-secretary" },
+      { "op": "set", "pointer": "/keywords", "value": ["secretary", "assistant", "non-engineer", "memory", "productivity"] },
+      { "op": "set", "pointer": "/interface/displayName", "value": "Yasashii Secretary" },
+      { "op": "set", "pointer": "/interface/shortDescription", "value": "日々の仕事を整理する非エンジニア向けAI秘書" },
+      { "op": "set", "pointer": "/interface/longDescription", "value": "記憶、一般プロジェクト、選択したChatworkルームとGoogle Chatスペースを、共通の安全境界を守りながら1つのprivate workspaceで管理します。" },
+      { "op": "set", "pointer": "/interface/websiteURL", "value": "https://github.com/mtaiseeei/yasashii-secretary" },
+      { "op": "set", "pointer": "/interface/defaultPrompt", "value": ["今日やることを整理して。", "このエラーで何が起きているか、次に何をすればよいか教えて。", "この作業結果を分かりやすくまとめて。"] },
+      { "op": "set", "pointer": "/interface/brandColor", "value": "#16A34A" }
+    ],
     "plugins/secretary/edition.json": [
       { "op": "set", "pointer": "/edition", "value": "yasashii-secretary" },
       { "op": "set", "pointer": "/distribution/pluginId", "value": "yasashii-secretary@yasashii-secretary" },
@@ -24,6 +42,12 @@
       { "op": "set", "pointer": "/update/sessionDirectory", "value": "secretary-update" },
       { "op": "set", "pointer": "/harness/marketplace", "value": "yasashii-harness" },
       { "op": "set", "pointer": "/harness/installId", "value": "harness@yasashii-harness" },
+      { "op": "set", "pointer": "/harness/repository", "value": "https://github.com/mtaiseeei/yasashii-harness" },
+      { "op": "set", "pointer": "/harness/observedCommit", "value": "8f9eb4c1d9e14414a7e94051ca6f4c34da282784" },
+      { "op": "set", "pointer": "/harness/hosts/claudeCode/marketplace", "value": "yasashii-harness" },
+      { "op": "set", "pointer": "/harness/hosts/claudeCode/installId", "value": "harness@yasashii-harness" },
+      { "op": "set", "pointer": "/harness/hosts/codex/marketplace", "value": "yasashii-harness" },
+      { "op": "set", "pointer": "/harness/hosts/codex/installId", "value": "harness@yasashii-harness" },
       { "op": "set", "pointer": "/copy/path", "value": "rules/copy/yasashii.json" }
     ],
     "plugins/secretary/rules/rule-manifest.json": [

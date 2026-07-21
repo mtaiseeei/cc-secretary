@@ -121,11 +121,22 @@ check("edition metadata stays yasashii and release candidate stays 0.8.0", () =>
   const edition = JSON.parse(readFileSync(join(root, "plugins/secretary/edition.json"), "utf8"));
   const marketplace = JSON.parse(readFileSync(join(root, ".claude-plugin/marketplace.json"), "utf8"));
   const manifest = JSON.parse(readFileSync(join(root, "plugins/secretary/.claude-plugin/plugin.json"), "utf8"));
+  const codexMarketplace = JSON.parse(readFileSync(join(root, ".agents/plugins/marketplace.json"), "utf8"));
+  const codexManifest = JSON.parse(readFileSync(join(root, "plugins/secretary/.codex-plugin/plugin.json"), "utf8"));
   assert.equal(edition.edition, "yasashii-secretary");
   assert.equal(edition.copy.path, "rules/copy/yasashii.json");
   assert.equal(edition.harness.installId, "harness@yasashii-harness");
+  assert.equal(edition.harness.version, "0.5.0");
+  assert.equal(edition.harness.repository, "https://github.com/mtaiseeei/yasashii-harness");
+  assert.equal(edition.harness.hosts.claudeCode.installId, "harness@yasashii-harness");
+  assert.equal(edition.harness.hosts.codex.installId, "harness@yasashii-harness");
   assert.equal(marketplace.plugins[0].version, "0.8.0");
   assert.equal(manifest.version, "0.8.0");
+  assert.equal(codexMarketplace.name, "yasashii-secretary");
+  assert.equal(codexMarketplace.plugins[0].name, "yasashii-secretary");
+  assert.equal(codexManifest.name, "yasashii-secretary");
+  assert.equal(codexManifest.version, "0.8.0");
+  assert.equal(codexManifest.skills, "./skills/");
   assert.equal(marketplace.plugins[0].forkedFrom, "https://github.com/Shin-sibainu/cc-company");
 });
 

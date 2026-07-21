@@ -2,8 +2,10 @@
   "schemaVersion": 1,
   "defaultUpstreamClassification": "common",
   "metadataOverlay": [
+    ".agents/plugins/marketplace.json",
     ".claude-plugin/marketplace.json",
     "plugins/secretary/.claude-plugin/plugin.json",
+    "plugins/secretary/.codex-plugin/plugin.json",
     "plugins/secretary/edition.json",
     "plugins/secretary/rules/rule-manifest.json"
   ],

@@ -42,9 +42,27 @@
     ]
   },
   "harness": {
+    "version": "0.5.0",
+    "repository": "https://github.com/mtaiseeei/yasashii-harness",
+    "observedCommit": "8f9eb4c1d9e14414a7e94051ca6f4c34da282784",
     "marketplace": "yasashii-harness",
     "plugin": "harness",
-    "installId": "harness@yasashii-harness"
+    "installId": "harness@yasashii-harness",
+    "hosts": {
+      "claudeCode": {
+        "marketplace": "yasashii-harness",
+        "installId": "harness@yasashii-harness",
+        "explicitEntry": "/harness"
+      },
+      "codex": {
+        "marketplace": "yasashii-harness",
+        "installId": "harness@yasashii-harness",
+        "explicitEntries": [
+          "$using-harness",
+          "$harness-loop"
+        ]
+      }
+    }
   },
   "copy": {
     "path": "rules/copy/yasashii.json",
