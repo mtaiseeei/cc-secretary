@@ -163,7 +163,7 @@ check("runner: 境界テストは一時workspace内fixtureで、/Systemやuser h
   assert(runnerSource.includes("chmodSync(locked, 0o555)"), "read-only fixture must be created inside the workspace");
 });
 
-check("runner: 成功・失敗問わずtry/finallyでworkspaceをcleanupし、外部変更0件検査を持つ", () => {
+check("runner: 成功・失敗問わずtry/finallyでworkspaceをcleanupし、列挙対象の前後比較を持つ", () => {
   assert(/try\s*\{[\s\S]*runSession[\s\S]*\}\s*finally\s*\{[\s\S]*cleanupWorkspace\(workspace\)/.test(runnerSource), "per-scenario cleanup must be in finally");
   assert(runnerSource.includes("inventoryDigest(pluginDir)"), "outside-workspace check must cover the plugin dir");
   assert(runnerSource.includes("guardDirUnchanged"), "outside-workspace check must cover the guard sentinel");
