@@ -109,7 +109,7 @@ for surface in "${REFERENCE_SURFACES[@]}"; do
 done
 check "yasashii styleのserializer唯一正本はI1-I3境界を満たす" "serializer_contract_ok '$RULES'"
 check "安全・証拠境界はstyleから分離" \
-  "grep -q 'push.*明示的に指示' '$SAFETY_RULES' && grep -q '実コネクタ' '$EVIDENCE_RULES' && grep -q '接続状態は未確認' '$EVIDENCE_RULES' && ! grep -q '実コネクタの証跡が無い' '$RULES'"
+  "grep -q 'push.*明示的に指示' '$SAFETY_RULES' && grep -q '実コネクタ' '$EVIDENCE_RULES' && grep -q 'edition.json.*4面copy' '$EVIDENCE_RULES' && ! grep -q '実コネクタの証跡が無い' '$RULES'"
 check "templates/tones/全15スキルは正本参照だけでschema重複0" \
   "[ '${#REFERENCE_SURFACES[@]}' -eq 20 ] && [ '$reference_bad' -eq 0 ]"
 SCHEMA_OWNER_COUNT="$(grep -Rsl '^- やったこと:' "$PLUGIN/rules" "$PLUGIN/skills" "$PLUGIN/templates" --include='*.md' | wc -l | tr -d ' ')"
@@ -156,15 +156,17 @@ check "初回後に設定変更導線を案内" "grep -q '設定はいつでも.
 # settings規律とプリセット
 check "settings skillのfrontmatter name" "[ \"\$(awk '/^name:/{print \$2; exit}' '$SETTINGS')\" = settings ]"
 check "settingsは例文→確認→反映→宣言→journal→commitを定義" \
-  "grep -q '変更後の短い例文' '$SETTINGS' && grep -q '確認ターンではツールを呼ばない' '$SETTINGS' && grep -q 'pref-set' '$SETTINGS' && grep -q 'こう覚えました' '$SETTINGS' && grep -q 'journal-add' '$SETTINGS' && grep -q 'commit' '$SETTINGS'"
+  "grep -q '変更後の短い例文' '$SETTINGS' && grep -q '確認ターンではツールを呼ばない' '$SETTINGS' && grep -q 'pref-set' '$SETTINGS' && grep -q '変更した項目:' '$SETTINGS' && grep -q 'journal-add' '$SETTINGS' && grep -q 'commit' '$SETTINGS'"
 PREVIEW_LINE="$(grep -n -m1 '変更後の短い例文' "$SETTINGS" | cut -d: -f1)"
 CONFIRM_LINE="$(grep -n -m1 'この確認ターンではツールを呼ばない' "$SETTINGS" | cut -d: -f1)"
 APPLY_LINE="$(grep -n -m1 '部分更新シームを1回呼ぶ' "$SETTINGS" | cut -d: -f1)"
-DECLARE_LINE="$(grep -n -m1 'こう覚えました' "$SETTINGS" | cut -d: -f1)"
+DECLARE_LINE="$(grep -n -m1 '変更した項目:' "$SETTINGS" | cut -d: -f1)"
 JOURNAL_LINE="$(grep -n -m1 '宣言後.*journal-add' "$SETTINGS" | cut -d: -f1)"
 COMMIT_LINE="$(grep -n -m1 '最後に.*commit' "$SETTINGS" | cut -d: -f1)"
 check "settingsの6段階は契約順に並ぶ" \
   "[ '$PREVIEW_LINE' -lt '$CONFIRM_LINE' ] && [ '$CONFIRM_LINE' -lt '$APPLY_LINE' ] && [ '$APPLY_LINE' -lt '$DECLARE_LINE' ] && [ '$DECLARE_LINE' -lt '$JOURNAL_LINE' ] && [ '$JOURNAL_LINE' -lt '$COMMIT_LINE' ]"
+check "settingsは値を会話・journal・commitへ再掲しない" \
+  "grep -q '値は表示しません' '$SETTINGS' && grep -q 'assistantの会話本文、journal、commit messageへ含めない' '$SETTINGS'"
 check "settingsはキャンセル副作用0" "grep -q 'キャンセル.*preferences、journal、git commitを一切変更しない' '$SETTINGS'"
 check "settingsはpushしない" "grep -q 'pushしない' '$SETTINGS' && ! grep -qE 'git +push' '$SETTINGS'"
 check "3つの口調プリセットが存在" "[ -f '$TEMPLATES/tones/standard.md' ] && [ -f '$TEMPLATES/tones/friendly.md' ] && [ -f '$TEMPLATES/tones/formal.md' ]"

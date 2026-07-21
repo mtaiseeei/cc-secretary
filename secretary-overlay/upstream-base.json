@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/mtaiseeei/agentic-secretary.git",
+  "fetchRemoteName": "upstream",
+  "baseCommit": "467043802ea030b67d092d86761caffa84675d61",
+  "neutralizationCommit": "52016cf10c1c5587fbd83ff2faf3888e29282d5e",
+  "releaseCandidate": "0.8.0",
+  "externalLiveGate": "external-live-gate-unavailable",
+  "remoteContract": {
+    "originRepository": "https://github.com/mtaiseeei/yasashii-secretary.git",
+    "upstreamFetchRepository": "https://github.com/mtaiseeei/agentic-secretary.git",
+    "upstreamPush": "disabled"
+  }
+}

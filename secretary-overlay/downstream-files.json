@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "description": "上流treeに存在せず、downstream overlayが所有するfile。",
+  "files": [
+    "scripts/sprint-034-test.mjs",
+    "scripts/sync-secretary-overlay.mjs",
+    "secretary-overlay/README.md",
+    "secretary-overlay/anchors.json",
+    "secretary-overlay/downstream-files.json",
+    "secretary-overlay/downstream-owned.json",
+    "secretary-overlay/mapping.json",
+    "secretary-overlay/metadata-overrides.json",
+    "secretary-overlay/upstream-base.json",
+    "secretary-overlay/upstream-tree.json"
+  ]
+}

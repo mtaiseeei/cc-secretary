@@ -244,3 +244,14 @@ AI が理解しやすいよう技術的文脈のまま維持しています。
 - 使い方（公開向け）: [`docs/guide/`](docs/guide/README.md)
 - 設計方針: [`docs/DESIGN.md`](docs/DESIGN.md)
 - 詳細仕様: [`docs/spec/`](docs/spec/)
+- 上流との関係とoverlay: [`docs/yasashii-upstream-mapping.md`](docs/yasashii-upstream-mapping.md)
+
+### agentic-secretaryとの関係
+
+共通の安全機能は別repoの [`agentic-secretary`](https://github.com/mtaiseeei/agentic-secretary) を上流とし、
+このrepoは非エンジニア向け表現だけを狭いoverlayとして重ねる下流完成品です。上流参照はfetch専用、
+上流へのpushは禁止とし、README、仕様、Sprint、progress、feedback、evidence、LICENSEは各repoが別々に所有します。
+
+ライセンスは両editionともMITです。クレジットは従来どおり
+[Shin-sibainu/cc-company](https://github.com/Shin-sibainu/cc-company) への単段表記を維持し、
+中間repoを追加の必須クレジットにはしません。

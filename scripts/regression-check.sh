@@ -339,7 +339,7 @@ communication_contract_ok() {
     grep -q '口調・専門用語・役割は項目数を変えません' "$style" &&
     grep -q '一般に通じる技術用語' "$common" &&
     grep -q '安全説明を省きません' "$safety" &&
-    grep -q '接続状態は未確認' "$evidence" &&
+    grep -q 'edition.json.*4面copy' "$evidence" &&
     grep -q '最終応答serializer.*唯一の出力形正本' "$agents" &&
     grep -q 'schemaを複製・再包装しない' "$agents" &&
     grep -q '最後にserializerを1回だけ適用する' "$agents" &&

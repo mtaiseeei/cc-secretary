@@ -17,7 +17,13 @@
       },
       "license": "MIT",
       "category": "productivity",
-      "tags": ["secretary", "assistant", "non-engineer", "memory", "productivity"],
+      "tags": [
+        "secretary",
+        "assistant",
+        "non-engineer",
+        "memory",
+        "productivity"
+      ],
       "forkedFrom": "https://github.com/Shin-sibainu/cc-company"
     }
   ]

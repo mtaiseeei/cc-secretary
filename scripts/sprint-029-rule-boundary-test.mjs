@@ -110,7 +110,7 @@ for (const rule of Object.values(manifest.rules)) assert(entrypoint.includes(rul
 assert(entrypoint.includes("rule-manifest.json"), "entrypointがmanifestを参照していません");
 assert(style.includes("../copy/yasashii.json"), "styleが宣言的copyを参照していません");
 for (const phrase of ["空または実質空", "secret", "明示確認", "push", "Repository Secret"]) assert(safety.includes(phrase), `安全契約が不足しています: ${phrase}`);
-for (const phrase of ["実コネクタ", "接続状態は未確認", "根拠", "推測で断定しません"]) assert(evidence.includes(phrase), `証拠契約が不足しています: ${phrase}`);
+for (const phrase of ["実コネクタ", "edition.json", "4面copy", "根拠", "推測で断定しません"]) assert(evidence.includes(phrase), `証拠契約が不足しています: ${phrase}`);
 for (const phrase of ["一般に通じる技術用語", "初出時", "幼稚なメタファー", "計画 → 道具 → 確認 → 結果", "common by design"]) assert(common.includes(phrase), `共通表現が不足しています: ${phrase}`);
 for (const phrase of ["最終応答serializer（通常報告の唯一の正本）", "無言で完了", "Markdown箇条書きとして物理的に分けます", "口調・専門用語・役割は項目数を変えません", "developer handoff"]) assert(style.includes(phrase), `yasashii styleが不足しています: ${phrase}`);
 

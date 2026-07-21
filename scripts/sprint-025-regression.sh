@@ -22,6 +22,7 @@ if [ "$CURRENT_VERSION" != "0.7.0" ]; then
     exit 1
   fi
   HISTORICAL_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/sprint025-history.XXXXXX")"
+  HISTORICAL_ROOT="$(cd "$HISTORICAL_ROOT" && pwd -P)"
   git -C "$REPO" archive "$HISTORICAL_REV" | tar -x -C "$HISTORICAL_ROOT"
   bash "$HISTORICAL_ROOT/scripts/sprint-025-regression.sh"
   STATUS=$?

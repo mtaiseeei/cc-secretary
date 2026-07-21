@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "description": "同期で書き換えず、yasashii-secretary自身が正本を持つfile。",
+  "patterns": [
+    ".harness/**",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "LICENSE",
+    "README.md",
+    "docs/**",
+    "scripts/archive-release-gate.mjs",
+    "scripts/check-release-integrity.py"
+  ]
+}
