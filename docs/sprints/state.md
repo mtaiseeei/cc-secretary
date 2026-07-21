@@ -4,6 +4,8 @@
 
 - Current ID: sprint-035
 - Retry Count: 0
+- Spec-Issue Count: 0
+- Lineage Dispatches: 0
 - Model Tier: strong
 - Rotate: none
 - Next Planned: TBD

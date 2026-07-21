@@ -1,6 +1,6 @@
 # Features
 
-機能IDと、ユーザーから見える振る舞いの正本。F01〜F16 は受け入れ済みの既存機能、F17〜F22 は 2026-07-15 方針転換、F23〜F27 は 2026-07-16 のsingle-repo Git-first + Chatwork方針、F28 は 2026-07-17 の一般プロジェクト管理方針、F29 は配布チャネルから独立した製品説明、F30〜F31 は更新の説明と実行を分ける安全な更新体験、F32〜F35 は各社所有Google Cloudプロジェクトを使うGoogle Chat同期、F36〜F43 は `0.7.0` の配布前監査を閉じたrelease hardening、F44〜F50 は次候補 `0.8.0` で2 editionへ安全に分離する機能、F51は両edition共通の会話可読性、F52は4つの正式対象ホストへ拡張できるホスト非依存の共通本体と各ホストの正式配布adapterである。
+機能IDと、ユーザーから見える振る舞いの正本。F01〜F16 は受け入れ済みの既存機能、F17〜F22 は 2026-07-15 方針転換、F23〜F27 は 2026-07-16 のsingle-repo Git-first + Chatwork方針、F28 は 2026-07-17 の一般プロジェクト管理方針、F29 は配布チャネルから独立した製品説明、F30〜F31 は更新の説明と実行を分ける安全な更新体験、F32〜F35 は各社所有Google Cloudプロジェクトを使うGoogle Chat同期、F36〜F43 は `0.7.0` の配布前監査を閉じたrelease hardening、F44〜F50 は次候補 `0.8.0` で2 editionへ安全に分離する機能、F51は両edition共通の会話可読性、F52は4つの正式対象ホストへ拡張できるホスト非依存の共通本体と各ホストの正式配布adapter、F53は別Pluginの対応Harness 0.5.0へ安全に追随する機能、F54はhost-neutralなplugin root解決と両editionのCodex正式配布parityである。
 
 ## 既存機能（F01〜F16）
 
@@ -373,18 +373,46 @@ read-only plugin copy、env allowlist、最小tool、sandbox／path-scoped permi
 `4670438` の同一current bytesで取得済みの4 host固有証拠は、fresh Evaluatorが実装との対応を確認した場合に再利用できる。
 schema v2／v3のproduction attestationは将来のoptional internal QAであり、製品・配布Pluginの必須機能にしない。
 
+### F53 対応Harness 0.5.0との分離連携
+
+`agentic-secretary` はGitHub `main` の `mtaiseeei/agentic-harness 0.5.0`、`yasashii-secretary` は
+GitHub `main` の `mtaiseeei/yasashii-harness 0.5.0` を対応先とする。各SecretaryはHarnessの識別、導入状態確認、
+Claude Code／Codex別の正規導入案内、導入済みHarnessへの接続を提供するが、Harnessのskills、agents、runtime実装、
+Git履歴を配布物へ内包しない。Claude CodeとCodexでmarketplace名が異なる場合は、1つの識別子へ丸めず、
+対応Harnessの正式manifest／marketplaceにあるhost別の値を案内する。
+
+Secretary repo自身をHarnessで保守する運用面では、既存の製品固有指示を保持したまま、0.5.0の停止上限、
+`verification-scope-issue`、product／verification-infra区分、契約済み証拠のsafe harbor、active Sprintの基準変更gate、
+spec-issue／lineage上限、増分再評価、同一candidate証拠の条件付き再利用、`done-by-user-decision` を扱える。
+互換確認はoffline構造検査とGitHub read-onlyのonline検査を分離し、network不可や未実行をPASSへ数えない。
+
+### F54 host-neutral plugin rootとCodex正式配布parity
+
+共通15 skillsは、各 `SKILL.md` の実パスから共通plugin root `plugins/secretary/` を解決し、通常shell環境に
+`${CLAUDE_PLUGIN_ROOT}` が無いClaude Code、Codex App、Codex CLIでも同じ共通script／rule／templateへ到達する。
+未解決の環境変数文字列をshell commandやfilesystem pathへ渡さない。さらにslash command、Hook、Claude固有UI、
+Claude marketplace、plugin root環境変数等のClaude Code限定前提を15 skillsと配布面でinventoryし、共通化できる意味内容は
+host-neutral本文へ置き、真にhost固有な導入・起動・UI・更新だけをadapter／案内で分ける。host別のskill本文コピーや分岐実装は作らない。
+代表scriptの最小実行証拠に加え、15 skills全件の静的検査、任意の絶対pathに置いたplugin fixture、既存Codex正式installテストで、
+未設定変数・誤root・cwd依存・Claude限定前提の誤適用・配布cacheの違いを検出する。
+
+Codexの正式配布面は両editionに必要である。`agentic-secretary` と `yasashii-secretary` の双方が
+`plugins/secretary/.codex-plugin/plugin.json` とrepo rootの `.agents/plugins/marketplace.json` を持ち、
+同じ `plugins/secretary/skills/` を参照しながらedition別identity、version、repository、marketplaceを正しく表す。
+agentic側だけのmanifest存在やClaude legacy互換を、yasashii側のCodex正式配布PASSへ流用しない。
+
 ## Gテーマと機能の対応
 
 | テーマ | 主な機能 |
 |---|---|
 | G1 | F05 F06 F07 F08 F17 F18 F19 F21 |
 | G2 | F04 F10 F20 F51 |
-| G3 | F14 F15 F22 |
-| G4 | F10 F14 F15 F20 F22 F51 |
+| G3 | F14 F15 F22 F53 |
+| G4 | F10 F14 F15 F20 F22 F51 F53 |
 | G5 | F04 F07 F23 F24 F25 F26 F27 |
 | G6 | F03 F05 F06 F07 F08 F15 F17 F18 F19 F28 |
 | G7 | F01 F02 F04 F10 F16 F29 |
 | G8 | F01 F02 F07 F10 F16 F20 F30 F31 |
 | G9 | F03 F07 F10 F16 F23 F32 F33 F34 F35 |
 | G10 | F01 F02 F04 F05 F07 F10 F16 F23 F24 F30 F31 F32 F33 F34 F35 F36 F37 F38 F39 F40 F41 F42 F43 |
-| G11 | F30 F31 F36 F40 F41 F42 F43 F44 F45 F46 F47 F48 F49 F50 F51 F52 |
+| G11 | F30 F31 F36 F40 F41 F42 F43 F44 F45 F46 F47 F48 F49 F50 F51 F52 F53 F54 |

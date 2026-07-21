@@ -13,6 +13,14 @@
 7. 親repo `mtaiseeei/agentic-harness` は移管・改名・変更しない。GitHubのfork badge／parent relation／同じforkから上流へPRする導線は非ゴール。上流変更は本作業では行わず、将来あらためて明示承認された場合だけ `agentic-harness` 側の別branch / PR手順に分離する。
 8. 上流由来行を変更できる機械的例外は、独立downstreamの配布識別metadataだけ。`.claude-plugin/marketplace.json` のmarketplace `name=yasashii-harness` / `repository=mtaiseeei/yasashii-harness`、plugin `name=harness` / `source=./plugins/harness`、plugin manifestの `repository` / `homepage=https://github.com/mtaiseeei/yasashii-harness`、必要なCodex marketplace識別子をdownstream向けに揃える。
 9. metadata例外は `gentle-overlay/metadata-overrides.json` に対象ファイル・JSON field・期待値を宣言し、これをoverlay兼allowlistの唯一の正本とする。sync後に完全一致を検査し、allowlist外のmetadata変更と上流由来行の書換・削除は0件でなければならない。
+10. SecretaryとHarnessは別Plugin／別Repoを維持する。SecretaryへHarnessのskills、agents、commands、hooks、runtime script、vendor依存、Git履歴をmerge、vendor、submodule、symlink、コピーで内包せず、Secretary manifestの暗黙依存として自動導入もしない。
+11. 対応関係は `agentic-secretary` → GitHub `mtaiseeei/agentic-harness`、`yasashii-secretary` → GitHub `mtaiseeei/yasashii-harness` とする。最終候補は両方の `main` にあるClaude／Codex正式配布面が `0.5.0` で一致することをread-onlyで確認する。network不可はonline合格にしない。
+12. Harness案内はhost別の正式配布識別子を保持する。Claude Codeのmarketplace／install IDとCodex repo marketplace／install IDが異なる場合、edition設定、案内、検査で区別し、片方の値を他方へ推測適用しない。
+13. Secretary repo内の `CLAUDE.md`、`AGENTS.md`、`.harness/config.toml`、`docs/harness-guidance.md` は製品固有指示を正本として保持する。Harness 0.5.0追随は必要な互換項目の追加・整合に限定し、テンプレートの全面置換、既存指示・Agent定義・個人設定の上書きを行わない。
+14. `/Users/taisei/workspace/agentic-harness` はread、list、存在確認、status、HEAD、branch、remote確認も含め絶対に操作しない。上流のversion、manifest、template、差分はGitHub remote／raw／APIのread-only結果だけを証拠にする。
+15. 共通15 skillsの通常実行は `${CLAUDE_PLUGIN_ROOT}` の暗黙設定を前提にしない。各 `SKILL.md` の実パスからplugin rootを決定し、未解決変数、空path、現在directory依存の誤rootをshellやfilesystem APIへ渡す前に停止する。host別skill本文コピーは作らない。
+16. Codex正式配布面は両editionに持つ。`plugins/secretary/.codex-plugin/plugin.json` とrepo rootの `.agents/plugins/marketplace.json` が同じ共通skillsを参照し、edition別identity、version、repository、source.pathを正しく表す。Claude legacy互換またはagentic側だけのmanifestでyasashii側の欠落を代替しない。
+17. 15 skillsと配布面にあるClaude Code限定前提を静的inventoryする。slash command、Hook、Claude固有UI、Claude marketplace等は対応hostのadapter／案内に限定し、共通の意味内容・script参照・安全契約はhost-neutralにする。新しい大規模runner、collector、attestor、統一証明schemaをこの監査のために作らない。
 
 ## 2. 外部データ・プライバシー・Git
 
