@@ -2,10 +2,10 @@
 
 <!-- オーケストレーターだけが書く進行状態の正本 -->
 
-- Current ID: sprint-035-patch-001
+- Current ID: sprint-035-patch-002
 - Retry Count: 0
 - Spec-Issue Count: 0
-- Lineage Dispatches: 6
+- Lineage Dispatches: 8
 - Model Tier: standard
 - Rotate: none
 - Next Planned: TBD
@@ -63,11 +63,15 @@
 | sprint-034 | done | [contract](sprint-034.md) | [progress](../progress/sprint-034.md) | [feedback](../feedback/sprint-034.md) |
 | sprint-035 | done-by-user-decision | [contract](sprint-035.md) | [progress](../progress/sprint-035.md) | [feedback](../feedback/sprint-035.md) |
 | sprint-035-patch-001 | done | [contract](sprint-035-patch-001.md) | [progress](../progress/sprint-035-patch-001.md) | [feedback](../feedback/sprint-035-patch-001.md) |
+| sprint-035-patch-002 | done | [contract](sprint-035-patch-002.md) | [progress](../progress/sprint-035-patch-002.md) | [feedback](../feedback/sprint-035-patch-002.md) |
 
 ## Deferred / Superseded
 - sprint-007: superseded — 2026-07-15 製品方針転換により白紙化、`backup/sprint-007-010-plan` に退避
 
 ## Completion
+- 2026-07-22: sprint-035-patch-002はfresh独立EvaluatorでPASS。Agentic共有面と一致する5 callsite、隔離Git fixture 148/148、3評価基準各5/5、product finding 0件を確認してdone。旧overlay固定baseのverification-infra 1件はfeedbackへ分離した。
+- 2026-07-22: sprint-035-patch-002 GeneratorがAgentic共有5 callsiteと同一の `pull --ff-only --no-rebase` 実装・Patch回帰を同期し、隔離Git fixture 148/148と主要近傍回帰を引き渡した。Lineage Dispatches 8としてfresh Evaluatorへ進める。
+- 2026-07-22: ユーザー承認済みの残存Git障害を sprint-035-patch-002（Type: micro）として開始。Agentic共有面と同じ `git pull --ff-only --no-rebase` 契約をYasashiiの5経路へ同期し、利用者のGit設定と取得対象外dirty差分を保持する。Model Tier standard、Rotate none、Lineage Dispatches 7としてfresh Generatorへ引き渡す。
 - 2026-07-22: sprint-035-patch-001はfresh独立Evaluatorで75/75 PASS。固定同期元`1cf2ae6`、Yasashii candidate `44066b9`、managed 229、未分類0、共有3 asset byte一致、apply／reapply差分0、実DOM 6/6、統合11/11、Yasashii固有面digest不変を確認し、product finding 0件でdone。実API／OAuth／Secrets／Actions／remote writeはnot-run。verification-infra Minor 2件はfeedbackへ分離記録した。
 - 2026-07-22: sprint-035-patch-001 GeneratorがAgentic合格candidate `1cf2ae6` を宣言済みoverlayで同期し、Yasashii candidate `44066b9` を作成。managed 229 path、未分類0、再適用差分0、共有wizard 3 asset byte一致、Yasashii固有面不変、統合11/11と実browser 6条件PASSで引き渡したため、statusをawaiting-eval、Lineage Dispatchesを6としてfresh Evaluatorへ進める。
 - 2026-07-22: Agentic正本のsprint-035-patch-001がcandidate `1cf2ae6` で独立評価PASS。Yasashii下流同期Patchを開始する。標準Generator `gpt-5.6-luna` は同一hostで子Agent作成前に拒否済みのため、resolver指定の可用性fallback `gpt-5.6-sol`／high、Model Tier strong、Rotate model-availability、Lineage Dispatches 5としてfresh Generatorへ引き渡す。
