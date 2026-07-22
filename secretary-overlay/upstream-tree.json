@@ -2230,7 +2230,7 @@
     {
       "path": "plugins/secretary/skills/chatwork/scripts/search-flow.mjs",
       "classification": "common",
-      "sha256": "fc31e24b1d5278dc5078e664949f27a8c35ca5471c6b3a0427184a9f122cb28c"
+      "sha256": "22aefe11a744ea14e46a547153856e74d66073a774e857dd1205bdc988cdb745"
     },
     {
       "path": "plugins/secretary/skills/chatwork/scripts/search.mjs",
@@ -2240,7 +2240,7 @@
     {
       "path": "plugins/secretary/skills/chatwork/scripts/wizard-server.mjs",
       "classification": "common",
-      "sha256": "b9e93e64397913ef6cb527eecb4de6657ccd17ee1a79e8eba0830e79fb127b6d"
+      "sha256": "8a3aa3d71211344d79115ecff3bce03652ea1a095b6091b2fe6072e51c69e1b4"
     },
     {
       "path": "plugins/secretary/skills/connections/SKILL.md",
@@ -2260,7 +2260,7 @@
     {
       "path": "plugins/secretary/skills/google-chat/assets/wizard/app.js",
       "classification": "common",
-      "sha256": "c8d71dac2faca9caad5eaa63b7d63370bc6f368f7bf3dcf7cb5a86c84b2a185f"
+      "sha256": "fcea246dc0b462f79647849bfffef9285d9fe9a1236d9afc264bf84ddc4ba1df"
     },
     {
       "path": "plugins/secretary/skills/google-chat/assets/wizard/cleanup.mjs",
@@ -2268,9 +2268,14 @@
       "sha256": "c0ed4be1f78fcdc68136c14d627489804af680181262b594e05e9498169fcad8"
     },
     {
+      "path": "plugins/secretary/skills/google-chat/scripts/actions-discovery.mjs",
+      "classification": "common",
+      "sha256": "5d0689e39a19b33c9d74b7cf996343ff567224478fc00507230937f3485b5b7a"
+    },
+    {
       "path": "plugins/secretary/skills/google-chat/scripts/client.mjs",
       "classification": "common",
-      "sha256": "1e9c42047dffb34218c74ef5cd2f25dbf1fdeb25e796cf49598f93da964ade41"
+      "sha256": "356661e657ed4bc2e415b16a44b7c220295328f0ef3df38fd64ad6b8a178efed"
     },
     {
       "path": "plugins/secretary/skills/google-chat/scripts/cloud-setup.mjs",
@@ -2280,12 +2285,17 @@
     {
       "path": "plugins/secretary/skills/google-chat/scripts/config-transaction.mjs",
       "classification": "common",
-      "sha256": "209631e21bdc2770bfdbe3ef432e483007dc9397db8d0f78f493249b5fdafc78"
+      "sha256": "b94fbb0acfefc7a994d626a31c220a511a9bd684c8e96473bc56cb56ab23a554"
     },
     {
       "path": "plugins/secretary/skills/google-chat/scripts/continuous-sync.mjs",
       "classification": "common",
       "sha256": "4566e155c9bde729e57db68aa6f13a4e7242441434dc4faf5cc22d87bb6ff137"
+    },
+    {
+      "path": "plugins/secretary/skills/google-chat/scripts/discovery.mjs",
+      "classification": "common",
+      "sha256": "c6af3792255d65f5763dc43ba12f0582c0ecccca51f5815ba41823ce0686e8fe"
     },
     {
       "path": "plugins/secretary/skills/google-chat/scripts/history.mjs",
@@ -2310,17 +2320,17 @@
     {
       "path": "plugins/secretary/skills/google-chat/scripts/schedule.mjs",
       "classification": "common",
-      "sha256": "1c4360595a0ac70fd73437074f5b94ee796102ff71d21fdc37a4391103aa16df"
+      "sha256": "f687a8ae2eec15a2f70a0e3cde8e8fbb5744e8de7c373b3ef38e9378ac0f6379"
     },
     {
       "path": "plugins/secretary/skills/google-chat/scripts/search-flow.mjs",
       "classification": "common",
-      "sha256": "fddc617ad52a21181d7cc86733602986c0c676a9dddd744008b2d460a49e2a94"
+      "sha256": "65ac78a93ba4f58c70c0d4cd663ed7c7c1551e8ccd78ed49ded453ff245d8c79"
     },
     {
       "path": "plugins/secretary/skills/google-chat/scripts/search.mjs",
       "classification": "common",
-      "sha256": "e18d354f4b8ae57bb04481ae0f1a0c815033deebf75cead38403189cb173a9a4"
+      "sha256": "8a2ba47af3638a68663786c6159a6ab29faadbb675e03f7b56c1b20f683571cf"
     },
     {
       "path": "plugins/secretary/skills/google-chat/scripts/sync.mjs",
@@ -2330,7 +2340,7 @@
     {
       "path": "plugins/secretary/skills/google-chat/scripts/wizard-server.mjs",
       "classification": "common",
-      "sha256": "aa450f841564045d36e1862f39d4c49e2da5d75ac143a7e76d6096f899df1294"
+      "sha256": "df75a671426454715578bff043d4ef37e15a71ca0d3121c9a7a9a4105cd73769"
     },
     {
       "path": "plugins/secretary/skills/memory-care/SKILL.md",
@@ -3111,6 +3121,16 @@
       "path": "scripts/sprint-035-patch-001-regression.sh",
       "classification": "anchor-overlay",
       "sha256": "fafeb1fc7507db9da657b0e6c215bf88fc61479d4dabcbf4cc5a58775a7a7037"
+    },
+    {
+      "path": "scripts/sprint-035-patch-002-git-pull-test.mjs",
+      "classification": "common",
+      "sha256": "b9700177b597de28282db7eb268995303dc807813277dddc15f1c33023ae1903"
+    },
+    {
+      "path": "scripts/sprint-035-patch-003-discovery-test.mjs",
+      "classification": "common",
+      "sha256": "1294a89d11e8ca6cc43d49891089ccb552b1687dc839f5c22dd6ecfcd681836b"
     },
     {
       "path": "scripts/sprint-035-test.mjs",
