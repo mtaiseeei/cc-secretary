@@ -4,12 +4,12 @@
 
 ## 1. 製品とリポジトリの境界
 
-1. `~/workspace/agentic-harness` は全面操作禁止。ファイル編集、checkout / switch、commit、branch作成・変更、remote変更、生成物作成、複製元としての利用、当該checkoutを対象にしたコマンド実行をすべて禁止する。上流参照はGitHub上の `mtaiseeei/agentic-harness` だけを使う。
+1. `<workspace-root>/agentic-harness` は全面操作禁止。ファイル編集、checkout / switch、commit、branch作成・変更、remote変更、生成物作成、複製元としての利用、当該checkoutを対象にしたコマンド実行をすべて禁止する。上流参照はGitHub上の `mtaiseeei/agentic-harness` だけを使う。
 2. やさしいハーネスの正本は別リポジトリ `yasashii-harness`。`yasashii-secretary` に `harness/` のコピーや planner / generator / evaluator の agents を同梱しない。
 3. `yasashii-secretary` は `yasashii-harness` のインストール案内・存在確認・接続導線だけを持つ。参照先が無い、リンクが切れる、同梱コピーが復活する状態を回帰として扱う。
 4. `mtaiseeei/yasashii-harness` は独立public downstream repoとして、GitHub API上 `private=false`、`fork=false` でなければならない。初期基点は `mtaiseeei/agentic-harness` の fb9c303 とする。
 5. `yasashii-harness` の本文・スキル・agents・runtimeロジックの差分は、**見出しに `yasashii` を含む追加セクションだけ**。上流由来の実装行の書換・削除は禁止。上流変更は本作業のスコープ外であり、将来あらためて明示承認された場合だけ上流側の別branch / PR手順に分離する。
-6. remoteは `origin=https://github.com/mtaiseeei/yasashii-harness.git` と、読取専用の `upstream=https://github.com/mtaiseeei/agentic-harness.git` を分離する。上流追随はGitHubの `upstream/main` から行い、ローカル `~/workspace/agentic-harness` を参照元・複製元・書込先・検査対象にしない。
+6. remoteは `origin=https://github.com/mtaiseeei/yasashii-harness.git` と、読取専用の `upstream=https://github.com/mtaiseeei/agentic-harness.git` を分離する。上流追随はGitHubの `upstream/main` から行い、ローカル `<workspace-root>/agentic-harness` を参照元・複製元・書込先・検査対象にしない。
 7. 親repo `mtaiseeei/agentic-harness` は移管・改名・変更しない。GitHubのfork badge／parent relation／同じforkから上流へPRする導線は非ゴール。上流変更は本作業では行わず、将来あらためて明示承認された場合だけ `agentic-harness` 側の別branch / PR手順に分離する。
 8. 上流由来行を変更できる機械的例外は、独立downstreamの配布識別metadataだけ。`.claude-plugin/marketplace.json` のmarketplace `name=yasashii-harness` / `repository=mtaiseeei/yasashii-harness`、plugin `name=harness` / `source=./plugins/harness`、plugin manifestの `repository` / `homepage=https://github.com/mtaiseeei/yasashii-harness`、必要なCodex marketplace識別子をdownstream向けに揃える。
 9. metadata例外は `gentle-overlay/metadata-overrides.json` に対象ファイル・JSON field・期待値を宣言し、これをoverlay兼allowlistの唯一の正本とする。sync後に完全一致を検査し、allowlist外のmetadata変更と上流由来行の書換・削除は0件でなければならない。
@@ -17,7 +17,7 @@
 11. 対応関係は `agentic-secretary` → GitHub `mtaiseeei/agentic-harness`、`yasashii-secretary` → GitHub `mtaiseeei/yasashii-harness` とする。最終候補は両方の `main` にあるClaude／Codex正式配布面が `0.5.0` で一致することをread-onlyで確認する。network不可はonline合格にしない。
 12. Harness案内はhost別の正式配布識別子を保持する。Claude Codeのmarketplace／install IDとCodex repo marketplace／install IDが異なる場合、edition設定、案内、検査で区別し、片方の値を他方へ推測適用しない。
 13. Secretary repo内の `CLAUDE.md`、`AGENTS.md`、`.harness/config.toml`、`docs/harness-guidance.md` は製品固有指示を正本として保持する。Harness 0.5.0追随は必要な互換項目の追加・整合に限定し、テンプレートの全面置換、既存指示・Agent定義・個人設定の上書きを行わない。
-14. `/Users/taisei/workspace/agentic-harness` はread、list、存在確認、status、HEAD、branch、remote確認も含め絶対に操作しない。上流のversion、manifest、template、差分はGitHub remote／raw／APIのread-only結果だけを証拠にする。
+14. `<workspace-root>/agentic-harness` はread、list、存在確認、status、HEAD、branch、remote確認も含め絶対に操作しない。上流のversion、manifest、template、差分はGitHub remote／raw／APIのread-only結果だけを証拠にする。
 15. 共通15 skillsの通常実行は `${CLAUDE_PLUGIN_ROOT}` の暗黙設定を前提にしない。各 `SKILL.md` の実パスからplugin rootを決定し、未解決変数、空path、現在directory依存の誤rootをshellやfilesystem APIへ渡す前に停止する。host別skill本文コピーは作らない。
 16. Codex正式配布面は両editionに持つ。`plugins/secretary/.codex-plugin/plugin.json` とrepo rootの `.agents/plugins/marketplace.json` が同じ共通skillsを参照し、edition別identity、version、repository、source.pathを正しく表す。Claude legacy互換またはagentic側だけのmanifestでyasashii側の欠落を代替しない。
 17. 15 skillsと配布面にあるClaude Code限定前提を静的inventoryする。slash command、Hook、Claude固有UI、Claude marketplace等は対応hostのadapter／案内に限定し、共通の意味内容・script参照・安全契約はhost-neutralにする。新しい大規模runner、collector、attestor、統一証明schemaをこの監査のために作らない。
@@ -263,7 +263,7 @@
 
 ## 15. 2 edition境界
 
-1. `agentic-secretary` は `/Users/taisei/workspace/agentic-secretary` の別directoryかつ `mtaiseeei/agentic-secretary` の別GitHub repoとする。`yasashii-secretary` 内のmonorepo／subdirectoryにしない。
+1. `agentic-secretary` は `<workspace-root>/agentic-secretary` の別directoryかつ `mtaiseeei/agentic-secretary` の別GitHub repoとする。`yasashii-secretary` 内のmonorepo／subdirectoryにしない。
 2. `agentic-secretary` は上流、`yasashii-secretary` は下流とし、下流の `upstream` remoteはfetch専用・push無効とする。両者はneutralization commitまでのGit履歴と共通祖先を持つ。
 3. 別directory／repo作成、remote追加・変更、push、公開、release、実plugin install／updateは、該当Sprintのexternal gateで操作ごとのユーザー明示許可を再確認する。
 4. 内部plugin pathは両editionで `plugins/secretary/`。外部plugin ID、marketplace名、repository／homepageはedition別とする。
@@ -310,3 +310,28 @@
 4. 改行の有無をユーザーへ質問せず、preferencesへ設定項目を追加しない。口調、専門用語、報告詳しさを変更しても、この最低基準は無効にできない。
 5. 「改行しない」「1行にまとめる」「平文で返す」「箇条書きを使わない」等のユーザー向け指示を配布rules、skills、templates、commands、edition copy、handoffに残さない。内部record、commit message、index、machine-readable出力の1行契約は対象外として区別する。
 6. agenticは結論・正式名称・証拠を早めに、yasashiiは何が起きたか・影響・次にすることを先に示す。可読性の共通化を理由に、思想・対象・4つのedition差分を同一化しない。
+
+## 18. 呼び方候補と現在値の安全境界
+
+1. 初回の呼び方は「あなた」「アカウント名」「指定の名前」とhost標準の「その他」を合わせた4経路にする。hostが「その他」を自動付与する場合は重複表示しない。
+2. account-name探索は「アカウント名」選択後だけ行う。他の3経路ではGit／OSを読まない。
+3. source priorityは、現在タスクへhostが既に提供した現在会話の明示名、Personalization、Project、過去会話の記憶、read-onlyの `git config user.name`、現在processのOSユーザー名とする。
+4. 任意の過去会話、別task、raw transcript、生session log、memory storeを直接検索しない。Git email、remote、credential、commit history、home directory列挙、外部人物検索を名前sourceにしない。
+5. 候補はNFKCと空白整理を行い、40 Unicode文字を超える値、email、汎用名、数字中心、path、UUID、long hex、token風、machine-like値、DNS hostnameを除外する。OS値はUnicode letterを含む場合だけ候補にする。
+6. NFKC＋Unicode case-foldで同値の候補は上位sourceの1件へ統合し、異なる文字を同一人物へ誤統合しない。
+7. 候補表示は値、短い出典、最上位1件のおすすめだけにする。raw context、Git設定全体、OS環境、除外値を表示しない。
+8. 候補0件では架空値を作らずaccount-nameを利用不能とする。全経路で解決値を別turnで確認し、未回答・空回答は確認候補を「あなた」とする。保存確認前は副作用0件とする。
+9. 探索値、除外値、出典、順位は永続化しない。選択・確認済みの呼び方だけを保存する。
+10. 既存変更では `preferences.md` を現在値の正本とし、`AGENTS.md`、`MEMORY.md` の現役表示を1 transactionで同期する。初回decision、他設定、手書き行、索引、open／closed project構成を維持する。
+11. file書込み、journal、commitの途中失敗、空値、path境界、symlink拒否では、3正本、journal、Git状態を開始時へrollbackする。成功時だけ所有path限定のlocal commitを1件作り、pushしない。
+
+## 19. 利用者中立の配布境界と下流同期
+
+1. 配布面、現行製品正本、現役回帰から、正式所有情報を除く実利用者の個人名、利用者端末固有の絶対path、私用workspace依存を除く。
+2. 人物が必要なfixtureは合成人物を使う。path境界testは合成pathまたは汎用guard patternを使い、許可pathと件数を固定する。
+3. LICENSEの著作権表示、GitHub owner、公式repository／release URL、`forkedFrom`、MIT、製品名、公開versionは正式配布識別情報として維持する。
+4. `docs/sprints/**`、`docs/progress/**`、`docs/feedback/**`、`docs/evidence/**`、proposal、Git履歴の過去記録は遡及改変しない。現行挙動の根拠と混同しない。
+5. Yasashiiへの共通機能同期は、独立評価PASS済みAgentic完全SHAを固定し、現在baseからの差分、tree、全path分類をreviewしてから `upstream-base.json` と `upstream-tree.json` を進める。
+6. 同じlocal candidateへのoverlay check／apply／reapplyで未分類0件、二回目の追加差分0件、repo-owned digest不変を確認する。同期前にbase記録だけをcandidateへ書き換えて検査を迂回しない。
+7. Yasashii固有copy、identity、manifest、marketplace、edition設定、README、repo-owned docsをAgentic値へ戻さない。宣言済みanchor／metadata差分だけを維持する。
+8. upstreamはfetch専用・push disabledとし、本機能同期ではremote追加・変更・fetch・push、cache更新、利用者workspace反映、releaseを行わない。

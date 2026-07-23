@@ -2,10 +2,10 @@
 
 <!-- オーケストレーターだけが書く進行状態の正本 -->
 
-- Current ID: sprint-035-patch-003
+- Current ID: sprint-037
 - Retry Count: 0
 - Spec-Issue Count: 0
-- Lineage Dispatches: 2
+- Lineage Dispatches: 4
 - Model Tier: standard
 - Rotate: none
 - Next Planned: TBD
@@ -65,11 +65,20 @@
 | sprint-035-patch-001 | done | [contract](sprint-035-patch-001.md) | [progress](../progress/sprint-035-patch-001.md) | [feedback](../feedback/sprint-035-patch-001.md) |
 | sprint-035-patch-002 | done | [contract](sprint-035-patch-002.md) | [progress](../progress/sprint-035-patch-002.md) | [feedback](../feedback/sprint-035-patch-002.md) |
 | sprint-035-patch-003 | done | [contract](sprint-035-patch-003.md) | [progress](../progress/sprint-035-patch-003.md) | [feedback](../feedback/sprint-035-patch-003.md) |
+| sprint-036 | superseded | [contract](sprint-036.md) | - | - |
+| sprint-037 | done | [contract](sprint-037.md) | [progress](../progress/sprint-037.md) | [feedback](../feedback/sprint-037.md) |
 
 ## Deferred / Superseded
 - sprint-007: superseded — 2026-07-15 製品方針転換により白紙化、`backup/sprint-007-010-plan` に退避
+- sprint-036: superseded — Agentic側でGenerator着手前に候補探索方針がhost明示値限定からhost提供済み文脈→Git→OSへ変更され、合格済みsprint-037へ置換されたため、Yasashii側も旧方針を実装しない。
 
 ## Completion
+- 2026-07-24: sprint-037 spec-issue Retryはfresh独立EvaluatorでPASS、product finding 0件。初回Majorは、値を3正本だけへ保存しjournal `設定を変更: 呼び方`、commit subject `設定を変更（呼び方）`、body空、断片・escape・Base64・SHA由来metadata 0、5失敗点rollbackとして直接解消を確認した。固定Agentic `d9a62755...`／tree `9473f36...`、overlay 654 files・未分類0・managed 239・check／apply／reapply差分0、common SHA `f792...d24`、専用5/5・14/14、Sprint 011 69/69・012 38/38・022 69/69＋8/8、archive 11/11、loopback許可面のChatwork／Google Chat、Yasashii identity、Sprint 045保護、diff checkを確認。旧digestは開始HEADと同じstale fixture、restricted EPERMは環境要因として分離し、Status done、Retry Count／Spec-Issue Count 0、Model Tier standard、Rotate none、Next Planned TBDで完了する。
+- 2026-07-24: sprint-037 spec-issue Retry Generatorがoverlay base/treeをAgentic `d9a62755ff78db12c435f225cdd40e95f86a8055`へ前進し、654 files・未分類0、managed 239、apply変更3 paths、check／reapply `secondChanged=0`を確認。共通transactionは6,626 bytes・SHA-256 `f7924212...`でbyte一致し、journal／subject固定、body空、値・断片・変換値混入0、3正本同期、5失敗点rollbackを専用5/5・14/14で確認した。overlay 11/11、Sprint 011 69/69、012 38/38、022 69/69＋wrapper 8/8、archive 11/11、Sprint 045保護diff 0、diff checkを引き渡した。既存digestとloopback sandbox制約は非因果として分離し、Status awaiting-eval、Lineage Dispatches 4でfresh独立Evaluatorへ進める。
+- 2026-07-24: Agentic共通修正 `sprint-037-patch-001` が独立評価PASSし、commit `d9a62755ff78db12c435f225cdd40e95f86a8055`へ固定された。PlannerがYasashii sprint-037の同期元を新SHAへ更新し、journal `設定を変更: 呼び方`、commit subject `設定を変更（呼び方）`、body空、入力値・断片・escape・hash等の履歴metadata非再掲を既存3正本transaction条件と両立させた。Spec-Issue Count 1を保持し、Lineage Dispatches 3としてfresh Generatorで同じSprintを再同期する。
+- 2026-07-24: sprint-037初回fresh EvaluatorはFAIL／spec-issue。overlay固定SHA・650 files分類・未分類0・managed 238・再適用0、4経路、候補除外、rollback、active scan、Yasashii identity、Sprint 045保護は合格したが、Agentic共通transactionが確認済みの呼び方をjournal本文とcommit subjectへ再掲し、Yasashii既存の設定値非再掲契約と衝突するMajor finding 1件を確認した。固定共通scriptとのbyte一致と値非再掲は現契約のまま両立しないためSpec-Issue Count 1、Status activeとし、下流forkを作らずAgentic共通coreを値非表示へ修正・独立評価した新SHAへ同期し直す。
+- 2026-07-24: sprint-037 GeneratorがAgentic固定candidate `0fa7af24551c149c3aabf9671d4cd87d6c276192`をreview済みoverlay baseへ前進し、650 filesを分類、managed 238・未分類0でapply／check／reapply `secondChanged=0`を確認。呼び方候補・3正本transaction・4経路onboarding/settingsを同期し、Yasashii固有Markdown・identityとSprint 045保護6 files差分0を維持した。専用14/14、overlay 11/11、Sprint 011 69/69、012 38/38、022 69/69＋wrapper 8/8、Sprint 035 15/15、Chatwork 33/33、Google Chat 51/51＋wrapper 12/12、archive 11/11、diff checkを引き渡したためStatus awaiting-eval、Lineage Dispatches 2としてfresh独立Evaluatorへ進める。開始HEADの旧Google Chat wizard digest不一致は対象asset差分0の非因果baselineとしてprogressへ分離した。
+- 2026-07-24: ユーザーがAgenticの合格済みsprint-037 commit `0fa7af24551c149c3aabf9671d4cd87d6c276192`をYasashiiへ同期するよう明示依頼。旧sprint-036をsupersededとして履歴化し、固定upstream candidate、review済みoverlay base、apply／reapply冪等性、呼び方4経路、host文脈→Git→OS候補、3正本transaction、利用者中立化、Yasashii固有面とSprint 045保護を契約化した。新メインSprintのため系譜をリセットし、Lineage Dispatches 1、Model Tier standard、Rotate noneでfresh Generatorへ進める。remote、installed cache、利用者workspace、releaseは変更しない。
 - 2026-07-23: sprint-035-patch-003 Retry 1はfresh独立EvaluatorでPASS。complete／partial／failedで検索query／caret／focus／未保存選択を保持し、専用45/45、Agentic共有面byte一致、overlay再適用0差分、Yasashii固有面不変、desktop／390px overflow 0、console error 0、新規finding 0を確認した。sprint-035-patch-003をdone、Retry Count 0、Model Tier standard、Rotate noneへ戻す。
 - 2026-07-23: ユーザー承認で限定再試行サイクルを再開。Retry 1 Generatorが再試行時の検索query／caret／focus／未保存checkbox選択を保持し、専用45/45、overlay再適用0差分、Agentic共有面byte一致、実DOM failed fixture、diff checkを0 FAILで引き渡したためawaiting-eval、Lineage Dispatches 2としてfresh Evaluatorへ進める。
 - 2026-07-23: Agentic正本のGoogle Chat起動時discovery契約をYasashiiへ同期するsprint-035-patch-003（regular patch / high risk）を開始。保存済み一覧だけを最新一覧として見せず、相関済みActionsで全ページの通常SPACEを確認し、既存選択保持・新規未選択・OAuth再認可不要を維持する。Model Tier strong、Rotate model-escalation、Lineage Dispatches 9としてfresh Generatorへ引き渡す。実OAuth／実API／実Secret更新／実Actions／remote writeは行わない。

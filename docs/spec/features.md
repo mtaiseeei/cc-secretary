@@ -1,6 +1,6 @@
 # Features
 
-機能IDと、ユーザーから見える振る舞いの正本。F01〜F16 は受け入れ済みの既存機能、F17〜F22 は 2026-07-15 方針転換、F23〜F27 は 2026-07-16 のsingle-repo Git-first + Chatwork方針、F28 は 2026-07-17 の一般プロジェクト管理方針、F29 は配布チャネルから独立した製品説明、F30〜F31 は更新の説明と実行を分ける安全な更新体験、F32〜F35 は各社所有Google Cloudプロジェクトを使うGoogle Chat同期、F36〜F43 は `0.7.0` の配布前監査を閉じたrelease hardening、F44〜F50 は次候補 `0.8.0` で2 editionへ安全に分離する機能、F51は両edition共通の会話可読性、F52は4つの正式対象ホストへ拡張できるホスト非依存の共通本体と各ホストの正式配布adapter、F53は別Pluginの対応Harness 0.5.0へ安全に追随する機能、F54はhost-neutralなplugin root解決と両editionのCodex正式配布parityである。
+機能IDと、ユーザーから見える振る舞いの正本。F01〜F16 は受け入れ済みの既存機能、F17〜F22 は 2026-07-15 方針転換、F23〜F27 は 2026-07-16 のsingle-repo Git-first + Chatwork方針、F28 は 2026-07-17 の一般プロジェクト管理方針、F29 は配布チャネルから独立した製品説明、F30〜F31 は更新の説明と実行を分ける安全な更新体験、F32〜F35 は各社所有Google Cloudプロジェクトを使うGoogle Chat同期、F36〜F43 は `0.7.0` の配布前監査を閉じたrelease hardening、F44〜F50 は次候補 `0.8.0` で2 editionへ安全に分離する機能、F51は両edition共通の会話可読性、F52は4つの正式対象ホストへ拡張できるホスト非依存の共通本体と各ホストの正式配布adapter、F53は別Pluginの対応Harness 0.5.0へ安全に追随する機能、F54はhost-neutralなplugin root解決と両editionのCodex正式配布parity、F55は利用者中立の呼び方と配布物を合格済み上流candidateから安全に同期する機能である。
 
 ## 既存機能（F01〜F16）
 
@@ -202,7 +202,7 @@
 - 初回取り込みとschedule設定の結果が分かれる場合は、完了した処理、未完了の処理、次にすることを別々に示し、全体を成功と誤認させない。既存の安全なtransaction／rollback境界は維持する。
 - 初回取り込みはOAuth完了直後の同じwizardセッション内で、メモリ上のtokenだけを使ってローカル実行する。tokenはセッション終了時に破棄し、以後の取得はGitHub Actionsが担う。
 - 初回取得時にも選択済みspace IDの `spaceType=SPACE` を再確認し、設定ファイルの直編集等でDM／グループDMが混入しても取得を拒否する。
-- `my-vault` の現行Google Chat同期を製品上の基準にし、スペース別・日付別Markdown、Asia/Tokyoの時刻、スレッド親子関係、発言者、本文、添付ファイル名・種類・参照先等のメタデータを保存する。添付ファイル本文はダウンロードしない。
+- 検証済みprivate workspaceのGoogle Chat同期契約を製品上の基準にし、スペース別・日付別Markdown、Asia/Tokyoの時刻、スレッド親子関係、発言者、本文、添付ファイル名・種類・参照先等のメタデータを保存する。添付ファイル本文はダウンロードしない。
 - message resource nameを同一性の基準にして再取得時の重複を防ぐ。同日ファイルへ新しい投稿を追加しても既存投稿を失わず、部分失敗時は成功スペースと失敗スペースを区別する。
 - `/google-chat search` は最新のGit状態を取り込んでから、スペース、発言者、日付、キーワードで保存済み履歴を検索し、該当箇所とスペース・日付の根拠を返す。
 
@@ -318,7 +318,7 @@ same-version bootstrap bridgeは作らず、`0.8.0 → 0.8.0` と `0.8.0 → 0.7
 
 ### F48 agentic-secretary上流edition
 
-neutralization commitまでの全Git履歴を継承し、`/Users/taisei/workspace/agentic-secretary` の別directoryと
+neutralization commitまでの全Git履歴を継承し、`<workspace-root>/agentic-secretary` の別directoryと
 GitHubの別repo `mtaiseeei/agentic-secretary` に上流editionを成立させる。monorepo／subdirectoryにはしない。
 技術者向け差分は会話、診断、報告、developer handoffだけで、wizardと安全動作は共通にする。
 
@@ -401,18 +401,36 @@ Codexの正式配布面は両editionに必要である。`agentic-secretary` と
 同じ `plugins/secretary/skills/` を参照しながらedition別identity、version、repository、marketplaceを正しく表す。
 agentic側だけのmanifest存在やClaude legacy互換を、yasashii側のCodex正式配布PASSへ流用しない。
 
+### F55 利用者中立の呼び方と配布物
+
+初回オンボーディングはClaude Code／Codex共通の「あなた」「アカウント名」「指定の名前」「その他」から
+呼び方を選べる。「アカウント名」のときだけ、現在タスクへhostが提供済みの文脈、Git表示名、OSユーザー名を
+順に確認し、正規化と不適格値除外を通った候補を出典つきで示す。複数候補では最良1件をおすすめにし、
+候補が無ければ他経路へ戻る。任意の過去会話・生session logを直接探索せず、探索結果を保存しない。
+全経路で実際に保存する呼び方を別turnで確認し、未確認では何も作成しない。
+
+既存workspaceの呼び方変更は、`preferences.md`、`AGENTS.md`、`MEMORY.md` の現役表示を
+1 transactionで同期し、失敗時はjournalとGit状態を含めてrollbackする。初回決定ログ、
+他設定、手書き行、索引、open／closed project構成を維持する。
+
+共通機能は独立評価PASS済みのAgentic完全SHAをreview済みbaseとしてYasashii overlayへ同期する。
+二回適用で追加差分0件を確認し、Yasashii固有の言葉遣い、identity、manifest、README、
+repo-owned docsを上流値で上書きしない。配布物と現行製品正本から、正式所有情報を除く個人名、
+利用者端末固有path、私用workspace依存を除く。
+
 ## Gテーマと機能の対応
 
 | テーマ | 主な機能 |
 |---|---|
 | G1 | F05 F06 F07 F08 F17 F18 F19 F21 |
-| G2 | F04 F10 F20 F51 |
+| G2 | F04 F10 F20 F51 F55 |
 | G3 | F14 F15 F22 F53 |
-| G4 | F10 F14 F15 F20 F22 F51 F53 |
+| G4 | F10 F14 F15 F20 F22 F51 F53 F55 |
 | G5 | F04 F07 F23 F24 F25 F26 F27 |
 | G6 | F03 F05 F06 F07 F08 F15 F17 F18 F19 F28 |
 | G7 | F01 F02 F04 F10 F16 F29 |
 | G8 | F01 F02 F07 F10 F16 F20 F30 F31 |
 | G9 | F03 F07 F10 F16 F23 F32 F33 F34 F35 |
 | G10 | F01 F02 F04 F05 F07 F10 F16 F23 F24 F30 F31 F32 F33 F34 F35 F36 F37 F38 F39 F40 F41 F42 F43 |
-| G11 | F30 F31 F36 F40 F41 F42 F43 F44 F45 F46 F47 F48 F49 F50 F51 F52 F53 F54 |
+| G11 | F30 F31 F36 F40 F41 F42 F43 F44 F45 F46 F47 F48 F49 F50 F51 F52 F53 F54 F55 |
+| G12 | F04 F16 F20 F41 F42 F49 F55 |

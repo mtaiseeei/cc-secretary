@@ -17,7 +17,12 @@ import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const candidate = resolve(process.argv[2] || "/Users/taisei/workspace/agentic-secretary");
+const candidateValue = process.argv[2] || process.env.AGENTIC_SECRETARY_CANDIDATE;
+if (!candidateValue) {
+  console.error("usage: sprint-034-test.mjs <agentic-secretary-candidate>");
+  process.exit(64);
+}
+const candidate = resolve(candidateValue);
 const syncScript = join(root, "scripts/sync-secretary-overlay.mjs");
 const snapshot = JSON.parse(readFileSync(join(root, "secretary-overlay/upstream-tree.json"), "utf8"));
 const downstreamFiles = JSON.parse(readFileSync(join(root, "secretary-overlay/downstream-files.json"), "utf8")).files;

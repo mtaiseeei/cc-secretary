@@ -33,7 +33,11 @@ output stylesには依存しない。
 
 ## 初回
 
-オンボーディングの5問を使う。呼び方、主に使うサービス、任せたいこと、お仕事・役割、説明の詳しさを聞く。
+オンボーディングの5問を使う。呼び方は同Skillの共通契約どおり「あなた」「アカウント名」
+「指定の名前」とhost標準の「その他」を使う。host UIが自動付与する「その他」は重複表示しない。
+「アカウント名」を選んだ後だけ共通の `name-candidates.mjs` を使い、host-task-context→Git→OSの順、
+同じ正規化・除外・重複・推奨規則で扱う。任意の過去会話や生session logは検索しない。
+呼び方、主に使うサービス、任せたいこと、お仕事・役割、説明の詳しさを聞く。
 口調は聞かず丁寧（標準）で開始する。完了時に「いつでも『設定変えたい』で変更できます」と伝える。
 
 ## 途中変更の手順
@@ -48,8 +52,11 @@ output stylesには依存しない。
    - 内部の正式key: `<セクション>.<キー>`
 
 3. **この確認ターンではツールを呼ばない。** キャンセル、訂正、別の話題なら終了し、preferences、journal、git commitを一切変更しない。
-4. 次の別ターンで明示了承された後だけ、次の部分更新シームを1回呼ぶ。値はこの内部呼出だけへ渡し、assistantの会話本文、journal、commit messageへ含めない。
-   `${SECRETARY_PLUGIN_ROOT}/skills/memory-care/scripts/memory-tools.sh pref-set <secretary> "<セクション>" "<キー>" "<値>"`
+4. 次の別ターンで明示了承された後だけ、部分更新シームまたは呼び方同期シームを1回呼ぶ。値はこの内部呼出だけへ渡し、assistantの会話本文、journal、commit messageへ含めない。
+   - 呼び方:
+     `node "${SECRETARY_PLUGIN_ROOT}/scripts/owner-name-transaction.mjs" <secretary> "<確認済みの値>"`
+   - それ以外:
+     `${SECRETARY_PLUGIN_ROOT}/skills/memory-care/scripts/memory-tools.sh pref-set <secretary> "<セクション>" "<キー>" "<値>"`
 5. 更新後も1行へ圧縮せず、次の箇条書きで宣言する。
 
    - 変更した項目: <日本語の項目名>
@@ -57,10 +64,14 @@ output stylesには依存しない。
    - 内部の正式key: `<セクション>.<キー>`
    - そのほかの設定: 変更していません
 
-6. 宣言後、`journal-add <secretary> did "設定を変更: <変更項目>"` を1回だけ呼ぶ。
-7. 最後に `commit <secretary> "設定を変更（<変更項目>）"` を呼び、ローカルcommitだけを作る。pushしない。
+6. 呼び方以外は、宣言後に `journal-add <secretary> did "設定を変更: <変更項目>"` を1回だけ呼ぶ。
+7. 呼び方以外は、最後に `commit <secretary> "設定を変更（<変更項目>）"` を呼ぶ。
+   呼び方の更新シームは `preferences.md`、`AGENTS.md`、`MEMORY.md` の現役表示、journal 1件、
+   local commit 1件を一つのtransaction、つまり途中失敗時に全変更を元へ戻す一組の処理として完了する。
+   初回decisionは変更しない。どちらの経路もpushしない。
 
-失敗時はjournalやcommitへ進まない。英語エラーは何が起きたかと直し方を日本語で先に説明する。
+失敗時はjournalやcommitへ進まない。呼び方更新の失敗では3正本、journal、commitに部分変更を残さない。
+英語エラーは何が起きたかと直し方を日本語で先に説明する。
 
 ## 変更できる項目
 
@@ -98,4 +109,6 @@ output stylesには依存しない。
 
 - 共通ルール: `${SECRETARY_PLUGIN_ROOT}/rules/plain-language.md`
 - preferences雛形: `${SECRETARY_PLUGIN_ROOT}/templates/memory/preferences.md`
-- 部分更新・追記・journal・commit: `${SECRETARY_PLUGIN_ROOT}/skills/memory-care/scripts/memory-tools.sh`
+- 呼び方候補: `${SECRETARY_PLUGIN_ROOT}/scripts/name-candidates.mjs`
+- 呼び方の3正本同期・journal・local commit: `${SECRETARY_PLUGIN_ROOT}/scripts/owner-name-transaction.mjs`
+- その他の部分更新・追記・journal・commit: `${SECRETARY_PLUGIN_ROOT}/skills/memory-care/scripts/memory-tools.sh`

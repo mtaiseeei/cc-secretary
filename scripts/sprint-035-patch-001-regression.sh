@@ -20,7 +20,7 @@ check "Google Chat wizard構文" node --check "$ROOT/plugins/secretary/skills/go
 check "Chatwork既存回帰" bash "$ROOT/scripts/sprint-013-regression.sh"
 check "Google Chat既存回帰" bash "$ROOT/scripts/sprint-019-regression.sh"
 check "共通wizard browser式回帰" node "$ROOT/scripts/sprint-027-browser-expression-test.mjs"
-check "Yasashii overlay／edition境界回帰" node "$ROOT/scripts/sprint-034-test.mjs" "${AGENTIC_SECRETARY_CANDIDATE:-/Users/taisei/workspace/agentic-secretary}"
+check "Yasashii overlay／edition境界回帰" node "$ROOT/scripts/sprint-034-test.mjs" "${AGENTIC_SECRETARY_CANDIDATE:-$(cd "$ROOT/.." && pwd -P)/agentic-secretary}"
 check "Yasashii会話可読性回帰" bash "$ROOT/scripts/sprint-032-patch-001-regression.sh"
 check "Yasashii host-neutral会話回帰" bash "$ROOT/scripts/sprint-032-patch-002-regression.sh"
 check "差分整形" git -C "$ROOT" diff --check
